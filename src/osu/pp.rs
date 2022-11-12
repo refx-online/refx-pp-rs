@@ -546,7 +546,9 @@ impl OsuPpInner {
 
         speed_value *= self.get_combo_scaling_factor();
 
-        let ar_factor = if self.attrs.ar > 10.33 {
+        let ar_factor = if self.mods.ap() {
+            0.0
+        } else if self.attrs.ar > 10.33 {
             0.3 * (self.attrs.ar - 10.33)
         } else {
             0.0
