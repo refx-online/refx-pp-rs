@@ -13,13 +13,14 @@ pub(crate) struct Speed {
     pub(crate) strain_peaks: Vec<f64>,
     object_strains: Vec<f64>,
     hit_window: f64,
+    mods: u32,
 }
 
 impl Speed {
     const SKILL_MULTIPLIER: f64 = 1375.0;
     const STRAIN_DECAY_BASE: f64 = 0.3;
 
-    pub(crate) fn new(hit_window: f64) -> Self {
+    pub(crate) fn new(hit_window: f64, mods: u32) -> Self {
         Self {
             curr_strain: 0.0,
             curr_section_peak: 0.0,
@@ -28,6 +29,7 @@ impl Speed {
             strain_peaks: Vec::new(),
             object_strains: Vec::new(),
             hit_window,
+            mods,
         }
     }
 
