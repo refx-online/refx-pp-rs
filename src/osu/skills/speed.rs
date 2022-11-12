@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, f64::consts::PI};
 
-use crate::osu::difficulty_object::OsuDifficultyObject;
+use crate::{osu::difficulty_object::OsuDifficultyObject, Mods};
 
 use super::{next, previous, previous_start_time, OsuStrainSkill, Skill, StrainSkill};
 
@@ -90,8 +90,9 @@ impl StrainSkill for Speed {
         diff_objects: &[OsuDifficultyObject<'_>],
     ) -> f64 {
         self.curr_strain *= Self::strain_decay(curr.strain_time);
-        self.curr_strain += SpeedEvaluator::evaluate_diff_of(curr, diff_objects, self.hit_window)
-            * Self::SKILL_MULTIPLIER;
+        self.curr_strain +=
+            SpeedEvaluator::evaluate_diff_of(curr, diff_objects, self.hit_window, self.mods)
+                * Self::SKILL_MULTIPLIER;
         self.curr_rhythm = RhythmEvaluator::evaluate_diff_of(curr, diff_objects, self.hit_window);
 
         let total_strain = self.curr_strain * self.curr_rhythm;
@@ -133,6 +134,7 @@ impl SpeedEvaluator {
         curr: &OsuDifficultyObject<'_>,
         diff_objects: &[OsuDifficultyObject<'_>],
         hit_window: f64,
+        mods: u32,
     ) -> f64 {
         if curr.base.is_spinner() {
             return 0.0;
@@ -171,8 +173,12 @@ impl SpeedEvaluator {
         };
 
         let travel_dist = osu_prev_obj.map_or(0.0, |obj| obj.dists.travel_dist);
-        let dist =
-            Self::SINGLE_SPACING_THRESHOLD.min(travel_dist + osu_curr_obj.dists.min_jump_dist);
+        let dist = match mods.ap() {
+            true => 0.0,
+            false => {
+                Self::SINGLE_SPACING_THRESHOLD.min(travel_dist + osu_curr_obj.dists.min_jump_dist)
+            }
+        };
 
         (speed_bonus + speed_bonus * (dist / Self::SINGLE_SPACING_THRESHOLD).powf(3.5))
             * doubletapness
