@@ -486,7 +486,8 @@ impl<'m> OsuPP<'m> {
         }
 
         // Scaling the speed value with accuracy and OD
-        speed_value *= (0.95 + attributes.od as f32 * attributes.od as f32 / 750.0)
+        let acc_factor = if self.mods.rx() { 0.9 } else { 0.95 };
+        speed_value *= (acc_factor + attributes.od as f32 * attributes.od as f32 / 750.0)
             * self
                 .acc
                 .unwrap()
