@@ -488,7 +488,7 @@ impl<'m> OsuPP<'m> {
         if attributes.ar > 10.33 {
             let mut ar_factor = if self.mods.rx() {
                 if attributes.ar > 10.67 {
-                    0.45 * (attributes.ar - 10.67)
+                    0.4 * (attributes.ar - 10.67)
                 } else {
                     0.0
                 }
