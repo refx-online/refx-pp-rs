@@ -275,11 +275,11 @@ impl<'m> OsuPP<'m> {
             }
         }
 
-        let nodt_bonus =
-            match !self.mods.dt() && !self.mods.ht() && self.mods.rx() && acc_depression == 1.0 {
-                true => 1.01,
-                false => 1.0,
-            };
+        let nodt_bonus = match !self.mods.change_speed() && self.mods.rx() && acc_depression == 1.0
+        {
+            true => 1.01,
+            false => 1.0,
+        };
 
         let speed_factor = match self.mods.rx() {
             true => speed_value.powf(0.83 * acc_depression),
