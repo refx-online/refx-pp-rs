@@ -154,8 +154,6 @@ macro_rules! parse_general_body {
 macro_rules! parse_metadata_body {
     ($self:ident, $reader:ident, $section:ident) => {{
         let mut empty = true;
-        let mut creator = None;
-        let mut beatmap_id = None;
 
         while next_line!($reader)? != 0 {
             if let Some(bytes) = $reader.get_section() {
@@ -167,16 +165,13 @@ macro_rules! parse_metadata_body {
             let (key, value) = $reader.split_colon().ok_or(ParseError::BadLine)?;
 
             if key == b"Creator" {
-                creator = Some(value)
+                $self.creator = value.to_string();
             } else if key == b"BeatmapID" {
-                if let Some(val) = u32::parse_in_range(value) {
-                    beatmap_id = Some(val);
+                if let Some(val) = u32::from_str(value).ok() {
+                    $self.beatmap_id = val;
                 }
             }
         }
-
-        $self.creator = creator.unwrap_or("").to_string();
-        $self.beatmap_id = beatmap_id.unwrap_or(0);
 
         Ok(empty)
     }};
