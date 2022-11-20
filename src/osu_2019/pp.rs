@@ -282,26 +282,17 @@ impl<'m> OsuPP<'m> {
 
         let speed_factor = match self.mods.rx() {
             true => speed_value.powf(0.82 * acc_depression),
-            false => match self.mods.ap() {
-                true => speed_value.powf(1.12),
-                false => speed_value.powf(1.1),
-            },
+            false => speed_value.powf(1.1),
         };
 
         let aim_factor = match self.mods.rx() {
             true => aim_value.powf(1.185 * nodt_bonus),
-            false => match self.mods.ap() {
-                true => 0.0,
-                false => aim_value.powf(1.1),
-            },
+            false => aim_value.powf(1.1),
         };
 
         let acc_factor = match self.mods.rx() {
             true => acc_value.powf(1.14 * nodt_bonus),
-            false => match self.mods.ap() {
-                true => acc_value.powf(1.12),
-                false => acc_value.powf(1.1),
-            },
+            false => acc_value.powf(1.1),
         };
 
         let mut pp = (aim_factor + speed_factor + acc_factor).powf(1.0 / 1.1) * multiplier;
@@ -524,26 +515,6 @@ impl<'m> OsuPP<'m> {
             true => 0.0,
             false => self.n50.unwrap() as f32 - total_hits / 500.0,
         });
-
-        if self.mods.ap() {
-            speed_value *= 0.5 + self.acc.unwrap() / 2.0;
-            speed_value *= 0.98 + attributes.od as f32 * attributes.od as f32 / 2500.0;
-
-            // FL bonus
-            if self.mods.fl() {
-                speed_value *= 1.0
-                    + 0.25 * (total_hits / 200.0).min(1.0)
-                    + (total_hits > 200.0) as u8 as f32
-                        * 0.2
-                        * ((total_hits - 200.0) / 300.0).min(1.0)
-                    + (total_hits > 500.0) as u8 as f32 * (total_hits - 500.0) / 1100.0;
-            }
-
-            speed_value *= 0.98_f32.powf(match (self.n50.unwrap() as f32) < total_hits / 500.0 {
-                true => 0.0,
-                false => self.n50.unwrap() as f32 - total_hits / 500.0,
-            });
-        }
 
         speed_value
     }

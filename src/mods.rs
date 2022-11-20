@@ -40,7 +40,6 @@ pub trait Mods: Copy {
     fn ht(self) -> bool;
     fn fl(self) -> bool;
     fn so(self) -> bool;
-    fn ap(self) -> bool;
 }
 
 impl Mods for u32 {
@@ -86,5 +85,4 @@ impl Mods for u32 {
     impl_mods!(ht, HT);
     impl_mods!(fl, FL);
     impl_mods!(so, SO);
-    impl_mods!(ap, AP);
 }
