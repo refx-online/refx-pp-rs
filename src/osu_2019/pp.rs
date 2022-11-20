@@ -261,11 +261,13 @@ impl<'m> OsuPP<'m> {
 
         let mut acc_depression = 1.0;
         if self.mods.rx() {
+            multiplier *= 0.9;
+
             let streams_nerf = aim_value / speed_value;
 
             if streams_nerf < 1.0 {
                 let acc_factor = (1.0 - self.acc.unwrap()).abs();
-                acc_depression = (0.94 - acc_factor).max(0.85);
+                acc_depression = (0.92 - acc_factor).max(0.8);
 
                 if acc_depression > 0.0 {
                     aim_value *= acc_depression;
@@ -273,14 +275,13 @@ impl<'m> OsuPP<'m> {
             }
         }
 
-        let nodt_bonus = match !self.mods.change_speed() && self.mods.rx() && acc_depression == 1.0
-        {
+        let nodt_bonus = match !self.mods.change_speed() && self.mods.rx() {
             true => 1.01,
             false => 1.0,
         };
 
         let speed_factor = match self.mods.rx() {
-            true => speed_value.powf(0.83 * acc_depression),
+            true => speed_value.powf(0.82 * acc_depression),
             false => match self.mods.ap() {
                 true => speed_value.powf(1.12),
                 false => speed_value.powf(1.1),
@@ -288,7 +289,7 @@ impl<'m> OsuPP<'m> {
         };
 
         let aim_factor = match self.mods.rx() {
-            true => aim_value.powf(1.18 * nodt_bonus),
+            true => aim_value.powf(1.185 * nodt_bonus),
             false => match self.mods.ap() {
                 true => 0.0,
                 false => aim_value.powf(1.1),
@@ -296,7 +297,7 @@ impl<'m> OsuPP<'m> {
         };
 
         let acc_factor = match self.mods.rx() {
-            true => acc_value.powf(1.15 * nodt_bonus),
+            true => acc_value.powf(1.14 * nodt_bonus),
             false => match self.mods.ap() {
                 true => acc_value.powf(1.12),
                 false => acc_value.powf(1.1),
