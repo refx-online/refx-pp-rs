@@ -432,7 +432,7 @@ impl<'m> OsuPP<'m> {
         }
 
         // Scale with accuracy
-        let acc_factor = if self.mods.rx() { 0.4 } else { 0.5 };
+        let acc_factor = if self.mods.rx() { 0.3 } else { 0.5 };
         aim_value *= acc_factor + self.acc.unwrap() / 2.0;
         aim_value *= 0.98 + attributes.od as f32 * attributes.od as f32 / 2500.0;
 
