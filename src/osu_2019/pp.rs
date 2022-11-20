@@ -372,13 +372,7 @@ impl<'m> OsuPP<'m> {
         }
 
         // AR bonus
-        let mut ar_factor = if self.mods.rx() {
-            if attributes.ar > 10.67 {
-                0.4 * (attributes.ar - 10.67)
-            } else {
-                0.0
-            }
-        } else if attributes.ar > 10.33 {
+        let mut ar_factor = if attributes.ar > 10.33 {
             0.3 * (attributes.ar - 10.33)
         } else {
             0.0
@@ -467,13 +461,7 @@ impl<'m> OsuPP<'m> {
 
         // AR bonus
         if attributes.ar > 10.33 {
-            let mut ar_factor = if self.mods.rx() {
-                if attributes.ar > 10.67 {
-                    0.4 * (attributes.ar - 10.67)
-                } else {
-                    0.0
-                }
-            } else if attributes.ar > 10.33 {
+            let mut ar_factor = if attributes.ar > 10.33 {
                 0.3 * (attributes.ar - 10.33)
             } else {
                 0.0
