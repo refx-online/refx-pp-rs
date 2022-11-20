@@ -18,6 +18,7 @@ pub(crate) struct Skill {
     pub(crate) strain_peaks: Vec<f32>,
 
     prev_time: Option<f32>,
+    pub(crate) object_strains: Vec<f32>,
 }
 
 impl Skill {
@@ -31,6 +32,7 @@ impl Skill {
             strain_peaks: Vec::with_capacity(128),
 
             prev_time: None,
+            object_strains: Vec::new(),
         }
     }
 
@@ -48,6 +50,9 @@ impl Skill {
     pub(crate) fn process(&mut self, current: &DifficultyObject<'_>) {
         self.current_strain *= self.strain_decay(current.delta);
         self.current_strain += self.kind.strain_value_of(current) * self.skill_multiplier();
+
+        self.object_strains.push(self.current_strain);
+
         self.current_section_peak = self.current_section_peak.max(self.current_strain);
         self.prev_time.replace(current.base.time);
     }
@@ -65,6 +70,18 @@ impl Skill {
         }
 
         difficulty
+    }
+
+    pub(crate) fn count_difficult_strains(&mut self) -> f64 {
+        let top_strain = self
+            .object_strains
+            .iter()
+            .fold(f64::NEG_INFINITY, |prev, curr| prev.max(*curr as f64));
+
+        self.object_strains
+            .iter()
+            .map(|strain| (strain / top_strain as f32).powi(4))
+            .sum::<f32>() as f64
     }
 
     #[inline]

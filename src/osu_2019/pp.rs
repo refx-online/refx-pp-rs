@@ -376,12 +376,8 @@ impl<'m> OsuPP<'m> {
         aim_value *= len_bonus;
 
         // Penalize misses
-        let penalty_factor: f32 = if self.mods.rx() { 0.96 } else { 0.97 };
-        aim_value *= penalty_factor.powi(self.n_misses as i32);
-
-        // Combo scaling
-        if let Some(combo) = self.combo.filter(|_| attributes.max_combo > 0) {
-            aim_value *= ((combo as f32 / attributes.max_combo as f32).powf(0.8)).min(1.0);
+        if self.n_misses > 0 {
+            aim_value *= self.calculate_miss_penalty(attributes.aim_difficult_strain_count as f32);
         }
 
         // AR bonus
@@ -479,12 +475,13 @@ impl<'m> OsuPP<'m> {
         speed_value *= len_bonus;
 
         // Penalize misses
-        let penalty_factor: f32 = if self.mods.rx() { 0.94 } else { 0.97 };
-        speed_value *= penalty_factor.powi(self.n_misses as i32);
+        if self.n_misses > 0 {
+            let mut strain_count = attributes.speed_difficult_strain_count as f32;
+            if self.mods.rx() {
+                strain_count *= 0.5;
+            }
 
-        // Combo scaling
-        if let Some(combo) = self.combo.filter(|_| attributes.max_combo > 0) {
-            speed_value *= ((combo as f32 / attributes.max_combo as f32).powf(0.8)).min(1.0);
+            speed_value *= self.calculate_miss_penalty(strain_count);
         }
 
         // AR bonus
@@ -587,6 +584,11 @@ impl<'m> OsuPP<'m> {
 
         (self.n300.unwrap_or(0) + self.n100.unwrap_or(0) + self.n50.unwrap_or(0) + self.n_misses)
             .min(n_objects)
+    }
+
+    #[inline]
+    fn calculate_miss_penalty(&self, strain_count: f32) -> f32 {
+        0.97 / ((self.n_misses as f32 / (2.0 * strain_count.sqrt())) + 1.0)
     }
 }
 
