@@ -245,7 +245,10 @@ impl<'m> OsuPP<'m> {
         let mut multiplier = 1.12;
 
         let effective_miss_count = self.calculate_effective_miss_count();
-        println!("effective_miss_count: {}", effective_miss_count);
+        println!(
+            "effective_miss_count: {}\nmap id: {}",
+            effective_miss_count, self.map.beatmap_id
+        );
 
         // NF penalty
         if self.mods.nf() {
