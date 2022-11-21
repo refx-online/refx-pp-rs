@@ -388,7 +388,7 @@ impl<'m> OsuPP<'m> {
                 attributes.aim_difficult_strain_count as f32,
                 effective_miss_count,
             );
-            println!("miss penalty for speed: {}", miss_penalty);
+            println!("miss penalty for aim: {}", miss_penalty);
 
             aim_value *= miss_penalty;
         }
