@@ -136,6 +136,7 @@ pub fn stars(map: &Beatmap, mods: u32, passed_objects: Option<usize>) -> OsuDiff
     diff_attributes.aim_strain = aim_strain as f64;
     diff_attributes.aim_difficult_strain_count = aim_difficult_strain_count;
     diff_attributes.speed_difficult_strain_count = speed_difficult_strain_count;
+    diff_attributes.n_sliders = map.n_sliders;
 
     diff_attributes
 }
