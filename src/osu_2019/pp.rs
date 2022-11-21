@@ -255,8 +255,10 @@ impl<'m> OsuPP<'m> {
                 1.0 - (self.attributes.as_ref().unwrap().n_spinners as f32 / total_hits).powf(0.85);
         }
 
-        let mut aim_value = self.compute_aim_value(total_hits);
-        let speed_value = self.compute_speed_value(total_hits);
+        let effective_miss_count = self.calculate_effective_miss_count();
+
+        let mut aim_value = self.compute_aim_value(total_hits, effective_miss_count);
+        let speed_value = self.compute_speed_value(total_hits, effective_miss_count);
         let acc_value = self.compute_accuracy_value(total_hits);
 
         let mut acc_depression = 1.0;
@@ -350,7 +352,7 @@ impl<'m> OsuPP<'m> {
         }
     }
 
-    fn compute_aim_value(&self, total_hits: f32) -> f32 {
+    fn compute_aim_value(&self, total_hits: f32, effective_miss_count: f32) -> f32 {
         let attributes = self.attributes.as_ref().unwrap();
 
         // TD penalty
@@ -370,8 +372,11 @@ impl<'m> OsuPP<'m> {
         aim_value *= len_bonus;
 
         // Penalize misses
-        if self.n_misses > 0 {
-            aim_value *= self.calculate_miss_penalty(attributes.aim_difficult_strain_count as f32);
+        if effective_miss_count > 0.0 {
+            aim_value *= self.calculate_miss_penalty(
+                attributes.aim_difficult_strain_count as f32,
+                effective_miss_count,
+            );
         }
 
         // AR bonus
@@ -439,7 +444,7 @@ impl<'m> OsuPP<'m> {
         aim_value
     }
 
-    fn compute_speed_value(&self, total_hits: f32) -> f32 {
+    fn compute_speed_value(&self, total_hits: f32, effective_miss_count: f32) -> f32 {
         let attributes = self.attributes.as_ref().unwrap();
 
         let mut speed_value =
@@ -453,13 +458,13 @@ impl<'m> OsuPP<'m> {
         speed_value *= len_bonus;
 
         // Penalize misses
-        if self.n_misses > 0 {
+        if effective_miss_count > 0.0 {
             let mut strain_count = attributes.speed_difficult_strain_count as f32;
             if self.mods.rx() {
                 strain_count *= 0.5;
             }
 
-            speed_value *= self.calculate_miss_penalty(strain_count);
+            speed_value *= self.calculate_miss_penalty(strain_count, effective_miss_count);
         }
 
         // AR bonus
@@ -540,8 +545,28 @@ impl<'m> OsuPP<'m> {
     }
 
     #[inline]
-    fn calculate_miss_penalty(&self, strain_count: f32) -> f32 {
-        0.95 / ((self.n_misses as f32 / (2.0 * strain_count.sqrt())) + 1.0)
+    fn calculate_miss_penalty(&self, strain_count: f32, effective_miss_count: f32) -> f32 {
+        0.95 / ((effective_miss_count / (2.0 * strain_count.sqrt())) + 1.0)
+    }
+
+    #[inline]
+    fn calculate_effective_miss_count(&self) -> f32 {
+        let mut combo_based_miss_count = 0.0;
+
+        let attributes = self.attributes.as_ref().unwrap();
+        let combo = self.combo.unwrap() as f32;
+        let n100 = self.n100.unwrap_or(0) as f32;
+        let n50 = self.n50.unwrap_or(0) as f32;
+
+        if attributes.n_sliders > 0 {
+            let fc_threshold = attributes.max_combo as f32 - 0.1 * attributes.n_sliders as f32;
+            if combo < fc_threshold {
+                combo_based_miss_count = fc_threshold / combo.max(1.0);
+            }
+        }
+
+        combo_based_miss_count = combo_based_miss_count.min(n100 + n50 + self.n_misses as f32);
+        combo_based_miss_count.max(self.n_misses as f32)
     }
 }
 
