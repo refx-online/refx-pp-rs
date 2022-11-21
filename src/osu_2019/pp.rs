@@ -576,8 +576,14 @@ impl<'m> OsuPP<'m> {
         let n100 = self.n100.unwrap_or(0) as f32;
         let n50 = self.n50.unwrap_or(0) as f32;
 
+        println!("combo: {}", combo);
+        println!("n100: {}", n100);
+        println!("n50: {}", n50);
+
         if attributes.n_sliders > 0 {
             let fc_threshold = attributes.max_combo as f32 - (0.1 * attributes.n_sliders as f32);
+            println!("fc threshold: {}", fc_threshold);
+
             if combo < fc_threshold {
                 combo_based_miss_count = fc_threshold / combo.max(1.0);
             }
