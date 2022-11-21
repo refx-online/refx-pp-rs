@@ -151,6 +151,32 @@ macro_rules! parse_general_body {
     }};
 }
 
+macro_rules! parse_metadata_body {
+    ($self:ident, $reader:ident, $section:ident) => {{
+        let mut empty = true;
+
+        while next_line!($reader)? != 0 {
+            if let Some(bytes) = $reader.get_section() {
+                *$section = Section::from_bytes(bytes);
+                empty = false;
+                break;
+            }
+
+            let (key, value) = $reader.split_colon().ok_or(ParseError::BadLine)?;
+
+            if key == b"Creator" {
+                $self.creator = value.to_string();
+            } else if key == b"BeatmapID" {
+                if let Some(val) = u32::from_str(value).ok() {
+                    $self.beatmap_id = val;
+                }
+            }
+        }
+
+        Ok(empty)
+    }};
+}
+
 macro_rules! parse_difficulty_body {
     ($self:ident, $reader:ident, $section:ident) => {{
         let mut ar = None;
@@ -752,6 +778,7 @@ macro_rules! parse_body {
         loop {
             match section {
                 Section::General => section!(map, parse_general, reader, section),
+                Section::Metadata => section!(map, parse_metadata, reader, section),
                 Section::Difficulty => section!(map, parse_difficulty, reader, section),
                 Section::Events => section!(map, parse_events, reader, section),
                 Section::TimingPoints => section!(map, parse_timingpoints, reader, section),
@@ -956,6 +983,14 @@ impl Beatmap {
         parse_general_body!(self, reader, section)
     }
 
+    fn parse_metadata<R: Read>(
+        &mut self,
+        reader: &mut FileReader<R>,
+        section: &mut Section,
+    ) -> ParseResult<bool> {
+        parse_metadata_body!(self, reader, section)
+    }
+
     fn parse_difficulty<R: Read>(
         &mut self,
         reader: &mut FileReader<R>,
@@ -1023,6 +1058,14 @@ impl Beatmap {
         parse_general_body!(self, reader, section)
     }
 
+    async fn parse_metadata<R: AsyncRead + Unpin>(
+        &mut self,
+        reader: &mut FileReader<R>,
+        section: &mut Section,
+    ) -> ParseResult<bool> {
+        parse_metadata_body!(self, reader, section)
+    }
+
     async fn parse_difficulty<R: AsyncRead + Unpin>(
         &mut self,
         reader: &mut FileReader<R>,
@@ -1076,6 +1119,7 @@ enum Section {
     TimingPoints,
     HitObjects,
     Events,
+    Metadata,
 }
 
 impl Section {
@@ -1086,6 +1130,7 @@ impl Section {
             b"TimingPoints" => Self::TimingPoints,
             b"HitObjects" => Self::HitObjects,
             b"Events" => Self::Events,
+            b"Metadata" => Self::Metadata,
             _ => Self::None,
         }
     }

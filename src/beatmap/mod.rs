@@ -64,6 +64,12 @@ pub struct Beatmap {
 
     /// All break points of the beatmap.
     pub breaks: Vec<Break>,
+
+    /// The creator of the beatmap
+    pub creator: String,
+
+    /// The beatmap ID of the map
+    pub beatmap_id: u32,
 }
 
 impl Beatmap {
@@ -164,6 +170,8 @@ impl Beatmap {
             effect_points: self.effect_points.clone(),
             stack_leniency: self.stack_leniency,
             breaks: self.breaks.clone(),
+            creator: self.creator.clone(),
+            beatmap_id: self.beatmap_id,
         }
     }
 }

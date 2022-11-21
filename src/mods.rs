@@ -20,6 +20,7 @@ pub trait Mods: Copy {
     const HT: u32 = 1 << 8;
     const FL: u32 = 1 << 10;
     const SO: u32 = 1 << 12;
+    const AP: u32 = 1 << 13;
 
     /// If the clock rate is affected by the mods.
     fn change_speed(self) -> bool;
