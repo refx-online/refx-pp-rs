@@ -281,6 +281,9 @@ impl<'m> OsuPP<'m> {
             }
         }
 
+        println!("aim_value: {}", aim_value);
+        println!("speed_value: {}", speed_value);
+
         let nodt_bonus = match !self.mods.change_speed() && self.mods.rx() {
             true => 1.01,
             false => 1.0,
