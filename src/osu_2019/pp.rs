@@ -373,10 +373,12 @@ impl<'m> OsuPP<'m> {
 
         // Penalize misses
         if effective_miss_count > 0.0 {
-            aim_value *= self.calculate_miss_penalty(
+            let miss_penalty = self.calculate_miss_penalty(
                 attributes.aim_difficult_strain_count as f32,
                 effective_miss_count,
             );
+
+            aim_value *= miss_penalty;
         }
 
         // AR bonus
@@ -464,7 +466,8 @@ impl<'m> OsuPP<'m> {
                 strain_count *= 0.5;
             }
 
-            speed_value *= self.calculate_miss_penalty(strain_count, effective_miss_count);
+            let miss_penalty = self.calculate_miss_penalty(strain_count, effective_miss_count);
+            speed_value *= miss_penalty;
         }
 
         // AR bonus
@@ -546,7 +549,7 @@ impl<'m> OsuPP<'m> {
 
     #[inline]
     fn calculate_miss_penalty(&self, strain_count: f32, effective_miss_count: f32) -> f32 {
-        0.95 / ((effective_miss_count / (2.0 * strain_count.sqrt())) + 1.0)
+        0.94 / ((effective_miss_count / (2.0 * strain_count.sqrt())) + 1.0)
     }
 
     #[inline]
@@ -559,7 +562,7 @@ impl<'m> OsuPP<'m> {
         let n50 = self.n50.unwrap_or(0) as f32;
 
         if attributes.n_sliders > 0 {
-            let fc_threshold = attributes.max_combo as f32 - 0.1 * attributes.n_sliders as f32;
+            let fc_threshold = attributes.max_combo as f32 - (0.1 * attributes.n_sliders as f32);
             if combo < fc_threshold {
                 combo_based_miss_count = fc_threshold / combo.max(1.0);
             }
