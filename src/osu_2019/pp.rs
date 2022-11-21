@@ -263,7 +263,7 @@ impl<'m> OsuPP<'m> {
 
         let mut acc_depression = 1.0;
         if self.mods.rx() {
-            multiplier *= 0.95;
+            multiplier *= 0.97;
 
             let streams_nerf = aim_value / speed_value;
 
