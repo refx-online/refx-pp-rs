@@ -149,6 +149,11 @@ impl<'map> OsuStars<'map> {
             flashlight_rating *= 0.7;
         }
 
+        if mods.ap() {
+            aim_rating = 0.0;
+            flashlight_rating *= 0.4;
+        }
+
         let base_aim_performance = (5.0 * (aim_rating / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
         let base_speed_performance =
             (5.0 * (speed_rating / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
