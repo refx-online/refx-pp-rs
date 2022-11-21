@@ -546,7 +546,7 @@ impl<'m> OsuPP<'m> {
 
     #[inline]
     fn calculate_miss_penalty(&self, strain_count: f32, effective_miss_count: f32) -> f32 {
-        0.94 / ((effective_miss_count / (2.0 * strain_count.sqrt())) + 1.0)
+        0.95 / ((effective_miss_count / (2.0 * strain_count.sqrt())) + 1.0)
     }
 
     #[inline]
