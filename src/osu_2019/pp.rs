@@ -245,10 +245,6 @@ impl<'m> OsuPP<'m> {
         let mut multiplier = 1.12;
 
         let effective_miss_count = self.calculate_effective_miss_count();
-        println!(
-            "effective_miss_count: {}\nmap id: {}",
-            effective_miss_count, self.map.beatmap_id
-        );
 
         // NF penalty
         if self.mods.nf() {
@@ -280,9 +276,6 @@ impl<'m> OsuPP<'m> {
                 }
             }
         }
-
-        println!("aim_value: {}", aim_value);
-        println!("speed_value: {}", speed_value);
 
         let nodt_bonus = match !self.mods.change_speed() && self.mods.rx() {
             true => 1.01,
@@ -380,15 +373,10 @@ impl<'m> OsuPP<'m> {
 
         // Penalize misses
         if effective_miss_count > 0.0 {
-            println!(
-                "aim strain count: {}",
-                attributes.aim_difficult_strain_count
-            );
             let miss_penalty = self.calculate_miss_penalty(
                 attributes.aim_difficult_strain_count as f32,
                 effective_miss_count,
             );
-            println!("miss penalty for aim: {}", miss_penalty);
 
             aim_value *= miss_penalty;
         }
@@ -478,10 +466,7 @@ impl<'m> OsuPP<'m> {
                 strain_count *= 0.5;
             }
 
-            println!("speed strain count: {}", strain_count);
-
             let miss_penalty = self.calculate_miss_penalty(strain_count, effective_miss_count);
-            println!("miss penalty for speed: {}", miss_penalty);
             speed_value *= miss_penalty;
         }
 
@@ -576,14 +561,8 @@ impl<'m> OsuPP<'m> {
         let n100 = self.n100.unwrap_or(0) as f32;
         let n50 = self.n50.unwrap_or(0) as f32;
 
-        println!("combo: {}", combo);
-        println!("n100: {}", n100);
-        println!("n50: {}", n50);
-
         if attributes.n_sliders > 0 {
             let fc_threshold = attributes.max_combo as f32 - (0.1 * attributes.n_sliders as f32);
-            println!("fc threshold: {}", fc_threshold);
-
             if combo < fc_threshold {
                 combo_based_miss_count = fc_threshold / combo.max(1.0);
             }
