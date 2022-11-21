@@ -390,7 +390,7 @@ impl<'m> OsuPP<'m> {
             ar_factor = 0.025 * (8.0 - attributes.ar);
         }
 
-        aim_value *= 1.0 + ar_factor as f32;
+        aim_value *= 1.0 + ar_factor as f32 * len_bonus;
 
         // HD bonus
         if self.mods.hd() {
@@ -479,7 +479,7 @@ impl<'m> OsuPP<'m> {
                 ar_factor = 0.025 * (8.0 - attributes.ar);
             }
 
-            speed_value *= 1.0 + ar_factor as f32;
+            speed_value *= 1.0 + ar_factor as f32 * len_bonus;
         }
 
         // HD bonus
