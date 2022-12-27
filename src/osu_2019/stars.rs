@@ -165,4 +165,5 @@ pub struct OsuPerformanceAttributes {
     pub pp_aim: f64,
     pub pp_flashlight: f64,
     pub pp_speed: f64,
+    pub effective_miss_count: f64,
 }
