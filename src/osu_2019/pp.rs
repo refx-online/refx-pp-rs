@@ -349,6 +349,7 @@ impl<'m> OsuPP<'m> {
             pp_flashlight: 0.0,
             pp_speed: speed_value as f64,
             pp: pp as f64,
+            effective_miss_count: effective_miss_count as f64,
         }
     }
 
