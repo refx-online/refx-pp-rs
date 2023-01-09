@@ -337,6 +337,9 @@ impl<'m> OsuPP<'m> {
 
                 // Songs Compilation [Marathon]
                 2403677 => 0.85,
+                
+                // Songs Compilation [Remembrance]
+                2174272 => 0.75,
 
                 _ => 1.0,
             }
