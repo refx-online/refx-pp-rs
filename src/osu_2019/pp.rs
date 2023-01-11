@@ -339,7 +339,10 @@ impl<'m> OsuPP<'m> {
                 2403677 => 0.85,
                 
                 // Songs Compilation [Remembrance]
-                2174272 => 0.75,
+                2174272 => 0.85,
+                
+                // Apocalypse 1992 [Universal Annihilation]
+                2382377 => 0.85,
 
                 _ => 1.0,
             }
