@@ -16,4 +16,4 @@ use skill::Skill;
 mod skill_kind;
 use skill_kind::SkillKind;
 
-mod stars;
+pub mod stars;
