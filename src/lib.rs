@@ -175,8 +175,7 @@
     rust_2018_idioms,
     unused,
     warnings,
-    missing_debug_implementations,
-    missing_docs
+    missing_debug_implementations
 )]
 
 /// Everything about osu!catch.
