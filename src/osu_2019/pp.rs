@@ -292,7 +292,7 @@ impl<'m> OsuPP<'m> {
         }
 
         if self.map.creator == "gwb" || self.map.creator == "Plasma" {
-            pp *= 0.85;
+            pp *= 0.9;
         }
 
         pp *= match self.map.beatmap_id {
