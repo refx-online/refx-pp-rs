@@ -242,7 +242,7 @@ impl<'m> OsuPP<'m> {
         self.assert_hitresults();
 
         let total_hits = self.total_hits() as f32;
-        let mut multiplier = 1.12;
+        let mut multiplier = 1.09;
 
         let effective_miss_count = self.calculate_effective_miss_count();
 
@@ -262,96 +262,78 @@ impl<'m> OsuPP<'m> {
         let acc_value = self.compute_accuracy_value(total_hits);
 
         let mut acc_depression = 1.0;
-        if self.mods.rx() {
-            multiplier *= 0.97;
 
-            let difficulty = self.attributes.as_ref().unwrap();
-            let streams_nerf = ((difficulty.aim_strain / difficulty.speed_strain) * 100.0).round() / 100.0;
+        let difficulty = self.attributes.as_ref().unwrap();
+        let streams_nerf =
+            ((difficulty.aim_strain / difficulty.speed_strain) * 100.0).round() / 100.0;
 
-            if streams_nerf < 1.09 {
-                let acc_factor = (1.0 - self.acc.unwrap()).abs();
-                acc_depression = (0.84 - acc_factor).max(0.5);
+        if streams_nerf < 1.09 {
+            let acc_factor = (1.0 - self.acc.unwrap()).abs();
+            acc_depression = (0.86 - acc_factor).max(0.5);
 
-                if acc_depression > 0.0 {
-                    aim_value *= acc_depression;
-                }
+            if acc_depression > 0.0 {
+                aim_value *= acc_depression;
             }
         }
 
-        let nodt_bonus = match !self.mods.change_speed() && self.mods.rx() {
-            true => 1.01,
+        let nodt_bonus = match !self.mods.change_speed() {
+            true => 1.02,
             false => 1.0,
         };
 
-        let speed_factor = match self.mods.rx() {
-            true => speed_value.powf(0.83 * acc_depression),
-            false => speed_value.powf(1.1),
-        };
+        let mut pp = (aim_value.powf(1.185 * nodt_bonus)
+            + speed_value.powf(0.83 * acc_depression)
+            + acc_value.powf(1.14 * nodt_bonus))
+        .powf(1.0 / 1.1)
+            * multiplier;
 
-        let aim_factor = match self.mods.rx() {
-            true => aim_value.powf(1.185 * nodt_bonus),
-            false => aim_value.powf(1.1),
-        };
-
-        let acc_factor = match self.mods.rx() {
-            true => acc_value.powf(1.14 * nodt_bonus),
-            false => acc_value.powf(1.1),
-        };
-
-        let mut pp = (aim_factor + speed_factor + acc_factor).powf(1.0 / 1.1) * multiplier;
-
-        if self.mods.rx() {
-            if self.mods.dt() && self.mods.hr() {
-                pp *= 1.025;
-            }
-
-            if self.map.creator == "ParkourWizard" {
-                pp *= 0.9;
-            }
-
-            pp *= match self.map.beatmap_id {
-                // Louder than steel [ok this is epic]
-                1808605 => 0.85,
-
-                // over the top [Above the stars]
-                1821147 => 0.70,
-
-                // Just press F [Parkour's ok this is epic]
-                1844776 => 0.64,
-
-                // Hardawre Store [skyapple mode]
-                1777768 => 0.90,
-
-                // HONESTY [RIGHTEOUSNESS OF MORALITY]
-                2079597 => 0.90,
-
-                // Akatsuki compilation [ok this is akatsuki]
-                1962833 => {
-                    pp *= 0.885;
-
-                    if self.mods.dt() {
-                        0.83
-                    } else {
-                        1.0
-                    }
-                }
-
-                // Songs Compilation [Marathon]
-                2403677 => 0.85,
-                
-                // Songs Compilation [Remembrance]
-                2174272 => 0.85,
-                
-                // Apocalypse 1992 [Universal Annihilation]
-                2382377 => 0.85,
-
-                _ => 1.0,
-            }
+        if self.mods.dt() && self.mods.hr() {
+            pp *= 1.025;
         }
+
+        if self.map.creator == "gwb" || self.map.creator == "Plasma" {
+            pp *= 0.85;
+        }
+
+        pp *= match self.map.beatmap_id {
+            // Louder than steel [ok this is epic]
+            1808605 => 0.85,
+
+            // over the top [Above the stars]
+            1821147 => 0.70,
+
+            // Just press F [Parkour's ok this is epic]
+            1844776 => 0.64,
+
+            // Hardware Store [skyapple mode]
+            1777768 => 0.90,
+
+            // Akatsuki compilation [ok this is akatsuki]
+            1962833 => {
+                pp *= 0.885;
+
+                if self.mods.dt() {
+                    0.83
+                } else {
+                    1.0
+                }
+            }
+
+            // Songs Compilation [Marathon]
+            2403677 => 0.85,
+
+            // Songs Compilation [Remembrance]
+            2174272 => 0.85,
+
+            // Apocalypse 1992 [Universal Annihilation]
+            2382377 => 0.85,
+
+            _ => 1.0,
+        };
 
         OsuPerformanceAttributes {
             difficulty: self.attributes.unwrap(),
-            pp_acc: acc_value as f64,
+            pp_acc: 0.0,
             pp_aim: aim_value as f64,
             pp_flashlight: 0.0,
             pp_speed: speed_value as f64,
@@ -373,8 +355,7 @@ impl<'m> OsuPP<'m> {
         let mut aim_value = (5.0 * (raw_aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
 
         // Longer maps are worth more
-        let bonus_factor = if self.mods.rx() { 0.88 } else { 0.95 };
-        let len_bonus = bonus_factor
+        let len_bonus = 0.88
             + 0.4 * (total_hits / 2000.0).min(1.0)
             + (total_hits > 2000.0) as u8 as f32 * 0.5 * (total_hits / 2000.0).log10();
         aim_value *= len_bonus;
@@ -400,35 +381,17 @@ impl<'m> OsuPP<'m> {
 
         // HD bonus
         if self.mods.hd() {
-            aim_value *= match self.mods.rx() {
-                true => 1.0 + 0.05 * (11.0 - attributes.ar) as f32,
-                false => 1.0 + 0.04 * (12.0 - attributes.ar) as f32,
-            }
+            aim_value *= 1.0 + 0.05 * (11.0 - attributes.ar) as f32;
         }
 
         // FL bonus
         if self.mods.fl() {
-            let first_factor = match self.mods.rx() {
-                true => 0.3,
-                false => 0.35,
-            };
-
-            let second_factor = match self.mods.rx() {
-                true => 0.25,
-                false => 0.3,
-            };
-
-            let third_factor = match self.mods.rx() {
-                true => 1600.0,
-                false => 1200.0,
-            };
-
             aim_value *= 1.0
-                + first_factor * (total_hits / 200.0).min(1.0)
+                + 0.3 * (total_hits / 200.0).min(1.0)
                 + (total_hits > 200.0) as u8 as f32
-                    * second_factor
+                    * 0.25
                     * ((total_hits - 200.0) / 300.0).min(1.0)
-                + (total_hits > 500.0) as u8 as f32 * (total_hits - 500.0) / third_factor;
+                + (total_hits > 500.0) as u8 as f32 * (total_hits - 500.0) / 1600.0;
         }
 
         // EZ bonus
@@ -443,8 +406,7 @@ impl<'m> OsuPP<'m> {
         }
 
         // Scale with accuracy
-        let acc_factor = if self.mods.rx() { 0.3 } else { 0.5 };
-        aim_value *= acc_factor + self.acc.unwrap() / 2.0;
+        aim_value *= 0.3 + self.acc.unwrap() / 2.0;
         aim_value *= 0.98 + attributes.od as f32 * attributes.od as f32 / 2500.0;
 
         aim_value
@@ -457,8 +419,7 @@ impl<'m> OsuPP<'m> {
             (5.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
 
         // Longer maps are worth more
-        let bonus_factor = if self.mods.rx() { 0.88 } else { 0.95 };
-        let len_bonus = bonus_factor
+        let len_bonus = 0.88
             + 0.4 * (total_hits / 2000.0).min(1.0)
             + (total_hits > 2000.0) as u8 as f32 * 0.5 * (total_hits / 2000.0).log10();
         speed_value *= len_bonus;
@@ -486,15 +447,11 @@ impl<'m> OsuPP<'m> {
 
         // HD bonus
         if self.mods.hd() {
-            speed_value *= match self.mods.rx() {
-                true => 1.0 + 0.05 * (11.0 - attributes.ar) as f32,
-                false => 1.0 + 0.04 * (12.0 - attributes.ar) as f32,
-            }
+            speed_value *= 1.0 + 0.05 * (11.0 - attributes.ar) as f32;
         }
 
         // Scaling the speed value with accuracy and OD
-        let acc_factor = if self.mods.rx() { 0.93 } else { 0.95 };
-        speed_value *= (acc_factor + attributes.od as f32 * attributes.od as f32 / 750.0)
+        speed_value *= (0.93 + attributes.od as f32 * attributes.od as f32 / 750.0)
             * self
                 .acc
                 .unwrap()
@@ -549,8 +506,9 @@ impl<'m> OsuPP<'m> {
     #[inline]
     fn calculate_miss_penalty(&self, effective_miss_count: f32) -> f32 {
         let total_hits = self.total_hits() as f32;
-        
-        0.97 * (1.0 - (effective_miss_count / total_hits).powf(0.5)).powf(1.0 + (effective_miss_count / 1.5))
+
+        0.97 * (1.0 - (effective_miss_count / total_hits).powf(0.5))
+            .powf(1.0 + (effective_miss_count / 1.5))
     }
 
     #[inline]
