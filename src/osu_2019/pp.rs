@@ -246,11 +246,6 @@ impl<'m> OsuPP<'m> {
 
         let effective_miss_count = self.calculate_effective_miss_count();
 
-        // NF penalty
-        if self.mods.nf() {
-            multiplier *= 0.9_f32.max(1.0 - 0.2 * effective_miss_count);
-        }
-
         // SO penalty
         if self.mods.so() {
             multiplier *=
