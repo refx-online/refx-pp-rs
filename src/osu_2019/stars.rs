@@ -28,6 +28,7 @@ pub fn stars(map: &Beatmap, mods: u32, passed_objects: Option<usize>) -> OsuDiff
     let mut diff_attributes = OsuDifficultyAttributes {
         ar: map_attributes.ar,
         od: map_attributes.od,
+        cs: map_attributes.cs,
         ..Default::default()
     };
 
@@ -39,8 +40,8 @@ pub fn stars(map: &Beatmap, mods: u32, passed_objects: Option<usize>) -> OsuDiff
     let radius = OBJECT_RADIUS * (1.0 - 0.7 * (map_attributes.cs as f32 - 5.0) / 5.0) / 2.0;
     let mut scaling_factor = NORMALIZED_RADIUS / radius;
 
-    if radius < 30.0 {
-        let small_circle_bonus = (30.0 - radius).min(5.0) / 50.0;
+    if radius < 30.05 {
+        let small_circle_bonus = ((30.05 - radius) / 50.0).powf(1.1) * 1.45;
         scaling_factor *= 1.0 + small_circle_bonus;
     }
 
@@ -148,6 +149,7 @@ pub struct OsuDifficultyAttributes {
     pub ar: f64,
     pub od: f64,
     pub hp: f64,
+    pub cs: f64,
     pub n_circles: usize,
     pub n_sliders: usize,
     pub n_spinners: usize,
