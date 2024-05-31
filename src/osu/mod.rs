@@ -186,7 +186,7 @@ impl<'map> OsuStars<'map> {
         attrs.stars = star_rating;
         attrs.speed_note_count = speed_notes;
         attrs.aim_difficult_strain_count = aim.count_difficult_strains();
-        attrs.speed = speed.count_difficult_strains();
+        attrs.speed_difficult_strain_count = speed.count_difficult_strains();
 
         attrs
     }
