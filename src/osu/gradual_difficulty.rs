@@ -10,7 +10,7 @@ use super::{
     old_stacking,
     osu_object::{ObjectParameters, OsuObject, OsuObjectKind},
     scaling_factor::ScalingFactor,
-    skills::{Skill, Skills},
+    skills::{OsuStrainSkill, Skills},
     stacking, OsuDifficultyAttributes, DIFFICULTY_MULTIPLIER, FADE_IN_DURATION_MULTIPLIER,
     PERFORMANCE_BASE_MULTIPLIER, PREEMPT_MIN,
 };
@@ -291,6 +291,8 @@ impl Iterator for OsuGradualDifficultyAttributes {
         attrs.slider_factor = slider_factor;
         attrs.stars = star_rating;
         attrs.speed_note_count = speed_notes;
+        attrs.aim_difficult_strain_count = aim.count_difficult_strains();
+        attrs.speed_difficult_strain_count = speed.count_difficult_strains();
 
         Some(attrs)
     }
