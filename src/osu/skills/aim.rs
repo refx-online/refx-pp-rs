@@ -12,6 +12,7 @@ pub(crate) struct Aim {
     pub(crate) strain_peaks: Vec<f64>,
     with_sliders: bool,
     object_strains: Vec<f64>,
+    difficulty: f64,
 }
 
 impl Aim {
@@ -26,6 +27,7 @@ impl Aim {
             strain_peaks: Vec::new(),
             with_sliders,
             object_strains: Vec::new(),
+            difficulty: 0.0,
         }
     }
 
@@ -100,6 +102,14 @@ impl StrainSkill for Aim {
 impl OsuStrainSkill for Aim {
     fn strains(&self) -> &Vec<f64> {
         &self.object_strains
+    }
+
+    fn set_raw_difficulty_value(&mut self, value: f64) {
+        self.difficulty = value;
+    }
+
+    fn get_raw_difficulty_value(&self) -> f64 {
+        self.difficulty
     }
 }
 

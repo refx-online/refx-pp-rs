@@ -123,13 +123,17 @@ pub(crate) trait OsuStrainSkill: StrainSkill + Sized {
             weight *= Self::DECAY_WEIGHT;
         }
 
+        self.set_raw_difficulty_value(difficulty);
         difficulty * Self::DIFFICULTY_MULTIPLER
     }
 
     fn strains(&self) -> &Vec<f64>;
 
+    fn set_raw_difficulty_value(&mut self, value: f64);
+    fn get_raw_difficulty_value(&self) -> f64;
+
     fn count_difficult_strains(&mut self) -> f64 {
-        let difficulty_value = OsuStrainSkill::difficulty_value(self);
+        let difficulty_value = self.get_raw_difficulty_value();
         if difficulty_value == 0.0 {
             0.0
         } else {
