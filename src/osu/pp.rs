@@ -470,15 +470,12 @@ impl OsuPpInner {
 
         aim_value *= len_bonus;
 
-        // * Penalize misses by assessing # of misses relative to the total # of objects.
-        // * Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
-            aim_value *= 0.97
-                * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
-                    .powf(self.effective_miss_count);
+            aim_value *= calculate_miss_penalty(
+                self.effective_miss_count,
+                self.attrs.aim_difficult_strain_count,
+            );
         }
-
-        aim_value *= self.get_combo_scaling_factor();
 
         let ar_factor = if self.mods.rx() {
             0.0
@@ -536,15 +533,12 @@ impl OsuPpInner {
 
         speed_value *= len_bonus;
 
-        // * Penalize misses by assessing # of misses relative to the total # of objects.
-        // * Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
-            speed_value *= 0.97
-                * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
-                    .powf(self.effective_miss_count.powf(0.875));
+            speed_value *= calculate_miss_penalty(
+                self.effective_miss_count,
+                self.attrs.speed_difficult_strain_count,
+            );
         }
-
-        speed_value *= self.get_combo_scaling_factor();
 
         let ar_factor = if self.mods.ap() {
             0.0
@@ -699,6 +693,10 @@ fn calculate_effective_misses(attrs: &OsuDifficultyAttributes, state: &OsuScoreS
         combo_based_miss_count.min((state.n100 + state.n50 + state.n_misses) as f64);
 
     combo_based_miss_count.max(state.n_misses as f64)
+}
+
+fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
+    0.96 / ((miss_count / (4.0 * difficult_strain_count.ln().powf(0.94))) + 1.0)
 }
 
 /// Abstract type to provide flexibility when passing difficulty attributes to a performance calculation.

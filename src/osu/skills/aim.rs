@@ -11,6 +11,7 @@ pub(crate) struct Aim {
     curr_section_end: f64,
     pub(crate) strain_peaks: Vec<f64>,
     with_sliders: bool,
+    object_strains: Vec<f64>,
 }
 
 impl Aim {
@@ -24,6 +25,7 @@ impl Aim {
             curr_section_end: 0.0,
             strain_peaks: Vec::new(),
             with_sliders,
+            object_strains: Vec::new(),
         }
     }
 
@@ -74,6 +76,8 @@ impl StrainSkill for Aim {
         self.curr_strain += AimEvaluator::evaluate_diff_of(curr, diff_objects, self.with_sliders)
             * Self::SKILL_MULTIPLIER;
 
+        self.object_strains.push(self.curr_strain);
+
         self.curr_strain
     }
 
@@ -93,7 +97,11 @@ impl StrainSkill for Aim {
     }
 }
 
-impl OsuStrainSkill for Aim {}
+impl OsuStrainSkill for Aim {
+    fn strains(&self) -> &Vec<f64> {
+        &self.object_strains
+    }
+}
 
 struct AimEvaluator;
 

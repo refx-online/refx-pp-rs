@@ -108,7 +108,13 @@ impl StrainSkill for Flashlight {
     }
 }
 
-impl OsuStrainSkill for Flashlight {}
+const HOLDING_VEC: &Vec<f64> = &vec![];
+
+impl OsuStrainSkill for Flashlight {
+    fn strains(&self) -> &Vec<f64> {
+        HOLDING_VEC
+    }
+}
 
 struct FlashlightEvaluator;
 

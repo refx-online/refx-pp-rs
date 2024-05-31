@@ -6,13 +6,15 @@ mod pp;
 mod scaling_factor;
 mod skills;
 
+use skills::OsuStrainSkill;
+
 use crate::{curve::CurveBuffers, parse::Pos2, AnyStars, Beatmap, GameMode, Mods};
 
 use self::{
     difficulty_object::{Distances, OsuDifficultyObject},
     osu_object::{ObjectParameters, OsuObject},
     scaling_factor::ScalingFactor,
-    skills::{Skill, Skills},
+    skills::Skills,
 };
 
 pub use self::{gradual_difficulty::*, gradual_performance::*, pp::*};
@@ -183,6 +185,8 @@ impl<'map> OsuStars<'map> {
         attrs.slider_factor = slider_factor;
         attrs.stars = star_rating;
         attrs.speed_note_count = speed_notes;
+        attrs.aim_difficult_strain_count = aim.count_difficult_strains();
+        attrs.speed = speed.count_difficult_strains();
 
         attrs
     }
@@ -513,6 +517,10 @@ pub struct OsuDifficultyAttributes {
     pub flashlight: f64,
     /// The ratio of the aim strain with and without considering sliders
     pub slider_factor: f64,
+    /// The number of difficult aim strains.
+    pub aim_difficult_strain_count: f64,
+    /// The number of difficult speed strains.
+    pub speed_difficult_strain_count: f64,
     /// The number of clickable objects weighted by difficulty.
     pub speed_note_count: f64,
     /// The approach rate.

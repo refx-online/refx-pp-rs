@@ -125,4 +125,24 @@ pub(crate) trait OsuStrainSkill: StrainSkill + Sized {
 
         difficulty * Self::DIFFICULTY_MULTIPLER
     }
+
+    fn strains(&self) -> &Vec<f64>;
+
+    fn count_difficult_strains(&mut self) -> f64 {
+        let difficulty_value = OsuStrainSkill::difficulty_value(self);
+        if difficulty_value == 0.0 {
+            0.0
+        } else {
+            // * What would the top strain be if all strain values were identical
+            let consistent_top_strain = difficulty_value / 10.0;
+
+            let strains = self.strains();
+
+            // Use a weighted sum of all strains. Constants are arbitrary and give nice values
+            strains
+                .iter()
+                .map(|&s| 1.1 / (1.0 + (-10.0 * (s / consistent_top_strain - 0.88)).exp()))
+                .sum()
+        }
+    }
 }

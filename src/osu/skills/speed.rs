@@ -121,6 +121,10 @@ impl StrainSkill for Speed {
 impl OsuStrainSkill for Speed {
     const REDUCED_SECTION_COUNT: usize = 5;
     const DIFFICULTY_MULTIPLER: f64 = 1.04;
+
+    fn strains(&self) -> &Vec<f64> {
+        &self.object_strains
+    }
 }
 
 struct SpeedEvaluator;
