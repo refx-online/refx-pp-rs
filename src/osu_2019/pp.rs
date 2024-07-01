@@ -252,79 +252,26 @@ impl<'m> OsuPP<'m> {
                 1.0 - (self.attributes.as_ref().unwrap().n_spinners as f32 / total_hits).powf(0.85);
         }
 
-        let mut aim_value = self.compute_aim_value(total_hits, effective_miss_count);
+        let aim_value = self.compute_aim_value(total_hits, effective_miss_count);
         let speed_value = self.compute_speed_value(total_hits, effective_miss_count);
         let acc_value = self.compute_accuracy_value(total_hits);
 
-        let mut acc_depression = 1.0;
-
-        let difficulty = self.attributes.as_ref().unwrap();
-        let streams_nerf =
-            ((difficulty.aim_strain / difficulty.speed_strain) * 100.0).round() / 100.0;
-
-        if streams_nerf < 1.09 {
-            let acc_factor = (1.0 - self.acc.unwrap()).abs();
-            acc_depression = (0.86 - acc_factor).max(0.5);
-
-            if acc_depression > 0.0 {
-                aim_value *= acc_depression;
-            }
-        }
+        let acc_depression = 1.0;
 
         let nodt_bonus = match !self.mods.change_speed() {
             true => 1.02,
             false => 1.0,
         };
 
-        let mut pp = (aim_value.powf(1.185 * nodt_bonus)
-            + speed_value.powf(0.83 * acc_depression)
-            + acc_value.powf(1.14 * nodt_bonus))
+        let mut pp = (aim_value.powf(1.385 * nodt_bonus)
+            + speed_value.powf(0.91 * acc_depression)
+            + acc_value.powf(1.24 * nodt_bonus))
         .powf(1.0 / 1.1)
             * multiplier;
 
         if self.mods.dt() && self.mods.hr() {
-            pp *= 1.025;
+            pp *= 1.145;
         }
-
-        if self.map.creator == "gwb" || self.map.creator == "Plasma" {
-            pp *= 0.9;
-        }
-
-        pp *= match self.map.beatmap_id {
-            // Louder than steel [ok this is epic]
-            1808605 => 0.85,
-
-            // over the top [Above the stars]
-            1821147 => 0.70,
-
-            // Just press F [Parkour's ok this is epic]
-            1844776 => 0.64,
-
-            // Hardware Store [skyapple mode]
-            1777768 => 0.90,
-
-            // Akatsuki compilation [ok this is akatsuki]
-            1962833 => {
-                pp *= 0.885;
-
-                if self.mods.dt() {
-                    0.83
-                } else {
-                    1.0
-                }
-            }
-
-            // Songs Compilation [Marathon]
-            2403677 => 0.85,
-
-            // Songs Compilation [Remembrance]
-            2174272 => 0.85,
-
-            // Apocalypse 1992 [Universal Annihilation]
-            2382377 => 0.85,
-
-            _ => 1.0,
-        };
 
         OsuPerformanceAttributes {
             difficulty: self.attributes.unwrap(),
