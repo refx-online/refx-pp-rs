@@ -347,9 +347,9 @@ impl<'m> OsuPP<'m> {
             aim_value *= base_buff;
         }
 
-        // Precision buff (reading)
-        if attributes.cs > 5.58 {
-            aim_value *= ((attributes.cs as f32 - 5.46).powf(1.8) + 1.0).powf(0.03);
+        // nerf high cs since ac actually powerful on high cs map
+        if attributes.cs > 5 {
+            aim_value *= ((attributes.cs as f32 - 5.50).powf(1.2) + 0.2).powf(0.02);
         }
 
         // Scale with accuracy
