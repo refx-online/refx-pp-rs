@@ -4,6 +4,7 @@ use crate::osu::{difficulty_object::OsuDifficultyObject, SECTION_LEN};
 
 pub(crate) trait Skill {
     fn process(&mut self, curr: &OsuDifficultyObject<'_>, diff_objects: &[OsuDifficultyObject<'_>]);
+    #[allow(dead_code)]
     fn difficulty_value(&mut self) -> f64;
 }
 
@@ -73,6 +74,7 @@ pub(crate) trait StrainSkill: Skill + Sized {
         *self.curr_section_peak() = self.calculate_initial_strain(time, curr, diff_objects);
     }
 
+    #[allow(dead_code)]
     fn difficulty_value(&mut self) -> f64;
 
     #[inline]
