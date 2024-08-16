@@ -373,6 +373,7 @@ impl<'map> OsuPP<'map> {
             acc: state.accuracy(),
             state,
             effective_miss_count,
+            map: self.map.clone()
         };
 
         inner.calculate()
@@ -385,6 +386,7 @@ struct OsuPpInner {
     acc: f64,
     state: OsuScoreState,
     effective_miss_count: f64,
+    map: Beatmap,
 }
 
 impl OsuPpInner {
@@ -437,12 +439,31 @@ impl OsuPpInner {
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
 
-        let pp = (aim_value.powf(1.1)
+        let mut pp = (aim_value.powf(1.1)
             + speed_value.powf(1.1)
             + acc_value.powf(1.1)
             + flashlight_value.powf(1.1))
         .powf(1.0 / 1.1)
             * multiplier;
+
+        pp *= match self.map.beatmap_id {
+            // Glass Phantoms [Visage Effigy]
+            4127115 => 0.713,
+                
+            // Sidetracked Days [Atomic Dimension]
+            4641389 => 0.6792,
+    
+            // Chronostasis [A Brilliant Petal Frozen in an Everlasting Moment]
+            2874408 => 0.706,
+    
+            // Tenbin no ue de [Last Fate]
+            4480795 => 0.853,
+    
+            // sweet pie with raisins / REGGAETON BUT IT HAS AMEN BREAKS [tula improved]
+            2901666 => 0.81,
+                
+            _ => 1.0,
+        };
 
         OsuPerformanceAttributes {
             difficulty: self.attrs,
@@ -555,7 +576,7 @@ impl OsuPpInner {
         };
         
         speed_value *= 1.0 + ar_factor * len_bonus;
-        
+
         if self.mods.hd() {
             speed_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
         }

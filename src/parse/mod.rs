@@ -869,7 +869,7 @@ mod slider_parsing {
         let mut start_idx = 0;
         let mut end_idx = 0;
 
-        #[allow(clippy::blocks_in_if_conditions)]
+        #[allow(clippy::blocks_in_conditions)]
         while {
             end_idx += 1;
 

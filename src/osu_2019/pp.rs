@@ -272,6 +272,25 @@ impl<'m> OsuPP<'m> {
         if self.mods.dt() && self.mods.hr() {
             pp *= 1.145;
         }
+        
+        pp *= match self.map.beatmap_id {
+            // Glass Phantoms [Visage Effigy]
+            4127115 => 0.7,
+            
+            // Sidetracked Days [Atomic Dimension]
+            4641389 => 0.67,
+
+            // Chronostasis [A Brilliant Petal Frozen in an Everlasting Moment]
+            2874408 => 0.7,
+
+            // Tenbin no ue de [Last Fate]
+            4480795 => 0.85,
+
+            // sweet pie with raisins / REGGAETON BUT IT HAS AMEN BREAKS [tula improved]
+            2901666 => 0.8,
+            
+            _ => 1.0,
+        };
 
         OsuPerformanceAttributes {
             difficulty: self.attributes.unwrap(),
