@@ -348,8 +348,8 @@ impl<'m> OsuPP<'m> {
         }
 
         // nerf high cs since ac actually powerful on high cs map
-        if attributes.cs > 5 {
-            aim_value *= 0.7;
+        if attributes.cs > 5.0 {
+            aim_value *= 0.6;
         }
 
         // Scale with accuracy

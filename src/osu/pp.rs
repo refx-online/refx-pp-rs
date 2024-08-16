@@ -510,6 +510,10 @@ impl OsuPpInner {
             aim_value *= slider_nerf_factor;
         }
 
+        if self.attrs.cs > 5.0 {
+            aim_value *= 0.6;
+        }
+
         aim_value *= self.acc;
         // * It is important to consider accuracy difficulty when scaling with accuracy.
         aim_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
@@ -519,73 +523,61 @@ impl OsuPpInner {
 
     fn compute_speed_value(&self) -> f64 {
         if self.mods.rx() {
+            return 0.3;
+        }
+
+        if self.mods.ap() {
             return 0.0;
         }
 
         let mut speed_value =
-            (5.0 * (self.attrs.speed / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
-
+            (4.0 * (self.attrs.speed / 0.075).max(1.0) - 3.0).powi(3) / 120_000.0;
+    
         let total_hits = self.total_hits();
-
-        let len_bonus = 0.95
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.5;
-
+    
+        let len_bonus = 0.9
+            + 0.3 * (total_hits / 2000.0).min(1.0)
+            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.4;
+    
         speed_value *= len_bonus;
-
+    
         if self.effective_miss_count > 0.0 {
             speed_value *= calculate_miss_penalty(
                 self.effective_miss_count,
                 self.attrs.speed_difficult_strain_count,
             );
         }
-
-        let ar_factor = if self.mods.ap() {
-            0.0
-        } else if self.attrs.ar > 10.33 {
-            0.3 * (self.attrs.ar - 10.33)
-        } else {
-            0.0
-        };
-
-        // * Buff for longer maps with high AR.
-        speed_value *= 1.0 + ar_factor * len_bonus;
-
+    
         if self.mods.hd() {
-            // * We want to give more reward for lower AR when it comes to aim and HD.
-            // * This nerfs high AR and buffs lower AR.
-            speed_value *= 1.0 + 0.04 * (12.0 - self.attrs.ar);
+            speed_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
         }
-
-        // * Calculate accuracy assuming the worst case scenario
+    
         let relevant_total_diff = total_hits - self.attrs.speed_note_count;
         let relevant_n300 = (self.state.n300 as f64 - relevant_total_diff).max(0.0);
         let relevant_n100 = (self.state.n100 as f64
             - (relevant_total_diff - self.state.n300 as f64).max(0.0))
-        .max(0.0);
+            .max(0.0);
         let relevant_n50 = (self.state.n50 as f64
             - (relevant_total_diff - (self.state.n300 + self.state.n100) as f64).max(0.0))
-        .max(0.0);
-
+            .max(0.0);
+    
         let relevant_acc = if self.attrs.speed_note_count.abs() <= f64::EPSILON {
             0.0
         } else {
             (relevant_n300 * 6.0 + relevant_n100 * 2.0 + relevant_n50)
                 / (self.attrs.speed_note_count * 6.0)
         };
-
-        // * Scale the speed value with accuracy and OD.
-        speed_value *= (0.95 + self.attrs.od * self.attrs.od / 750.0)
-            * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
-
-        // * Scale the speed value with # of 50s to punish doubletapping.
-        speed_value *= 0.99_f64.powf(
+    
+        speed_value *= (0.85 + self.attrs.od * self.attrs.od / 1250.0)
+            * ((self.acc + relevant_acc) / 2.0).powf((12.0 - (self.attrs.od).max(8.0)) / 3.5);
+    
+        speed_value *= 0.98_f64.powf(
             (self.state.n50 as f64 >= total_hits / 500.0) as u8 as f64
                 * (self.state.n50 as f64 - total_hits / 500.0),
         );
-
+    
         speed_value
-    }
+    }    
 
     fn compute_accuracy_value(&self) -> f64 {
         if self.mods.rx() {
@@ -659,7 +651,6 @@ impl OsuPpInner {
 
         flashlight_value
     }
-
 
     fn total_hits(&self) -> f64 {
         self.state.total_hits() as f64
