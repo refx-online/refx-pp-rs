@@ -1,11 +1,11 @@
 [package]
-name = "akatsuki-pp"
-version = "1.0.1"
-authors = ["MaxOhn <ohn.m@hotmail.de>", "tsunyoku <tsunyoku@gmail.com>"]
+name = "refx-pp"
+version = "0.0.2"
+authors = ["MaxOhn <ohn.m@hotmail.de>", "tsunyoku <tsunyoku@gmail.com>", "ldci4 <anoletenu@gmail.com>"]
 edition = "2018"
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/osuAkatsuki/akatsuki-pp"
+repository = "https://github.com/ldci4/refx-pp-rs"
 description = "osu! difficulty and pp calculation for all modes"
 keywords = ["osu", "pp", "stars", "async"]
 
