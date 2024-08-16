@@ -275,20 +275,20 @@ impl<'m> OsuPP<'m> {
         
         pp *= match self.map.beatmap_id {
             // Glass Phantoms [Visage Effigy]
-            4127115 => 0.7,
+            4127115 => 0.72,
             
             // Sidetracked Days [Atomic Dimension]
-            4641389 => 0.67,
+            4641389 => 0.6,
 
             // Chronostasis [A Brilliant Petal Frozen in an Everlasting Moment]
-            2874408 => 0.7,
+            2874408 => 0.71,
 
             // Tenbin no ue de [Last Fate]
-            4480795 => 0.85,
+            4480795 => 0.82,
 
             // sweet pie with raisins / REGGAETON BUT IT HAS AMEN BREAKS [tula improved]
-            2901666 => 0.8,
-            
+            2901666 => 0.792,
+
             _ => 1.0,
         };
 
