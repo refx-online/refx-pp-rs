@@ -547,7 +547,15 @@ impl OsuPpInner {
                 self.attrs.speed_difficult_strain_count,
             );
         }
-    
+        
+        let ar_factor = if self.attrs.ar > 10.33 {
+            0.25 * (self.attrs.ar - 10.33)
+        } else {
+            0.0
+        };
+        
+        speed_value *= 1.0 + ar_factor * len_bonus;
+        
         if self.mods.hd() {
             speed_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
         }
