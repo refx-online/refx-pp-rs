@@ -493,13 +493,13 @@ impl OsuPpInner {
             return 0.0;
         }
     
-        let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 80_000.0;
+        let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 50_000.0; // what
     
         let total_hits = self.total_hits();
     
-        let len_bonus = 1.0
-            + 0.5 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.6;
+        let len_bonus = 1.1
+            + 0.6 * (total_hits / 2000.0).min(1.0)
+            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.7;
     
         aim_value *= len_bonus;
     
@@ -513,23 +513,20 @@ impl OsuPpInner {
         let ar_factor = if self.mods.rx() {
             0.0
         } else if self.attrs.ar > 10.33 {
-            0.35 * (self.attrs.ar - 10.33)
+            0.4 * (self.attrs.ar - 10.33)
         } else if self.attrs.ar < 8.0 {
-            0.06 * (8.0 - self.attrs.ar)
+            0.1 * (8.0 - self.attrs.ar)
         } else {
             0.0
         };
-
-        // * Buff for longer maps with high AR.
-        aim_value *= 1.0 + ar_factor * len_bonus;
+    
+        aim_value *= 1.2 + ar_factor * len_bonus;
     
         if self.mods.hd() {
-            // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
-            aim_value *= 1.0 + 0.05 * (12.0 - self.attrs.ar);
+            aim_value *= 1.1 + 0.06 * (12.0 - self.attrs.ar);
         }
-
-        // * We assume 15% of sliders in a map are difficult since there's no way to tell from the performance calculator.
-        let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.2;
+    
+        let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.3;
     
         if self.attrs.n_sliders > 0 {
             let estimate_slider_ends_dropped =
@@ -543,20 +540,19 @@ impl OsuPpInner {
             aim_value *= slider_nerf_factor;
         }
     
-        if self.attrs.cs > 5.0 {
-            aim_value *= 0.6;
+        if self.attrs.cs > 5.5 {
+            aim_value *= 0.432;
         }
     
         aim_value *= self.acc;
-        // * It is important to consider accuracy difficulty when scaling with accuracy.
-        aim_value *= 1.02 + self.attrs.od * self.attrs.od / 2400.0;
+        aim_value *= 1.1 + self.attrs.od * self.attrs.od / 2000.0;
     
         aim_value
     }    
 
     fn compute_speed_value(&self) -> f64 {
         if self.mods.rx() {
-            return 0.3;
+            return 0.0;
         }
 
         if self.mods.ap() {
@@ -698,23 +694,9 @@ impl OsuPpInner {
     }
 }
 
-fn calculate_effective_misses(attrs: &OsuDifficultyAttributes, state: &OsuScoreState) -> f64 {
-    // * Guess the number of misses + slider breaks from combo
-    let mut combo_based_miss_count = 0.0;
-
-    if attrs.n_sliders > 0 {
-        let full_combo_threshold = attrs.max_combo as f64 - 0.1 * attrs.n_sliders as f64;
-
-        if (state.max_combo as f64) < full_combo_threshold {
-            combo_based_miss_count = full_combo_threshold / (state.max_combo as f64).max(1.0);
-        }
-    }
-
-    // * Clamp miss count to maximum amount of possible breaks
-    combo_based_miss_count =
-        combo_based_miss_count.min((state.n100 + state.n50 + state.n_misses) as f64);
-
-    combo_based_miss_count.max(state.n_misses as f64)
+fn calculate_effective_misses(_attrs: &OsuDifficultyAttributes, state: &OsuScoreState) -> f64 {
+    // lets try this
+    state.n_misses as f64
 }
 
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
