@@ -242,41 +242,49 @@ impl<'m> OsuPP<'m> {
         self.assert_hitresults();
 
         let total_hits = self.total_hits() as f32;
-        let mut multiplier = 1.09;
+        let multiplier = 1.09;
 
         let effective_miss_count = self.calculate_effective_miss_count();
 
-        // SO penalty
-        if self.mods.so() {
-            multiplier *=
-                1.0 - (self.attributes.as_ref().unwrap().n_spinners as f32 / total_hits).powf(0.85);
-        }
 
-        let aim_value = self.compute_aim_value(total_hits, effective_miss_count);
+        let mut aim_value = self.compute_aim_value(total_hits, effective_miss_count);
         let speed_value = self.compute_speed_value(total_hits, effective_miss_count);
         let acc_value = self.compute_accuracy_value(total_hits);
 
-        let acc_depression = 1.0;
+        let mut acc_depression = 1.0;
+
+        let difficulty = self.attributes.as_ref().unwrap();
+        let streams_nerf =
+            ((difficulty.aim_strain / difficulty.speed_strain) * 100.0).round() / 100.0;
+
+        if streams_nerf < 1.09 {
+            let acc_factor = (1.0 - self.acc.unwrap()).abs();
+            acc_depression = (0.86 - acc_factor).max(0.5);
+
+            if acc_depression > 0.0 {
+                aim_value *= acc_depression;
+            }
+        }
 
         let nodt_bonus = match !self.mods.change_speed() {
             true => 1.02,
             false => 1.0,
         };
 
-        let mut pp = (aim_value.powf(1.385 * nodt_bonus)
-            + speed_value.powf(0.91 * acc_depression)
-            + acc_value.powf(1.24 * nodt_bonus))
+        let mut pp = (aim_value.powf(1.185 * nodt_bonus)
+            + speed_value.powf(0.83 * acc_depression)
+            + acc_value.powf(1.14 * nodt_bonus))
         .powf(1.0 / 1.1)
             * multiplier;
 
         if self.mods.dt() && self.mods.hr() {
-            pp *= 1.145;
+            pp *= 1.025;
         }
-        
+
         pp *= match self.map.beatmap_id {
             // Glass Phantoms [Visage Effigy]
             4127115 => 0.72,
-            
+
             // Sidetracked Days [Atomic Dimension]
             4641389 => 0.6,
 
@@ -366,9 +374,9 @@ impl<'m> OsuPP<'m> {
             aim_value *= base_buff;
         }
 
-        // nerf high cs since ac actually powerful on high cs map
-        if attributes.cs > 5.0 {
-            aim_value *= 0.6;
+        // Precision buff (reading)
+        if attributes.cs > 5.58 {
+            aim_value *= ((attributes.cs as f32 - 5.46).powf(1.8) + 1.0).powf(0.03);
         }
 
         // Scale with accuracy
