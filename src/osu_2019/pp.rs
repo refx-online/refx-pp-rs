@@ -285,6 +285,11 @@ impl<'m> OsuPP<'m> {
             pp *= 0.95;
         }
 
+        if self.attrs.cs > 5.5 {
+            let cs_factor = 0.7 - 0.1 * (self.attrs.cs - 5.5);
+            pp *= cs_factor.max(0.4);
+        }
+
         pp *= match self.map.title.as_str() {
 
             "sidetracked" => 0.6,
@@ -392,11 +397,6 @@ impl<'m> OsuPP<'m> {
             }
 
             aim_value *= base_buff;
-        }
-
-        // Precision buff (reading)
-        if attributes.cs > 5.0 {
-            aim_value *= 0.6;
         }
 
         // Scale with accuracy
