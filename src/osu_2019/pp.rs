@@ -285,8 +285,8 @@ impl<'m> OsuPP<'m> {
             pp *= 0.95;
         }
 
-        if self.attrs.cs > 5.5 {
-            let cs_factor = 0.7 - 0.1 * (self.attrs.cs - 5.5);
+        if self.map.cs > 5.5 {
+            let cs_factor = 0.7 - 0.1 * (self.map.cs - 5.5);
             pp *= cs_factor.max(0.4);
         }
 
