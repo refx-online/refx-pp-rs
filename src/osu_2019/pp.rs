@@ -281,12 +281,32 @@ impl<'m> OsuPP<'m> {
             pp *= 1.025;
         }
 
+        if self.map.creator == "quantumvortex" || self.map.creator == "LaurKappita"{
+            pp *= 0.95;
+        }
+
+        pp *= match self.map.title.as_str() {
+
+            "sidetracked" => 0.6,
+
+            "Mario Paint (Time Regression Mix For BMS)" => 0.4,
+
+            "fiancailles" => {
+                pp *= 0.72;
+
+                // this shit gave too much pp
+                if self.mods.hr() {
+                    0.4
+                } else {
+                    1.0
+                }
+            }
+            _ => 1.0,
+        };
+
         pp *= match self.map.beatmap_id {
             // Glass Phantoms [Visage Effigy]
             4127115 => 0.72,
-
-            // Sidetracked Days [Atomic Dimension]
-            4641389 => 0.6,
 
             // Chronostasis [A Brilliant Petal Frozen in an Everlasting Moment]
             2874408 => 0.71,
@@ -375,8 +395,8 @@ impl<'m> OsuPP<'m> {
         }
 
         // Precision buff (reading)
-        if attributes.cs > 5.58 {
-            aim_value *= ((attributes.cs as f32 - 5.46).powf(1.8) + 1.0).powf(0.03);
+        if attributes.cs > 5.0 {
+            aim_value *= 0.6;
         }
 
         // Scale with accuracy

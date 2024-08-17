@@ -70,6 +70,9 @@ pub struct Beatmap {
 
     /// The beatmap ID of the map
     pub beatmap_id: u32,
+
+    /// The Title of the beatmapset
+    pub title: String,
 }
 
 impl Beatmap {
@@ -172,6 +175,7 @@ impl Beatmap {
             breaks: self.breaks.clone(),
             creator: self.creator.clone(),
             beatmap_id: self.beatmap_id,
+            title: self.title.clone(),
         }
     }
 }

@@ -446,12 +446,24 @@ impl OsuPpInner {
         .powf(1.0 / 1.1)
             * multiplier;
 
+        if self.map.creator == "quantumvortex" || self.map.creator == "LaurKappita"{
+            pp *= 0.95;
+        }
+
+        pp *= match self.map.title.as_str() {
+
+            "sidetracked" => 0.6,
+    
+            "Mario Paint (Time Regression Mix For BMS)" => 0.4,
+    
+            "fiancailles" => 0.64,
+    
+            _ => 1.0,
+        };
+
         pp *= match self.map.beatmap_id {
             // Glass Phantoms [Visage Effigy]
             4127115 => 0.713,
-                
-            // Sidetracked Days [Atomic Dimension]
-            4641389 => 0.6792,
     
             // Chronostasis [A Brilliant Petal Frozen in an Everlasting Moment]
             2874408 => 0.706,
@@ -480,67 +492,67 @@ impl OsuPpInner {
         if self.mods.ap() {
             return 0.0;
         }
-
-        let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
-
+    
+        let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 80_000.0;
+    
         let total_hits = self.total_hits();
-
-        let len_bonus = 0.95
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.5;
-
+    
+        let len_bonus = 1.0
+            + 0.5 * (total_hits / 2000.0).min(1.0)
+            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.6;
+    
         aim_value *= len_bonus;
-
+    
         if self.effective_miss_count > 0.0 {
             aim_value *= calculate_miss_penalty(
                 self.effective_miss_count,
                 self.attrs.aim_difficult_strain_count,
             );
         }
-
+    
         let ar_factor = if self.mods.rx() {
             0.0
         } else if self.attrs.ar > 10.33 {
-            0.3 * (self.attrs.ar - 10.33)
+            0.35 * (self.attrs.ar - 10.33)
         } else if self.attrs.ar < 8.0 {
-            0.05 * (8.0 - self.attrs.ar)
+            0.06 * (8.0 - self.attrs.ar)
         } else {
             0.0
         };
 
         // * Buff for longer maps with high AR.
         aim_value *= 1.0 + ar_factor * len_bonus;
-
+    
         if self.mods.hd() {
             // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
-            aim_value *= 1.0 + 0.04 * (12.0 - self.attrs.ar);
+            aim_value *= 1.0 + 0.05 * (12.0 - self.attrs.ar);
         }
 
         // * We assume 15% of sliders in a map are difficult since there's no way to tell from the performance calculator.
-        let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.15;
-
+        let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.2;
+    
         if self.attrs.n_sliders > 0 {
             let estimate_slider_ends_dropped =
                 ((self.state.n100 + self.state.n50 + self.state.n_misses)
                     .min(self.attrs.max_combo - self.state.max_combo) as f64)
                     .clamp(0.0, estimate_diff_sliders);
             let slider_nerf_factor = (1.0 - self.attrs.slider_factor)
-                * (1.0 - estimate_slider_ends_dropped / estimate_diff_sliders).powi(3)
+                * (1.0 - estimate_slider_ends_dropped / estimate_diff_sliders).powi(2)
                 + self.attrs.slider_factor;
-
+    
             aim_value *= slider_nerf_factor;
         }
-
+    
         if self.attrs.cs > 5.0 {
             aim_value *= 0.6;
         }
-
+    
         aim_value *= self.acc;
         // * It is important to consider accuracy difficulty when scaling with accuracy.
-        aim_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
-
+        aim_value *= 1.02 + self.attrs.od * self.attrs.od / 2400.0;
+    
         aim_value
-    }
+    }    
 
     fn compute_speed_value(&self) -> f64 {
         if self.mods.rx() {
