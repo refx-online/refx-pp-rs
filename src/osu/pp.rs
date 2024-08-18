@@ -451,8 +451,7 @@ impl OsuPpInner {
         }
 
         if self.attrs.cs > 5.5 {
-            let cs_factor = 0.7 - 0.1 * (self.attrs.cs - 5.5);
-            pp *= cs_factor.max(0.4);
+            pp *= 0.532;
         }
 
         pp *= match self.map.title.as_str() {
