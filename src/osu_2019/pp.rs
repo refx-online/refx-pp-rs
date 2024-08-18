@@ -271,14 +271,14 @@ impl<'m> OsuPP<'m> {
             false => 1.0,
         };
 
-        let mut pp = (aim_value.powf(1.185 * nodt_bonus)
-            + speed_value.powf(0.83 * acc_depression)
-            + acc_value.powf(1.14 * nodt_bonus))
+        let mut pp = (aim_value.powf(1.385 * nodt_bonus)
+            + speed_value.powf(0.91 * acc_depression)
+            + acc_value.powf(1.24 * nodt_bonus))
         .powf(1.0 / 1.1)
             * multiplier;
 
         if self.mods.dt() && self.mods.hr() {
-            pp *= 1.025;
+            pp *= 1.145;
         }
 
         if self.map.creator == "quantumvortex" || self.map.creator == "LaurKappita"{
@@ -287,18 +287,16 @@ impl<'m> OsuPP<'m> {
 
         pp *= match self.map.title.as_str() {
 
-            "sidetracked" => 0.6,
-
-            "Mario Paint (Time Regression Mix For BMS)" => 0.4,
-
             "fiancailles" => 0.5,
+            
+            "jump pack" => 0.8,
 
             _ => 1.0,
         };
 
         pp *= match self.map.beatmap_id {
-            // Glass Phantoms [Visage Effigy]
-            4127115 => 0.72,
+            // Keikan no Senritsu (Cut Ver.) [Thorn Crown]
+            4268996 => 0.7132,
 
             // Chronostasis [A Brilliant Petal Frozen in an Everlasting Moment]
             2874408 => 0.71,

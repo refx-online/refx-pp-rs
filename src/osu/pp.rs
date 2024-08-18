@@ -694,9 +694,18 @@ impl OsuPpInner {
     }
 }
 
-fn calculate_effective_misses(_attrs: &OsuDifficultyAttributes, state: &OsuScoreState) -> f64 {
-    // lets try this
-    state.n_misses as f64
+fn calculate_effective_misses(attrs: &OsuDifficultyAttributes, state: &OsuScoreState) -> f64 {
+    let mut effective_miss_count = state.n_misses as f64;
+
+    if attrs.n_sliders > 0 {
+        let slider_breaks_estimate = (state.n100 + state.n50) as f64 * 0.5;
+        effective_miss_count += slider_breaks_estimate;
+    }
+
+    // clamp
+    effective_miss_count = effective_miss_count.min((state.n100 + state.n50 + state.n_misses) as f64);
+
+    effective_miss_count
 }
 
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
