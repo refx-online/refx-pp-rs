@@ -498,41 +498,41 @@ impl OsuPpInner {
             return 0.0;
         }
     
-        let mut aim_value = (7.0 * (self.attrs.aim / 0.0675).max(1.0) - 5.0).powi(3) / 40_000.0;
-    
+        let mut aim_value = (7.0 * (self.attrs.aim / 0.05).max(1.0) - 5.0).powi(3) / 40_000.0;
+        
         let total_hits = self.total_hits();
-    
-        let len_bonus = 1.5
-            + 0.6 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.5;
-    
+        
+        let len_bonus = 1.2
+            + 0.7 * (total_hits / 2000.0).min(1.0)
+            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.8;
+        
         aim_value *= len_bonus;
-    
+        
         if self.effective_miss_count > 0.0 {
             aim_value *= calculate_miss_penalty(
                 self.effective_miss_count,
                 self.attrs.aim_difficult_strain_count,
             );
         }
-    
+        
         let ar_factor = if self.mods.rx() {
             0.0
         } else if self.attrs.ar > 10.33 {
-            0.4 * (self.attrs.ar - 10.33) 
+            0.5 * (self.attrs.ar - 10.33)
         } else if self.attrs.ar < 8.0 {
-            0.1 * (8.0 - self.attrs.ar)
+            0.2 * (8.0 - self.attrs.ar)
         } else {
             0.0
         };
-    
-        aim_value *= 1.3 + ar_factor * len_bonus;
-    
+        
+        aim_value *= 1.2 + ar_factor * len_bonus;
+        
         if self.mods.hd() {
-            aim_value *= 1.2 + 0.05 * (12.0 - self.attrs.ar);
+            aim_value *= 1.2 + 0.1 * (12.0 - self.attrs.ar);
         }
-    
-        let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.4; 
-    
+        
+        let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.3;
+        
         if self.attrs.n_sliders > 0 {
             let estimate_slider_ends_dropped =
                 ((self.state.n100 + self.state.n50 + self.state.n_misses)
@@ -544,13 +544,12 @@ impl OsuPpInner {
     
             aim_value *= slider_nerf_factor;
         }
-    
-        aim_value *= self.acc * 1.2;
-    
-        aim_value *= 1.1 + self.attrs.od * self.attrs.od / 1500.0; 
-    
+        
+        aim_value *= self.acc;
+        aim_value *= 1.2 + self.attrs.od * self.attrs.od / 1500.0;
+        
         aim_value
-    }         
+    }
 
     fn compute_speed_value(&self) -> f64 {
         if self.mods.rx() {
