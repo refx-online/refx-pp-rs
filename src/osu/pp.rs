@@ -448,12 +448,7 @@ impl OsuPpInner {
 
         if self.map.creator == "quantumvortex" || self.map.creator == "LaurKappita"{
             pp *= 0.95;
-        }
-
-        if (self.map.cs as f64) > 5.5 {
-            let cs_factor = 0.6 - 0.2 * ((self.map.cs as f64) - 5.5);
-            pp *= cs_factor.max(0.2);
-        }        
+        }       
 
         pp *= match self.map.title.as_str() {
 
@@ -481,6 +476,11 @@ impl OsuPpInner {
                 
             _ => 1.0,
         };
+
+        if self.attrs.cs > 5.5 {
+            let cs_factor = 0.6 - 0.2 * (self.attrs.cs - 5.5);
+            pp *= cs_factor.max(0.2);
+        } 
 
         OsuPerformanceAttributes {
             difficulty: self.attrs,

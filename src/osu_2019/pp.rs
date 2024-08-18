@@ -283,12 +283,7 @@ impl<'m> OsuPP<'m> {
 
         if self.map.creator == "quantumvortex" || self.map.creator == "LaurKappita"{
             pp *= 0.95;
-        }
-
-        if self.map.cs > 5.5 {
-            let cs_factor = 0.6 - 0.2 * (self.map.cs - 5.5);
-            pp *= cs_factor.max(0.2);
-        }        
+        }       
 
         pp *= match self.map.title.as_str() {
 
@@ -378,6 +373,12 @@ impl<'m> OsuPP<'m> {
                     * 0.25
                     * ((total_hits - 200.0) / 300.0).min(1.0)
                 + (total_hits > 500.0) as u8 as f32 * (total_hits - 500.0) / 1600.0;
+        }
+
+        // ima put it here
+        if (attributes.cs as f32) > 5.5 {
+            let cs_factor = 0.6 - 0.2 * ((attributes.cs as f32) - 5.5);
+            aim_value *= cs_factor.max(0.2);
         }
 
         // EZ bonus
