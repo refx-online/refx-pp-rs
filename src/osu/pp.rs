@@ -554,41 +554,41 @@ impl OsuPpInner {
         if self.mods.rx() {
             return 0.0;
         }
-    
+
         if self.mods.ap() {
             return 0.0;
         }
-    
+
         let mut speed_value =
-            (2.0 * (self.attrs.speed / 0.1).max(1.0) - 2.5).powi(3) / 200_000.0;
-        
+            (4.0 * (self.attrs.speed / 0.075).max(1.0) - 3.0).powi(3) / 120_000.0;
+    
         let total_hits = self.total_hits();
-        
-        let len_bonus = 0.8
-            + 0.2 * (total_hits / 2500.0).min(1.0)
-            + (total_hits > 2500.0) as u8 as f64 * (total_hits / 2500.0).log10() * 0.2;
-        
+    
+        let len_bonus = 0.9
+            + 0.3 * (total_hits / 2000.0).min(1.0)
+            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.4;
+    
         speed_value *= len_bonus;
-        
+    
         if self.effective_miss_count > 0.0 {
             speed_value *= calculate_miss_penalty(
                 self.effective_miss_count,
                 self.attrs.speed_difficult_strain_count,
-            ) * 0.8;
+            );
         }
         
         let ar_factor = if self.attrs.ar > 10.33 {
-            0.15 * (self.attrs.ar - 10.33)
+            0.25 * (self.attrs.ar - 10.33)
         } else {
             0.0
         };
         
         speed_value *= 1.0 + ar_factor * len_bonus;
-    
+
         if self.mods.hd() {
-            speed_value *= 1.0 + 0.015 * (12.0 - self.attrs.ar);
+            speed_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
         }
-        
+    
         let relevant_total_diff = total_hits - self.attrs.speed_note_count;
         let relevant_n300 = (self.state.n300 as f64 - relevant_total_diff).max(0.0);
         let relevant_n100 = (self.state.n100 as f64
@@ -597,24 +597,24 @@ impl OsuPpInner {
         let relevant_n50 = (self.state.n50 as f64
             - (relevant_total_diff - (self.state.n300 + self.state.n100) as f64).max(0.0))
             .max(0.0);
-        
+    
         let relevant_acc = if self.attrs.speed_note_count.abs() <= f64::EPSILON {
             0.0
         } else {
             (relevant_n300 * 6.0 + relevant_n100 * 2.0 + relevant_n50)
                 / (self.attrs.speed_note_count * 6.0)
         };
-        
-        speed_value *= (0.8 + self.attrs.od * self.attrs.od / 1500.0)
-            * ((self.acc + relevant_acc) / 2.0).powf((12.0 - (self.attrs.od).max(8.0)) / 4.0);
-        
-        speed_value *= 0.96_f64.powf(
-            (self.state.n50 as f64 >= total_hits / 1000.0) as u8 as f64
-                * (self.state.n50 as f64 - total_hits / 1000.0),
+    
+        speed_value *= (0.85 + self.attrs.od * self.attrs.od / 1250.0)
+            * ((self.acc + relevant_acc) / 2.0).powf((12.0 - (self.attrs.od).max(8.0)) / 3.5);
+    
+        speed_value *= 0.98_f64.powf(
+            (self.state.n50 as f64 >= total_hits / 500.0) as u8 as f64
+                * (self.state.n50 as f64 - total_hits / 500.0),
         );
-        
+    
         speed_value
-    }      
+    }    
 
     fn compute_accuracy_value(&self) -> f64 {
         if self.mods.rx() {
