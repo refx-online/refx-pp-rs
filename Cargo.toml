@@ -5,7 +5,7 @@ authors = ["MaxOhn <ohn.m@hotmail.de>", "tsunyoku <tsunyoku@gmail.com>", "ldci4 
 edition = "2018"
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/ldci4/refx-pp-rs"
+repository = "https://github.com/refx-online/refx-pp-rs"
 description = "osu! difficulty and pp calculation for all modes"
 keywords = ["osu", "pp", "stars", "async"]
 
