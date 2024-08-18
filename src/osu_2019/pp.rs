@@ -271,14 +271,14 @@ impl<'m> OsuPP<'m> {
             false => 1.0,
         };
 
-        let mut pp = (aim_value.powf(1.385 * nodt_bonus)
-            + speed_value.powf(0.91 * acc_depression)
-            + acc_value.powf(1.24 * nodt_bonus))
+        let mut pp = (aim_value.powf(1.185 * nodt_bonus)
+            + speed_value.powf(0.83 * acc_depression)
+            + acc_value.powf(1.14 * nodt_bonus))
         .powf(1.0 / 1.1)
             * multiplier;
 
         if self.mods.dt() && self.mods.hr() {
-            pp *= 1.145;
+            pp *= 1.025;
         }
 
         if self.map.creator == "quantumvortex" || self.map.creator == "LaurKappita"{
@@ -323,77 +323,68 @@ impl<'m> OsuPP<'m> {
 
     fn compute_aim_value(&self, total_hits: f32, effective_miss_count: f32) -> f32 {
         let attributes = self.attributes.as_ref().unwrap();
-
-        // TD penalty
+    
         let raw_aim = if self.mods.td() {
-            attributes.aim_strain.powf(0.8) as f32
+            attributes.aim_strain.powf(0.85) as f32 
         } else {
             attributes.aim_strain as f32
         };
-
+    
         let mut aim_value = (5.0 * (raw_aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
-
-        // Longer maps are worth more
-        let len_bonus = 0.88
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f32 * 0.5 * (total_hits / 2000.0).log10();
+    
+        let len_bonus = 0.9  
+            + 0.45 * (total_hits / 2000.0).min(1.0) 
+            + (total_hits > 2000.0) as u8 as f32 * 0.55 * (total_hits / 2000.0).log10(); 
         aim_value *= len_bonus;
-
-        // Penalize misses
+    
         if effective_miss_count > 0.0 {
             let miss_penalty = self.calculate_miss_penalty(effective_miss_count);
-            aim_value *= miss_penalty;
+            aim_value *= miss_penalty * 0.95; 
         }
-
-        // AR bonus
+    
         let mut ar_factor = if attributes.ar > 10.33 {
-            0.3 * (attributes.ar - 10.33)
+            0.32 * (attributes.ar - 10.33) 
         } else {
             0.0
         };
-
+    
         if attributes.ar < 8.0 {
-            ar_factor = 0.025 * (8.0 - attributes.ar);
+            ar_factor = 0.03 * (8.0 - attributes.ar); 
         }
-
+    
         aim_value *= 1.0 + ar_factor as f32 * len_bonus;
-
-        // HD bonus
+    
         if self.mods.hd() {
-            aim_value *= 1.0 + 0.05 * (11.0 - attributes.ar) as f32;
+            aim_value *= 1.0 + 0.06 * (11.0 - attributes.ar) as f32;
         }
-
-        // FL bonus
+    
         if self.mods.fl() {
             aim_value *= 1.0
-                + 0.3 * (total_hits / 200.0).min(1.0)
+                + 0.35 * (total_hits / 200.0).min(1.0) 
                 + (total_hits > 200.0) as u8 as f32
-                    * 0.25
+                    * 0.3
                     * ((total_hits - 200.0) / 300.0).min(1.0)
-                + (total_hits > 500.0) as u8 as f32 * (total_hits - 500.0) / 1600.0;
+                + (total_hits > 500.0) as u8 as f32 * (total_hits - 500.0) / 1500.0; 
         }
-
-        // ima put it here
+    
         if (attributes.cs as f32) > 5.5 {
-            let cs_factor = 0.6 - 0.2 * ((attributes.cs as f32) - 5.5);
-            aim_value *= cs_factor.max(0.2);
+            let cs_factor = 0.65 - 0.18 * ((attributes.cs as f32) - 5.5);
+            aim_value *= cs_factor.max(0.25);
         }
-
-        // EZ bonus
+    
         if self.mods.ez() {
-            let mut base_buff = 1.08_f32;
-
+            let mut base_buff = 1.1_f32;
+    
             if attributes.ar <= 8.0 {
-                base_buff += (7.0 - attributes.ar as f32) / 100.0;
+                base_buff += (7.0 - attributes.ar as f32) / 90.0;
             }
-
+    
             aim_value *= base_buff;
         }
-
-        // Scale with accuracy
-        aim_value *= 0.3 + self.acc.unwrap() / 2.0;
-        aim_value *= 0.98 + attributes.od as f32 * attributes.od as f32 / 2500.0;
-
+    
+        aim_value *= 0.35 + self.acc.unwrap() / 1.9;
+        aim_value *= 0.99 + attributes.od as f32 * attributes.od as f32 / 2400.0;
+    
         aim_value
     }
 
