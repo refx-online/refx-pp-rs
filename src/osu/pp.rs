@@ -450,10 +450,10 @@ impl OsuPpInner {
             pp *= 0.95;
         }
 
-        if self.attrs.cs > 5.5 {
-            let cs_factor = 0.7 - 0.1 * (self.attrs.cs - 5.5);
-            pp *= cs_factor.max(0.4);
-        }
+        if (self.map.cs as f64) > 5.5 {
+            let cs_factor = 0.6 - 0.2 * ((self.map.cs as f64) - 5.5);
+            pp *= cs_factor.max(0.2);
+        }        
 
         pp *= match self.map.title.as_str() {
 
@@ -461,7 +461,7 @@ impl OsuPpInner {
     
             "Mario Paint (Time Regression Mix For BMS)" => 0.4,
     
-            "fiancailles" => 0.64,
+            "fiancailles" => 0.5,
     
             _ => 1.0,
         };

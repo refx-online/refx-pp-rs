@@ -286,9 +286,9 @@ impl<'m> OsuPP<'m> {
         }
 
         if self.map.cs > 5.5 {
-            let cs_factor = 0.7 - 0.1 * (self.map.cs - 5.5);
-            pp *= cs_factor.max(0.4);
-        }
+            let cs_factor = 0.6 - 0.2 * (self.map.cs - 5.5);
+            pp *= cs_factor.max(0.2);
+        }        
 
         pp *= match self.map.title.as_str() {
 
@@ -296,16 +296,8 @@ impl<'m> OsuPP<'m> {
 
             "Mario Paint (Time Regression Mix For BMS)" => 0.4,
 
-            "fiancailles" => {
-                pp *= 0.72;
+            "fiancailles" => 0.5,
 
-                // this shit gave too much pp
-                if self.mods.hr() {
-                    0.4
-                } else {
-                    1.0
-                }
-            }
             _ => 1.0,
         };
 
