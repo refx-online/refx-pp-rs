@@ -367,8 +367,8 @@ impl<'m> OsuPP<'m> {
                 + (total_hits > 500.0) as u8 as f32 * (total_hits - 500.0) / 1500.0; 
         }
     
-        if (attributes.cs as f32) > 5.5 {
-            let cs_factor = 0.65 - 0.18 * ((attributes.cs as f32) - 5.5);
+        if (attributes.cs as f32) > 6.2 {
+            let cs_factor = 0.65 - 0.18 * ((attributes.cs as f32) - 6.2);
             aim_value *= cs_factor.max(0.25);
         }
     
