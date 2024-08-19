@@ -255,11 +255,11 @@ impl<'m> OsuPP<'m> {
 
         let difficulty = self.attributes.as_ref().unwrap();
         let streams_nerf =
-            ((difficulty.aim_strain / difficulty.speed_strain) * 100.0).round() / 100.0;
+            ((difficulty.speed_strain / difficulty.aim_strain) * 100.0).round() / 100.0;
 
-        if streams_nerf < 1.09 {
+        if streams_nerf < 1.05 {
             let acc_factor = (1.0 - self.acc.unwrap()).abs();
-            acc_depression = (0.86 - acc_factor).max(0.5);
+            acc_depression = (0.9 + acc_factor).min(1.2);
 
             if acc_depression > 0.0 {
                 aim_value *= acc_depression;
