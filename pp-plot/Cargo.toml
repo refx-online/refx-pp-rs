@@ -7,7 +7,7 @@ edition = "2021"
 dotenv = { version = "0.15", default-features = false }
 futures = { version = "0.3", default-features = false, features = ["std"] }
 plotters = { version = "0.3" }
-rosu-pp = { path = "..", features = ["async_tokio"] }
+refx-pp = { path = "..", features = ["async_tokio"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 tokio = { version = "1.0", default-features = false, features = ["fs", "rt-multi-thread"] }

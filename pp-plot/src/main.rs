@@ -9,7 +9,7 @@ use plotters::{
     },
     style::WHITE,
 };
-use rosu_pp::{Beatmap, BeatmapExt, PerformanceAttributes};
+use refx_pp::{Beatmap, BeatmapExt, PerformanceAttributes};
 use serde::Deserialize;
 use tokio::{fs::File, runtime::Runtime};
 
@@ -36,7 +36,7 @@ async fn async_main() {
         data.len()
     );
 
-    // Calculate rosu-pp's PerformanceAttributes on all map-mod pairs
+    // Calculate refx-pp's PerformanceAttributes on all map-mod pairs
     let result = data
         .into_iter()
         .map(|data| async move {
@@ -116,19 +116,7 @@ impl Evaluator {
 
         match attrs {
             PerformanceAttributes::Catch(_) => {}
-            PerformanceAttributes::Mania(attrs) => {
-                if let Some(acc) = data.performance.acc {
-                    let values = self.accuracy.get_or_insert_with(Vec::new);
-                    let entry = difference(acc, attrs.pp_acc);
-                    values.push(entry);
-                }
-
-                if let Some(strain) = data.performance.difficulty {
-                    let values = self.strain.get_or_insert_with(Vec::new);
-                    let entry = difference(strain, attrs.pp_strain);
-                    values.push(entry);
-                }
-            }
+            PerformanceAttributes::Mania(attrs) => {}
             PerformanceAttributes::Osu(attrs) => {
                 if let Some(acc) = data.performance.acc {
                     let values = self.accuracy.get_or_insert_with(Vec::new);
@@ -156,19 +144,7 @@ impl Evaluator {
                     values.push(entry);
                 }
             }
-            PerformanceAttributes::Taiko(attrs) => {
-                if let Some(acc) = data.performance.acc {
-                    let values = self.accuracy.get_or_insert_with(Vec::new);
-                    let entry = difference(acc, attrs.pp_acc);
-                    values.push(entry);
-                }
-
-                if let Some(strain) = data.performance.difficulty {
-                    let values = self.strain.get_or_insert_with(Vec::new);
-                    let entry = difference(strain, attrs.pp_strain);
-                    values.push(entry);
-                }
-            }
+            PerformanceAttributes::Taiko(attrs) => {}
         }
     }
 
@@ -302,7 +278,7 @@ impl Evaluator {
 enum Error {
     DrawingArea(String),
     Io(std::io::Error),
-    ParseMap(rosu_pp::ParseError),
+    ParseMap(refx_pp::ParseError),
 }
 
 impl fmt::Display for Error {
@@ -337,8 +313,8 @@ impl From<std::io::Error> for Error {
     }
 }
 
-impl From<rosu_pp::ParseError> for Error {
-    fn from(e: rosu_pp::ParseError) -> Self {
+impl From<refx_pp::ParseError> for Error {
+    fn from(e: refx_pp::ParseError) -> Self {
         Self::ParseMap(e)
     }
 }

@@ -477,9 +477,9 @@ impl OsuPpInner {
             _ => 1.0,
         };
 
-        if self.attrs.cs > 5.5 {
-            let cs_factor = 0.6 - 0.2 * (self.attrs.cs - 5.5);
-            pp *= cs_factor.max(0.2);
+        if self.attrs.cs > 6.0 {
+            let cs_factor = 0.65 - 0.18 * (self.attrs.cs - 6.0);
+            pp *= cs_factor.max(0.25);
         } 
 
         OsuPerformanceAttributes {
