@@ -247,8 +247,8 @@ impl<'m> OsuPP<'m> {
         let effective_miss_count = self.calculate_effective_miss_count();
 
 
-        let mut aim_value = self.compute_aim_value(total_hits, effective_miss_count);
-        let speed_value = self.compute_speed_value(total_hits, effective_miss_count);
+        let aim_value = self.compute_aim_value(total_hits, effective_miss_count);
+        let mut speed_value = self.compute_speed_value(total_hits, effective_miss_count);
         let acc_value = self.compute_accuracy_value(total_hits);
 
         let mut acc_depression = 1.0;
@@ -262,7 +262,7 @@ impl<'m> OsuPP<'m> {
             acc_depression = (0.9 + acc_factor).min(1.2);
 
             if acc_depression > 0.0 {
-                aim_value *= acc_depression;
+                speed_value *= acc_depression;
             }
         }
 
