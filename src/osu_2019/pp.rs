@@ -282,7 +282,7 @@ impl<'m> OsuPP<'m> {
         }
 
         if self.map.creator == "quantumvortex" || self.map.creator == "LaurKappita"{
-            pp *= 0.95;
+            pp *= 0.9;
         }       
 
         pp *= match self.map.title.as_str() {
@@ -390,54 +390,54 @@ impl<'m> OsuPP<'m> {
 
     fn compute_speed_value(&self, total_hits: f32, effective_miss_count: f32) -> f32 {
         let attributes = self.attributes.as_ref().unwrap();
-
+    
         let mut speed_value =
-            (5.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
-
+            (5.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 80_000.0;
+    
         // Longer maps are worth more
-        let len_bonus = 0.88
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f32 * 0.5 * (total_hits / 2000.0).log10();
+        let len_bonus = 0.9
+            + 0.5 * (total_hits / 1800.0).min(1.0)
+            + (total_hits > 1800.0) as u8 as f32 * 0.55 * (total_hits / 1800.0).log10();
         speed_value *= len_bonus;
-
+    
         // Penalize misses
         if effective_miss_count > 0.0 {
             let miss_penalty = self.calculate_miss_penalty(effective_miss_count);
             speed_value *= miss_penalty;
         }
-
+    
         // AR bonus
         if attributes.ar > 10.33 {
             let mut ar_factor = if attributes.ar > 10.33 {
-                0.3 * (attributes.ar - 10.33)
+                0.4 * (attributes.ar - 10.33)
             } else {
                 0.0
             };
-
+    
             if attributes.ar < 8.0 {
-                ar_factor = 0.025 * (8.0 - attributes.ar);
+                ar_factor = 0.03 * (8.0 - attributes.ar);
             }
-
+    
             speed_value *= 1.0 + ar_factor as f32 * len_bonus;
         }
-
+    
         // HD bonus
         if self.mods.hd() {
-            speed_value *= 1.0 + 0.05 * (11.0 - attributes.ar) as f32;
+            speed_value *= 1.0 + 0.07 * (11.0 - attributes.ar) as f32;
         }
-
+    
         // Scaling the speed value with accuracy and OD
-        speed_value *= (0.93 + attributes.od as f32 * attributes.od as f32 / 750.0)
+        speed_value *= (0.95 + attributes.od as f32 * attributes.od as f32 / 700.0)
             * self
                 .acc
                 .unwrap()
-                .powf((14.5 - attributes.od.max(8.0) as f32) / 2.0);
-
-        speed_value *= 0.98_f32.powf(match (self.n50.unwrap() as f32) < total_hits / 500.0 {
+                .powf((14.0 - attributes.od.max(8.0) as f32) / 2.0);
+    
+        speed_value *= 0.97_f32.powf(match (self.n50.unwrap() as f32) < total_hits / 500.0 {
             true => 0.0,
             false => self.n50.unwrap() as f32 - total_hits / 500.0,
         });
-
+    
         speed_value
     }
 

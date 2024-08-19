@@ -170,6 +170,8 @@ macro_rules! parse_metadata_body {
                 if let Some(val) = u32::from_str(value).ok() {
                     $self.beatmap_id = val;
                 }
+            } else if key == b"Title" {
+                $self.title = value.to_string();
             }
         }
 
