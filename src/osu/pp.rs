@@ -446,7 +446,7 @@ impl OsuPpInner {
         .powf(1.0 / 1.1)
             * multiplier;
 
-        if self.map.creator == "quantumvortex" || self.map.creator == "LaurKappita"{
+        if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
             pp *= 0.95;
         }       
 
@@ -456,7 +456,7 @@ impl OsuPpInner {
     
             "Mario Paint (Time Regression Mix For BMS)" => 0.4,
     
-            "fiancailles" => 0.5,
+            " fiancailles" => 0.5,
     
             _ => 1.0,
         };

@@ -392,12 +392,12 @@ impl<'m> OsuPP<'m> {
         let attributes = self.attributes.as_ref().unwrap();
     
         let mut speed_value =
-            (5.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 80_000.0;
+            (5.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 60_000.0;
     
         // Longer maps are worth more
-        let len_bonus = 0.9
-            + 0.5 * (total_hits / 1800.0).min(1.0)
-            + (total_hits > 1800.0) as u8 as f32 * 0.55 * (total_hits / 1800.0).log10();
+        let len_bonus = 0.95
+            + 0.6 * (total_hits / 1600.0).min(1.0)
+            + (total_hits > 1600.0) as u8 as f32 * 0.6 * (total_hits / 1600.0).log10();
         speed_value *= len_bonus;
     
         // Penalize misses
@@ -409,13 +409,13 @@ impl<'m> OsuPP<'m> {
         // AR bonus
         if attributes.ar > 10.33 {
             let mut ar_factor = if attributes.ar > 10.33 {
-                0.4 * (attributes.ar - 10.33)
+                0.5 * (attributes.ar - 10.33)
             } else {
                 0.0
             };
     
             if attributes.ar < 8.0 {
-                ar_factor = 0.03 * (8.0 - attributes.ar);
+                ar_factor = 0.04 * (8.0 - attributes.ar);
             }
     
             speed_value *= 1.0 + ar_factor as f32 * len_bonus;
@@ -423,23 +423,23 @@ impl<'m> OsuPP<'m> {
     
         // HD bonus
         if self.mods.hd() {
-            speed_value *= 1.0 + 0.07 * (11.0 - attributes.ar) as f32;
+            speed_value *= 1.0 + 0.1 * (11.0 - attributes.ar) as f32;
         }
     
         // Scaling the speed value with accuracy and OD
-        speed_value *= (0.95 + attributes.od as f32 * attributes.od as f32 / 700.0)
+        speed_value *= (1.0 + attributes.od as f32 * attributes.od as f32 / 650.0)
             * self
                 .acc
                 .unwrap()
-                .powf((14.0 - attributes.od.max(8.0) as f32) / 2.0);
+                .powf((13.5 - attributes.od.max(8.0) as f32) / 2.0);
     
-        speed_value *= 0.97_f32.powf(match (self.n50.unwrap() as f32) < total_hits / 500.0 {
+        speed_value *= 0.96_f32.powf(match (self.n50.unwrap() as f32) < total_hits / 500.0 {
             true => 0.0,
             false => self.n50.unwrap() as f32 - total_hits / 500.0,
         });
     
         speed_value
-    }
+    }    
 
     fn compute_accuracy_value(&self, total_hits: f32) -> f32 {
         let attributes = self.attributes.as_ref().unwrap();
