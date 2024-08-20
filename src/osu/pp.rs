@@ -694,8 +694,24 @@ impl OsuPpInner {
     }
 }
 
-fn calculate_effective_misses(_attrs: &OsuDifficultyAttributes, state: &OsuScoreState) -> f64 {
-    state.n_misses as f64
+fn calculate_effective_misses(attrs: &OsuDifficultyAttributes, state: &OsuScoreState) -> f64 {
+    let mut combo_based_miss_count = 0.0;
+
+    let max_combo = state.max_combo as f32;
+    let n100 = state.n100 as f32;
+    let n50 = state.n50 as f32;
+    let n_misses = state.n_misses as f32;
+
+    if attrs.n_sliders > 0 {
+        let fc_threshold = attrs.max_combo as f32 - 0.1 * attrs.n_sliders as f32;
+        if max_combo < fc_threshold {
+            combo_based_miss_count = fc_threshold / max_combo.max(1.0);
+        }
+    }
+
+    combo_based_miss_count = combo_based_miss_count.min(n100 + n50 + n_misses);
+
+    combo_based_miss_count.max(n_misses) as f64
 }
 
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
