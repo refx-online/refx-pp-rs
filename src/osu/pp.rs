@@ -447,9 +447,13 @@ impl OsuPpInner {
             * multiplier;
 
         if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
-            pp *= 0.95;
+            pp *= 0.9;
         }       
-
+        
+        if self.map.artist == "TUYU" {
+            pp *= 0.8434; // testing
+        }
+        
         pp *= match self.map.title.as_str() {
 
             "sidetracked" => 0.6,

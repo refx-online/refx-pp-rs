@@ -172,6 +172,8 @@ macro_rules! parse_metadata_body {
                 }
             } else if key == b"Title" {
                 $self.title = value.to_string();
+            } else if key == b"Artist" {
+                $self.artist = value.to_string();
             }
         }
 

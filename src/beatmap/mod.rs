@@ -73,6 +73,9 @@ pub struct Beatmap {
 
     /// The Title of the beatmapset
     pub title: String,
+
+    // The artist of the beatmap
+    pub artist: String,
 }
 
 impl Beatmap {
@@ -176,6 +179,7 @@ impl Beatmap {
             creator: self.creator.clone(),
             beatmap_id: self.beatmap_id,
             title: self.title.clone(),
+            artist: self.artist.clone()
         }
     }
 }
