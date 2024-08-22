@@ -453,7 +453,7 @@ impl OsuPpInner {
         if self.map.artist == "TUYU" {
             pp *= 0.8434; // testing
         }
-        
+
         pp *= match self.map.title.as_str() {
 
             "sidetracked" => 0.6,
@@ -699,24 +699,22 @@ impl OsuPpInner {
 }
 
 fn calculate_effective_misses(attrs: &OsuDifficultyAttributes, state: &OsuScoreState) -> f64 {
+    // * Guess the number of misses + slider breaks from combo
     let mut combo_based_miss_count = 0.0;
 
-    let max_combo = state.max_combo as f32;
-    let n100 = state.n100 as f32;
-    let n50 = state.n50 as f32;
-    let n_misses = state.n_misses as f32;
-
     if attrs.n_sliders > 0 {
-        let fc_threshold = attrs.max_combo as f32 - 0.1 * attrs.n_sliders as f32;
-        if max_combo < fc_threshold {
-            combo_based_miss_count = fc_threshold / max_combo.max(1.0);
+        let full_combo_threshold = attrs.max_combo as f64 - 0.1 * attrs.n_sliders as f64;
+
+        if (state.max_combo as f64) < full_combo_threshold {
+            combo_based_miss_count = full_combo_threshold / (state.max_combo as f64).max(1.0);
         }
     }
 
-    combo_based_miss_count = combo_based_miss_count.min(n100 + n50 + n_misses);
+    // * Clamp miss count to maximum amount of possible breaks
+    combo_based_miss_count =
+        combo_based_miss_count.min((state.n100 + state.n50 + state.n_misses) as f64);
 
-    combo_based_miss_count.max(n_misses) as f64
-}
+    combo_based_miss_count.max(state.n_misses as f64)
 
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
     0.96 / ((miss_count / (4.0 * difficult_strain_count.ln().powf(0.94))) + 1.0)
