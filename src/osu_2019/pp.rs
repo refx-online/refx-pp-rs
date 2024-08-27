@@ -396,7 +396,7 @@ impl<'m> OsuPP<'m> {
         let attributes = self.attributes.as_ref().unwrap();
     
         let mut speed_value =
-            (5.0 * (attributes.speed_strain as f32 / 0.0625).max(1.0) - 4.0).powf(3.8) / 100_000.0;
+            (6.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 55_000.0;
     
         // Longer maps are worth more
         let len_bonus = 1.1
