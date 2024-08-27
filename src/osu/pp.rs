@@ -373,7 +373,7 @@ impl<'map> OsuPP<'map> {
             acc: state.accuracy(),
             state,
             effective_miss_count,
-            map: self.map.clone(),
+            map: self.map.clone()
         };
 
         inner.calculate()
@@ -445,46 +445,46 @@ impl OsuPpInner {
             + flashlight_value.powf(1.1))
         .powf(1.0 / 1.1)
             * multiplier;
-        
+
         if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
             pp *= 0.9;
         }       
-            
+        
         if self.map.artist == "TUYU" {
             pp *= 0.8434; // testing
         }
-    
+
         pp *= match self.map.title.as_str() {
-    
+
             "sidetracked" => 0.6,
-        
+    
             "Mario Paint (Time Regression Mix For BMS)" => 0.4,
-        
+    
             " fiancailles" => 0.5,
-        
+    
             _ => 1.0,
         };
-    
+
         pp *= match self.map.beatmap_id {
             // Glass Phantoms [Visage Effigy]
             4127115 => 0.713,
-        
+    
             // Chronostasis [A Brilliant Petal Frozen in an Everlasting Moment]
             2874408 => 0.706,
-        
+    
             // Tenbin no ue de [Last Fate]
             4480795 => 0.853,
-        
+    
             // sweet pie with raisins / REGGAETON BUT IT HAS AMEN BREAKS [tula improved]
             2901666 => 0.81,
-                    
+                
             _ => 1.0,
         };
-    
+
         if self.attrs.cs > 6.2 {
             let cs_factor = 0.65 - 0.18 * (self.attrs.cs - 6.2);
             pp *= cs_factor.max(0.25);
-        }
+        } 
 
         OsuPerformanceAttributes {
             difficulty: self.attrs,
@@ -501,133 +501,124 @@ impl OsuPpInner {
         if self.mods.ap() {
             return 0.0;
         }
-
-        let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
-
+    
+        let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 80_000.0;
+    
         let total_hits = self.total_hits();
-
-        let len_bonus = 0.95
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.5;
-
+    
+        let len_bonus = 1.0
+            + 0.5 * (total_hits / 2000.0).min(1.0)
+            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.6;
+    
         aim_value *= len_bonus;
-
+    
         if self.effective_miss_count > 0.0 {
             aim_value *= calculate_miss_penalty(
                 self.effective_miss_count,
                 self.attrs.aim_difficult_strain_count,
             );
         }
-
+    
         let ar_factor = if self.mods.rx() {
             0.0
         } else if self.attrs.ar > 10.33 {
-            0.3 * (self.attrs.ar - 10.33)
+            0.35 * (self.attrs.ar - 10.33)
         } else if self.attrs.ar < 8.0 {
-            0.05 * (8.0 - self.attrs.ar)
+            0.06 * (8.0 - self.attrs.ar)
         } else {
             0.0
         };
 
-        // * Buff for longer maps with high AR.
         aim_value *= 1.0 + ar_factor * len_bonus;
-
+    
         if self.mods.hd() {
-            // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
-            aim_value *= 1.0 + 0.04 * (12.0 - self.attrs.ar);
+            aim_value *= 1.0 + 0.05 * (12.0 - self.attrs.ar);
         }
 
-        // * We assume 15% of sliders in a map are difficult since there's no way to tell from the performance calculator.
-        let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.15;
-
+        let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.2;
+    
         if self.attrs.n_sliders > 0 {
             let estimate_slider_ends_dropped =
                 ((self.state.n100 + self.state.n50 + self.state.n_misses)
                     .min(self.attrs.max_combo - self.state.max_combo) as f64)
                     .clamp(0.0, estimate_diff_sliders);
             let slider_nerf_factor = (1.0 - self.attrs.slider_factor)
-                * (1.0 - estimate_slider_ends_dropped / estimate_diff_sliders).powi(3)
+                * (1.0 - estimate_slider_ends_dropped / estimate_diff_sliders).powi(2)
                 + self.attrs.slider_factor;
-
+    
             aim_value *= slider_nerf_factor;
         }
-
+    
         aim_value *= self.acc;
-        // * It is important to consider accuracy difficulty when scaling with accuracy.
-        aim_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
-
+        aim_value *= 1.02 + self.attrs.od * self.attrs.od / 2400.0;
         aim_value
-    }
+    }  
 
     fn compute_speed_value(&self) -> f64 {
         if self.mods.rx() {
             return 0.0;
         }
-
+    
+        if self.mods.ap() {
+            return 0.0;
+        }
+    
         let mut speed_value =
-            (5.0 * (self.attrs.speed / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
-
+            (2.1 * (self.attrs.speed / 0.1).max(1.0) - 2.4).powi(3) / 190_000.0;
+    
         let total_hits = self.total_hits();
-
-        let len_bonus = 0.95
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.5;
-
+    
+        let len_bonus = 0.82
+            + 0.22 * (total_hits / 2400.0).min(1.0)
+            + (total_hits > 2400.0) as u8 as f64 * (total_hits / 2400.0).log10() * 0.22;
+    
         speed_value *= len_bonus;
-
+    
         if self.effective_miss_count > 0.0 {
             speed_value *= calculate_miss_penalty(
                 self.effective_miss_count,
                 self.attrs.speed_difficult_strain_count,
-            );
+            ) * 0.82;
         }
-
-        let ar_factor = if self.mods.ap() {
-            0.0
-        } else if self.attrs.ar > 10.33 {
-            0.3 * (self.attrs.ar - 10.33)
+    
+        let ar_factor = if self.attrs.ar > 10.33 {
+            0.16 * (self.attrs.ar - 10.33)
         } else {
             0.0
         };
-
-        // * Buff for longer maps with high AR.
+    
         speed_value *= 1.0 + ar_factor * len_bonus;
-
+    
         if self.mods.hd() {
-            // * We want to give more reward for lower AR when it comes to aim and HD.
-            // * This nerfs high AR and buffs lower AR.
-            speed_value *= 1.0 + 0.04 * (12.0 - self.attrs.ar);
+            speed_value *= 1.0 + 0.017 * (12.0 - self.attrs.ar);
         }
-
-        // * Calculate accuracy assuming the worst case scenario
+    
         let relevant_total_diff = total_hits - self.attrs.speed_note_count;
         let relevant_n300 = (self.state.n300 as f64 - relevant_total_diff).max(0.0);
         let relevant_n100 = (self.state.n100 as f64
             - (relevant_total_diff - self.state.n300 as f64).max(0.0))
-        .max(0.0);
+            .max(0.0);
         let relevant_n50 = (self.state.n50 as f64
             - (relevant_total_diff - (self.state.n300 + self.state.n100) as f64).max(0.0))
-        .max(0.0);
-
+            .max(0.0);
+    
         let relevant_acc = if self.attrs.speed_note_count.abs() <= f64::EPSILON {
             0.0
         } else {
             (relevant_n300 * 6.0 + relevant_n100 * 2.0 + relevant_n50)
                 / (self.attrs.speed_note_count * 6.0)
         };
-
-        // * Scale the speed value with accuracy and OD.
-        speed_value *= (0.95 + self.attrs.od * self.attrs.od / 750.0)
-            * ((self.acc + relevant_acc) / 2.0).powf((14.5 - (self.attrs.od).max(8.0)) / 2.0);
-
-        // * Scale the speed value with # of 50s to punish doubletapping.
-        speed_value *= 0.99_f64.powf(
-            (self.state.n50 as f64 >= total_hits / 500.0) as u8 as f64
-                * (self.state.n50 as f64 - total_hits / 500.0),
+    
+        speed_value *= (0.87 + self.attrs.od * self.attrs.od / 1200.0)
+            * ((self.acc + relevant_acc) / 2.0).powf((12.5 - (self.attrs.od).max(8.0)) / 3.4);
+    
+        speed_value *= 0.97_f64.powf(
+            (self.state.n50 as f64 >= total_hits / 1000.0) as u8 as f64
+                * (self.state.n50 as f64 - total_hits / 1000.0),
         );
-
+    
         speed_value
-    }
+    }     
 
     fn compute_accuracy_value(&self) -> f64 {
         if self.mods.rx() {
@@ -689,8 +680,6 @@ impl OsuPpInner {
                     .powf(self.effective_miss_count.powf(0.875));
         }
 
-        flashlight_value *= self.get_combo_scaling_factor();
-
         // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
         flashlight_value *= 0.7
             + 0.1 * (total_hits / 200.0).min(1.0)
@@ -702,15 +691,6 @@ impl OsuPpInner {
         flashlight_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
 
         flashlight_value
-    }
-
-    fn get_combo_scaling_factor(&self) -> f64 {
-        if self.attrs.max_combo == 0 {
-            1.0
-        } else {
-            ((self.state.max_combo as f64).powf(0.8) / (self.attrs.max_combo as f64).powf(0.8))
-                .min(1.0)
-        }
     }
 
     fn total_hits(&self) -> f64 {
