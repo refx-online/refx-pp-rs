@@ -294,6 +294,10 @@ impl<'m> OsuPP<'m> {
             "fiancailles" => 0.5,
             
             "jump pack" => 0.8,
+            
+            "farm pack" => 0.8,
+            
+            "Speed-Up Map Pack" => 0.6,
 
             _ => 1.0,
         };
