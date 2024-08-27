@@ -396,17 +396,17 @@ impl<'m> OsuPP<'m> {
         let attributes = self.attributes.as_ref().unwrap();
     
         let mut speed_value =
-            (5.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 60_000.0;
+            (6.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 55_000.0;
     
         // Longer maps are worth more
-        let len_bonus = 0.95
-            + 0.6 * (total_hits / 1600.0).min(1.0)
-            + (total_hits > 1600.0) as u8 as f32 * 0.6 * (total_hits / 1600.0).log10();
+        let len_bonus = 1.1
+            + 0.7 * (total_hits / 1500.0).min(1.0)
+            + (total_hits > 1500.0) as u8 as f32 * 0.7 * (total_hits / 1500.0).log10();
         speed_value *= len_bonus;
     
         // Penalize misses
         if effective_miss_count > 0.0 {
-            let miss_penalty = self.calculate_miss_penalty(effective_miss_count);
+            let miss_penalty = self.calculate_miss_penalty(effective_miss_count).powf(0.9);
             speed_value *= miss_penalty;
         }
     
@@ -431,16 +431,13 @@ impl<'m> OsuPP<'m> {
         }
     
         // Scaling the speed value with accuracy and OD
-        speed_value *= (1.0 + attributes.od as f32 * attributes.od as f32 / 650.0)
+        speed_value *= (1.1 + attributes.od as f32 * attributes.od as f32 / 600.0)
             * self
                 .acc
                 .unwrap()
-                .powf((13.5 - attributes.od.max(8.0) as f32) / 2.0);
+                .powf((14.0 - attributes.od.max(8.0) as f32) / 2.0);
     
-        speed_value *= 0.96_f32.powf(match (self.n50.unwrap() as f32) < total_hits / 500.0 {
-            true => 0.0,
-            false => self.n50.unwrap() as f32 - total_hits / 500.0,
-        });
+        speed_value *= 0.95_f32.powf((self.n50.unwrap() as f32 - total_hits / 500.0).max(0.0));
     
         speed_value
     }    
