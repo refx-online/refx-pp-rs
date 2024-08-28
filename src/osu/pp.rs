@@ -703,10 +703,10 @@ fn calculate_effective_misses(attrs: &OsuDifficultyAttributes, state: &OsuScoreS
     let mut combo_based_miss_count = 0.0;
 
     if attrs.n_sliders > 0 {
-        let full_combo_threshold = attrs.max_combo as f64 - 0.1 * attrs.n_sliders as f64;
+        let full_combo_threshold = attrs.max_combo as f64 - 0.05 * attrs.n_sliders as f64; // Reduced the penalty threshold
 
         if (state.max_combo as f64) < full_combo_threshold {
-            combo_based_miss_count = full_combo_threshold / (state.max_combo as f64).max(1.0);
+            combo_based_miss_count = (full_combo_threshold - state.max_combo as f64) / (state.max_combo as f64).max(2.0);
         }
     }
 
