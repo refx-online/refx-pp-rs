@@ -284,10 +284,6 @@ impl<'m> OsuPP<'m> {
         if self.map.creator == "quantumvortex" || self.map.creator == "LaurKappita"{
             pp *= 0.9;
         }       
-
-        if self.map.artist == "TUYU" {
-            pp *= 0.8434; // testing
-        }
         
         pp *= match self.map.title.as_str() {
 
@@ -296,7 +292,7 @@ impl<'m> OsuPP<'m> {
             "jump pack" => 0.8,
             
             "farm pack" => 0.8,
-            
+
             "Speed-Up Map Pack" => 0.6,
 
             _ => 1.0,
