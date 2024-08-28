@@ -411,7 +411,7 @@ impl OsuPpInner {
         if self.mods.so() && total_hits > 0.0 {
             multiplier *= 1.0 - (self.attrs.n_spinners as f64 / total_hits).powf(0.85);
         }
-
+        
         if self.mods.rx() {
             // * https://www.desmos.com/calculator/bc9eybdthb
             // * we use OD13.3 as maximum since it's the value at which great hitwidow becomes 0
