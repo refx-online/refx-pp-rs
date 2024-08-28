@@ -287,14 +287,12 @@ impl<'m> OsuPP<'m> {
         
         pp *= match self.map.title.as_str() {
 
-            title if title.contains("fiancailles") => 0.5,
-
             title if title.contains("jump pack") => 0.8,
 
             title if title.contains("farm pack") => 0.8,
             
             title if title.contains("Speed-Up Map Pack") => 0.6,
-            
+
             _ => 1.0,
         };
 
