@@ -551,22 +551,18 @@ impl OsuPpInner {
     }  
 
     fn compute_speed_value(&self) -> f64 {
-        if self.mods.rx() {
-            return 0.0;
-        }
-    
-        if self.mods.ap() {
+        if self.mods.rx() || self.mods.ap() {
             return 0.0;
         }
     
         let mut speed_value =
-            (2.1 * (self.attrs.speed / 0.1).max(1.0) - 2.4).powi(3) / 190_000.0;
+            (2.2 * (self.attrs.speed / 0.1).max(1.0) - 2.4).powi(3) / 175_000.0;
     
         let total_hits = self.total_hits();
     
-        let len_bonus = 0.82
-            + 0.22 * (total_hits / 2400.0).min(1.0)
-            + (total_hits > 2400.0) as u8 as f64 * (total_hits / 2400.0).log10() * 0.22;
+        let len_bonus = 0.85
+            + 0.24 * (total_hits / 2400.0).min(1.0)
+            + (total_hits > 2400.0) as u8 as f64 * (total_hits / 2400.0).log10() * 0.24;
     
         speed_value *= len_bonus;
     
@@ -578,7 +574,7 @@ impl OsuPpInner {
         }
     
         let ar_factor = if self.attrs.ar > 10.33 {
-            0.16 * (self.attrs.ar - 10.33)
+            0.18 * (self.attrs.ar - 10.33)
         } else {
             0.0
         };
@@ -586,7 +582,7 @@ impl OsuPpInner {
         speed_value *= 1.0 + ar_factor * len_bonus;
     
         if self.mods.hd() {
-            speed_value *= 1.0 + 0.017 * (12.0 - self.attrs.ar);
+            speed_value *= 1.0 + 0.02 * (12.0 - self.attrs.ar);
         }
     
         let relevant_total_diff = total_hits - self.attrs.speed_note_count;
@@ -605,16 +601,16 @@ impl OsuPpInner {
                 / (self.attrs.speed_note_count * 6.0)
         };
     
-        speed_value *= (0.87 + self.attrs.od * self.attrs.od / 1200.0)
-            * ((self.acc + relevant_acc) / 2.0).powf((12.5 - (self.attrs.od).max(8.0)) / 3.4);
+        speed_value *= (0.89 + self.attrs.od * self.attrs.od / 1100.0)
+            * ((self.acc + relevant_acc) / 2.0).powf((12.5 - (self.attrs.od).max(8.0)) / 3.2);
     
-        speed_value *= 0.97_f64.powf(
+        speed_value *= 0.96_f64.powf(
             (self.state.n50 as f64 >= total_hits / 1000.0) as u8 as f64
                 * (self.state.n50 as f64 - total_hits / 1000.0),
         );
     
         speed_value
-    }     
+    }
 
     fn compute_accuracy_value(&self) -> f64 {
         if self.mods.rx() {
@@ -714,7 +710,7 @@ fn calculate_effective_misses(attrs: &OsuDifficultyAttributes, state: &OsuScoreS
 }
 
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
-    0.96 / ((miss_count / (2.0 * difficult_strain_count.ln().powf(0.94))) + 1.0)
+    0.98 / ((miss_count / (2.0 * difficult_strain_count.ln().powf(0.85))) + 1.0)
 }
 
 /// Abstract type to provide flexibility when passing difficulty attributes to a performance calculation.
