@@ -287,11 +287,11 @@ impl<'m> OsuPP<'m> {
         
         pp *= match self.map.title.as_str() {
 
-            title if title.contains("jump pack") => 0.8,
+            title if title.contains("jump pack") => 0.9134,
 
-            title if title.contains("farm pack") => 0.8,
+            title if title.contains("farm pack") => 0.89421,
             
-            title if title.contains("Speed-Up Map Pack") => 0.6,
+            title if title.contains("Speed-Up Map Pack") => 0.732,
 
             _ => 1.0,
         };
@@ -300,14 +300,11 @@ impl<'m> OsuPP<'m> {
             // Keikan no Senritsu (Cut Ver.) [Thorn Crown]
             4268996 => 0.7132,
 
-            // Chronostasis [A Brilliant Petal Frozen in an Everlasting Moment]
-            2874408 => 0.71,
+            // Identity Part 4 [zluks' Ultimate Jumps]
+            4334268 => 0.797,
 
             // Tenbin no ue de [Last Fate]
             4480795 => 0.82,
-
-            // sweet pie with raisins / REGGAETON BUT IT HAS AMEN BREAKS [tula improved]
-            2901666 => 0.792,
 
             _ => 1.0,
         };
