@@ -519,9 +519,9 @@ impl OsuPpInner {
     
         aim_value *= 1.0 + ar_factor * len_bonus;
     
-        if self.mods.hd() {
-            aim_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
-        }
+        //if self.mods.hd() { HD Remover exist
+        //    aim_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
+        //}
     
         let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.15;
     
@@ -644,6 +644,11 @@ impl OsuPpInner {
 
         if self.mods.fl() {
             acc_value *= 1.02;
+        }
+
+        if better_acc_percentage >= 0.7 && better_acc_percentage <= 0.93 {
+            let scaling_factor = 0.7 + (better_acc_percentage - 0.7) * 0.3 / 0.23;
+            acc_value *= scaling_factor;
         }
 
         acc_value
