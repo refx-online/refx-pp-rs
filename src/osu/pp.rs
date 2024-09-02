@@ -519,9 +519,9 @@ impl OsuPpInner {
 
         aim_value *= 1.0 + ar_factor * len_bonus;
     
-        if self.mods.hd() {
+        /*if self.mods.hd() {
             aim_value *= 1.0 + 0.05 * (12.0 - self.attrs.ar);
-        }
+        }*/
 
         let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.2;
     
