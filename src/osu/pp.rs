@@ -719,11 +719,7 @@ fn calculate_effective_misses(attrs: &OsuDifficultyAttributes, state: &OsuScoreS
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
     let base_penalty = 0.96 / ((miss_count / (2.0 * difficult_strain_count.ln().powf(0.94))) + 1.0);
 
-    if miss_count > 5.0 {
-        base_penalty * (0.98_f64.powf(miss_count - 5.0))
-    } else {
-        base_penalty
-    }
+    base_penalty * (0.95_f64.powf(miss_count.powf(1.5)))
 }
 
 /// Abstract type to provide flexibility when passing difficulty attributes to a performance calculation.
