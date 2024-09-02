@@ -448,14 +448,20 @@ impl OsuPpInner {
 
         if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
             pp *= 0.9;
-        }       
+        }
+        
+        if self.map.creator == "nebuwua" {
+            pp *= 0.8;
+        }
 
         pp *= match self.map.title.as_str() {
 
-            title if title.contains("sidetracked") => 0.6,
+            title if title.contains("sidetracked") => 0.77,
     
-            "Mario Paint (Time Regression Mix For BMS)" => 0.4,
-    
+            "Mario Paint (Time Regression Mix For BMS)" => 0.74,
+            
+            "Glass Phantoms" => 0.8,
+            
             _ => 1.0,
         };
 
@@ -465,7 +471,10 @@ impl OsuPpInner {
     
             // Akari no Arika [My Angel's 9* Eroge Fantasy]
             2399767 => 0.763,
-                
+            
+            // Yekteniya I: Ochishenie [EBNYTIY SVYASHENNIK]
+            2321051 => 0.6,
+
             _ => 1.0,
         };
 
