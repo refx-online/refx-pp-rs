@@ -449,7 +449,7 @@ impl OsuPpInner {
         if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
             pp *= 0.9;
         }
-        
+
         if self.map.creator == "nebuwua" {
             pp *= 0.8;
         }
@@ -656,7 +656,7 @@ impl OsuPpInner {
         }
 
         if better_acc_percentage >= 0.6 && better_acc_percentage <= 0.93 {
-            let scaling_factor = 0.6 + (better_acc_percentage - 0.6) * 0.3 / 0.33;
+            let scaling_factor = 0.5 + (better_acc_percentage - 0.6) * 0.3 / 0.33;
             acc_value *= scaling_factor;
         }
 
