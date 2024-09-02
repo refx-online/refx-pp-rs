@@ -287,9 +287,11 @@ impl<'m> OsuPP<'m> {
         
         pp *= match self.map.title.as_str() {
 
-            title if title.contains("jump pack") => 0.9134,
+            title if title.contains("jump pack") => 0.86434,
 
-            title if title.contains("farm pack") => 0.89421,
+            title if title.contains("farm pack") => 0.83421,
+
+            title if title.contains("fuquila pack") => 0.621,
             
             title if title.contains("Speed-Up Map Pack") => 0.732,
 
@@ -301,7 +303,7 @@ impl<'m> OsuPP<'m> {
             4268996 => 0.7132,
 
             // Identity Part 4 [zluks' Ultimate Jumps]
-            4334268 => 0.797,
+            4334268 => 0.7,
 
             // Tenbin no ue de [Last Fate]
             4480795 => 0.82,

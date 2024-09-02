@@ -452,27 +452,19 @@ impl OsuPpInner {
 
         pp *= match self.map.title.as_str() {
 
-            "sidetracked" => 0.6,
+            title if title.contains("sidetracked") => 0.6,
     
             "Mario Paint (Time Regression Mix For BMS)" => 0.4,
-    
-            " fiancailles" => 0.5,
     
             _ => 1.0,
         };
 
         pp *= match self.map.beatmap_id {
-            // Glass Phantoms [Visage Effigy]
-            4127115 => 0.713,
-    
-            // Chronostasis [A Brilliant Petal Frozen in an Everlasting Moment]
-            2874408 => 0.706,
-    
             // Tenbin no ue de [Last Fate]
             4480795 => 0.853,
     
             // sweet pie with raisins / REGGAETON BUT IT HAS AMEN BREAKS [tula improved]
-            2901666 => 0.81,
+            //2901666 => 0.863,
                 
             _ => 1.0,
         };
@@ -555,14 +547,13 @@ impl OsuPpInner {
             return 0.0;
         }
     
-        let mut speed_value =
-            (2.2 * (self.attrs.speed / 0.1).max(1.0) - 2.4).powi(3) / 175_000.0;
+        let mut speed_value = (2.5 * (self.attrs.speed / 0.09).max(1.0) - 2.2).powi(3) / 150_000.0;
     
         let total_hits = self.total_hits();
     
-        let len_bonus = 0.85
-            + 0.24 * (total_hits / 2400.0).min(1.0)
-            + (total_hits > 2400.0) as u8 as f64 * (total_hits / 2400.0).log10() * 0.24;
+        let len_bonus = 1.0
+            + 0.25 * (total_hits / 1800.0).min(1.0)
+            + (total_hits > 1800.0) as u8 as f64 * (total_hits / 1800.0).log10() * 0.25;
     
         speed_value *= len_bonus;
     
@@ -582,7 +573,7 @@ impl OsuPpInner {
         speed_value *= 1.0 + ar_factor * len_bonus;
     
         if self.mods.hd() {
-            speed_value *= 1.0 + 0.02 * (12.0 - self.attrs.ar);
+            speed_value *= 1.0 + 0.017 * (12.0 - self.attrs.ar);
         }
     
         let relevant_total_diff = total_hits - self.attrs.speed_note_count;
@@ -601,16 +592,16 @@ impl OsuPpInner {
                 / (self.attrs.speed_note_count * 6.0)
         };
     
-        speed_value *= (0.89 + self.attrs.od * self.attrs.od / 1100.0)
-            * ((self.acc + relevant_acc) / 2.0).powf((12.5 - (self.attrs.od).max(8.0)) / 3.2);
+        speed_value *= (0.9 + self.attrs.od * self.attrs.od / 1150.0)
+            * ((self.acc + relevant_acc) / 2.0).powf((13.0 - (self.attrs.od).max(8.0)) / 3.0);
     
         speed_value *= 0.96_f64.powf(
-            (self.state.n50 as f64 >= total_hits / 1000.0) as u8 as f64
-                * (self.state.n50 as f64 - total_hits / 1000.0),
+            (self.state.n50 as f64 >= total_hits / 900.0) as u8 as f64
+                * (self.state.n50 as f64 - total_hits / 900.0),
         );
     
         speed_value
-    }
+    }       
 
     fn compute_accuracy_value(&self) -> f64 {
         if self.mods.rx() {
@@ -710,7 +701,7 @@ fn calculate_effective_misses(attrs: &OsuDifficultyAttributes, state: &OsuScoreS
 }
 
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
-    0.98 / ((miss_count / (2.0 * difficult_strain_count.ln().powf(0.85))) + 1.0)
+    0.96 / ((miss_count / (2.0 * difficult_strain_count.ln().powf(0.94))) + 1.0)
 }
 
 /// Abstract type to provide flexibility when passing difficulty attributes to a performance calculation.
