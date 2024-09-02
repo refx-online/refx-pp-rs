@@ -547,13 +547,13 @@ impl OsuPpInner {
             return 0.0;
         }
     
-        let mut speed_value = (2.5 * (self.attrs.speed / 0.09).max(1.0) - 2.2).powi(3) / 150_000.0;
+        let mut speed_value = (4.5 * (self.attrs.speed / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
     
         let total_hits = self.total_hits();
     
-        let len_bonus = 1.0
-            + 0.25 * (total_hits / 1800.0).min(1.0)
-            + (total_hits > 1800.0) as u8 as f64 * (total_hits / 1800.0).log10() * 0.25;
+        let len_bonus = 0.90
+            + 0.3 * (total_hits / 2000.0).min(1.0)
+            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.4;
     
         speed_value *= len_bonus;
     
@@ -564,26 +564,28 @@ impl OsuPpInner {
             );
         }
     
-        let ar_factor = if self.attrs.ar > 10.33 {
-            0.18 * (self.attrs.ar - 10.33)
-        } else {
+        let ar_factor = if self.mods.ap() {
             0.0
+        } else if self.attrs.ar > 10.33 {
+            0.2 * (self.attrs.ar - 10.33)
+        } else {
+            0.0 // lets leave this so they can kinda get pp even tho they have ar changer
         };
     
         speed_value *= 1.0 + ar_factor * len_bonus;
     
-        if self.mods.hd() {
-            speed_value *= 1.0 + 0.017 * (12.0 - self.attrs.ar);
-        }
+        //if self.mods.hd() { HD Remover exist :sob:
+        //    speed_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
+        //}
     
         let relevant_total_diff = total_hits - self.attrs.speed_note_count;
         let relevant_n300 = (self.state.n300 as f64 - relevant_total_diff).max(0.0);
         let relevant_n100 = (self.state.n100 as f64
             - (relevant_total_diff - self.state.n300 as f64).max(0.0))
-            .max(0.0);
+        .max(0.0);
         let relevant_n50 = (self.state.n50 as f64
             - (relevant_total_diff - (self.state.n300 + self.state.n100) as f64).max(0.0))
-            .max(0.0);
+        .max(0.0);
     
         let relevant_acc = if self.attrs.speed_note_count.abs() <= f64::EPSILON {
             0.0
@@ -592,16 +594,16 @@ impl OsuPpInner {
                 / (self.attrs.speed_note_count * 6.0)
         };
     
-        speed_value *= (0.9 + self.attrs.od * self.attrs.od / 1150.0)
-            * ((self.acc + relevant_acc) / 2.0).powf((13.0 - (self.attrs.od).max(8.0)) / 3.0);
+        speed_value *= (0.90 + self.attrs.od * self.attrs.od / 850.0)
+            * ((self.acc + relevant_acc) / 2.0).powf((13.5 - (self.attrs.od).max(8.0)) / 2.0);
     
-        speed_value *= 0.96_f64.powf(
-            (self.state.n50 as f64 >= total_hits / 900.0) as u8 as f64
-                * (self.state.n50 as f64 - total_hits / 900.0),
+        speed_value *= 0.98_f64.powf(
+            (self.state.n50 as f64 >= total_hits / 500.0) as u8 as f64
+                * (self.state.n50 as f64 - total_hits / 500.0),
         );
     
         speed_value
-    }       
+    }    
 
     fn compute_accuracy_value(&self) -> f64 {
         if self.mods.rx() {
