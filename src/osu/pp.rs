@@ -490,13 +490,13 @@ impl OsuPpInner {
             return 0.0;
         }
     
-        let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 80_000.0;
+        let mut aim_value = (4.5 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
     
         let total_hits = self.total_hits();
     
-        let len_bonus = 1.0
-            + 0.5 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.6;
+        let len_bonus = 0.95
+            + 0.4 * (total_hits / 2000.0).min(1.0)
+            + (total_hits > 2000.0) as u8 as f64 * (total_hits / 2000.0).log10() * 0.5;
     
         aim_value *= len_bonus;
     
@@ -510,20 +510,20 @@ impl OsuPpInner {
         let ar_factor = if self.mods.rx() {
             0.0
         } else if self.attrs.ar > 10.33 {
-            0.35 * (self.attrs.ar - 10.33)
+            0.25 * (self.attrs.ar - 10.33)
         } else if self.attrs.ar < 8.0 {
-            0.06 * (8.0 - self.attrs.ar)
+            0.05 * (8.0 - self.attrs.ar)
         } else {
             0.0
         };
-
+    
         aim_value *= 1.0 + ar_factor * len_bonus;
     
         if self.mods.hd() {
-            aim_value *= 1.0 + 0.05 * (12.0 - self.attrs.ar);
+            aim_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
         }
-
-        let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.2;
+    
+        let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.15;
     
         if self.attrs.n_sliders > 0 {
             let estimate_slider_ends_dropped =
@@ -536,11 +536,11 @@ impl OsuPpInner {
     
             aim_value *= slider_nerf_factor;
         }
-    
+
         aim_value *= self.acc;
-        aim_value *= 1.02 + self.attrs.od * self.attrs.od / 2400.0;
+        aim_value *= 1.01 + self.attrs.od * self.attrs.od / 3000.0;
         aim_value
-    }  
+    }    
 
     fn compute_speed_value(&self) -> f64 {
         if self.mods.rx() || self.mods.ap() {
