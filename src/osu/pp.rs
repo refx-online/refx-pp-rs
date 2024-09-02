@@ -463,8 +463,8 @@ impl OsuPpInner {
             // Tenbin no ue de [Last Fate]
             4480795 => 0.853,
     
-            // sweet pie with raisins / REGGAETON BUT IT HAS AMEN BREAKS [tula improved]
-            //2901666 => 0.863,
+            // Akari no Arika [My Angel's 9* Eroge Fantasy]
+            2399767 => 0.763,
                 
             _ => 1.0,
         };
