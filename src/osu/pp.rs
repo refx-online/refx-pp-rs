@@ -457,6 +457,8 @@ impl OsuPpInner {
         pp *= match self.map.title.as_str() {
 
             title if title.contains("sidetracked") => 0.77,
+            
+            title if title.contains("gamma") => 0.6,
     
             "Mario Paint (Time Regression Mix For BMS)" => 0.74,
             
