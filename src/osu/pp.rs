@@ -454,7 +454,7 @@ impl OsuPpInner {
             pp *= 0.8;
         }
 
-        pp *= match self.map.title.as_str() {
+        /*pp *= match self.map.title.as_str() {
 
             title if title.contains("sidetracked") => 0.77,
             
@@ -465,7 +465,7 @@ impl OsuPpInner {
             "Glass Phantoms" => 0.8,
             
             _ => 1.0,
-        };
+        };*/
 
         pp *= match self.map.beatmap_id {
             // Tenbin no ue de [Last Fate]
@@ -476,6 +476,9 @@ impl OsuPpInner {
             
             // Yekteniya I: Ochishenie [EBNYTIY SVYASHENNIK]
             2321051 => 0.6,
+            
+            // Popular GAMMA [SHRED]
+            4527611 => 0.4,
 
             _ => 1.0,
         };
