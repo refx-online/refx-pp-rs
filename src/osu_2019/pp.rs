@@ -466,9 +466,9 @@ impl<'m> OsuPP<'m> {
             acc_value *= 1.02;
         }
         
-        if better_acc_percentage >= 0.6 && better_acc_percentage < 0.94 {
-            let penalty_factor = (better_acc_percentage - 0.6).powf(2.0) * 0.75 + 0.25;
-            acc_value *= penalty_factor;
+        if better_acc_percentage >= 0.6 && better_acc_percentage <= 0.93 {
+            let scaling_factor = 0.5 + (better_acc_percentage - 0.6) * 0.3 / 0.33;
+            acc_value *= scaling_factor;
         }
 
         acc_value

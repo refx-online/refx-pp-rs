@@ -1,6 +1,6 @@
 [package]
 name = "refx-pp"
-version = "0.2.2"
+version = "0.2.7"
 authors = ["MaxOhn <ohn.m@hotmail.de>", "tsunyoku <tsunyoku@gmail.com>", "ldci4 <anoletenu@gmail.com>"]
 edition = "2018"
 license = "MIT"
