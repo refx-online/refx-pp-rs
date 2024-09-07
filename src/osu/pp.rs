@@ -439,7 +439,12 @@ impl OsuPpInner {
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
 
-        let mut pp = (aim_value.powf(1.1)
+        /*let nodt_bonus = match !self.mods.change_speed() {
+            true => 1.02,
+            false => 1.0,
+        };*/
+
+        let mut pp = (aim_value.powf(1.1)/* * nodt_bonus)*/
             + speed_value.powf(1.1)
             + acc_value.powf(1.1)
             + flashlight_value.powf(1.1))

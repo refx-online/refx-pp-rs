@@ -465,15 +465,6 @@ impl<'m> OsuPP<'m> {
         if self.mods.fl() {
             acc_value *= 1.02;
         }
-        
-        let accuracy = self.acc.unwrap_or(0.0);
-
-        if accuracy >= 0.6 && accuracy < 0.94 {
-            let scaling_factor = 0.5 + (accuracy - 0.6) * 0.5 / 0.34;
-            acc_value *= scaling_factor;
-        } else if accuracy < 0.6 {
-            acc_value *= 0.2;
-        }
 
         acc_value
     }
