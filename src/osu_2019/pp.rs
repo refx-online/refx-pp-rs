@@ -291,7 +291,7 @@ impl<'m> OsuPP<'m> {
 
             title if title.contains("farm pack") => 0.83421,
 
-            title if title.contains("fuquila pack") => 0.621,
+            title if title.contains("Fuquila pack") => 0.621,
             
             title if title.contains("Speed-Up Map Pack") => 0.732,
 
@@ -466,10 +466,10 @@ impl<'m> OsuPP<'m> {
             acc_value *= 1.02;
         }
         
-        if better_acc_percentage >= 0.6 && better_acc_percentage < 0.9 {
-            let penalty_factor = (better_acc_percentage - 0.6).powf(2.0) * 0.75 + 0.25;
+        if better_acc_percentage >= 0.4 && better_acc_percentage < 0.93 {
+            let penalty_factor = (better_acc_percentage - 0.4).powf(2.0) * 0.75 + 0.25;
             acc_value *= penalty_factor;
-        } else if better_acc_percentage < 0.6 {
+        } else if better_acc_percentage < 0.4 {
             acc_value *= 0.5;
         }
 
