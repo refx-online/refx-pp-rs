@@ -465,6 +465,13 @@ impl<'m> OsuPP<'m> {
         if self.mods.fl() {
             acc_value *= 1.02;
         }
+        
+        if better_acc_percentage >= 0.6 && better_acc_percentage < 0.9 {
+            let penalty_factor = (better_acc_percentage - 0.6).powf(2.0) * 0.75 + 0.25;
+            acc_value *= penalty_factor;
+        } else if better_acc_percentage < 0.6 {
+            acc_value *= 0.5;
+        }
 
         acc_value
     }

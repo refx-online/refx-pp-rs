@@ -723,18 +723,9 @@ fn calculate_effective_misses(_attrs: &OsuDifficultyAttributes, state: &OsuScore
 }
 
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
-    // i tried to make a balance where lower miss counts are rewarded and higher miss counts are penalized more aggressively
-    if miss_count <= difficult_strain_count * 0.25 {
-        return 1.0 + (miss_count / (difficult_strain_count * 0.5)).ln().powf(1.5);
-    }
-
     let base_penalty = 0.96 / ((miss_count / (2.0 * difficult_strain_count.ln().powf(0.94))) + 1.0);
-
-    if miss_count > difficult_strain_count * 0.75 {
-        base_penalty * (1.0 - ((miss_count - difficult_strain_count * 0.75) / difficult_strain_count).powi(2))
-    } else {
-        base_penalty
-    }
+    
+    base_penalty * (0.98_f64.powf(miss_count.powf(1.2)))
 }
 
 /// Abstract type to provide flexibility when passing difficulty attributes to a performance calculation.
