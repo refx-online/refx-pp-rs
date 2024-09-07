@@ -454,7 +454,7 @@ impl OsuPpInner {
             pp *= 0.8;
         }
 
-        /*pp *= match self.map.title.as_str() {
+        pp *= match self.map.title.to_lowercase().as_str() {
 
             title if title.contains("sidetracked") => 0.77,
             
@@ -465,7 +465,7 @@ impl OsuPpInner {
             "Glass Phantoms" => 0.8,
             
             _ => 1.0,
-        };*/
+        };
 
         pp *= match self.map.beatmap_id {
             // Tenbin no ue de [Last Fate]
@@ -724,7 +724,7 @@ fn calculate_effective_misses(_attrs: &OsuDifficultyAttributes, state: &OsuScore
 
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
     let base_penalty = 0.96 / ((miss_count / (2.0 * difficult_strain_count.ln().powf(0.94))) + 1.0);
-    
+
     base_penalty * (0.98_f64.powf(miss_count.powf(1.2)))
 }
 
