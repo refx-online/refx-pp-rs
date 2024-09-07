@@ -285,15 +285,15 @@ impl<'m> OsuPP<'m> {
             pp *= 0.9;
         }       
         
-        pp *= match self.map.title.as_str() {
+        pp *= match self.map.title.to_lowercase().as_str() {
 
             title if title.contains("jump pack") => 0.86434,
 
             title if title.contains("farm pack") => 0.83421,
 
-            title if title.contains("Fuquila pack") => 0.621,
+            title if title.contains("fuquila pack") => 0.621,
             
-            title if title.contains("Speed-Up Map Pack") => 0.732,
+            title if title.contains("speed-up map pack") => 0.732,
 
             _ => 1.0,
         };
