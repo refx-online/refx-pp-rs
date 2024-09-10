@@ -408,9 +408,9 @@ impl OsuPpInner {
             multiplier *= (1.0 - 0.02 * self.effective_miss_count).max(0.9);
         }
 
-        if self.mods.so() && total_hits > 0.0 {
+        /*if self.mods.so() && total_hits > 0.0 {
             multiplier *= 1.0 - (self.attrs.n_spinners as f64 / total_hits).powf(0.85);
-        }
+        }*/
         
         if self.mods.rx() {
             // * https://www.desmos.com/calculator/bc9eybdthb

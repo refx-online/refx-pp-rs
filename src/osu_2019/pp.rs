@@ -307,6 +307,12 @@ impl<'m> OsuPP<'m> {
 
             // Tenbin no ue de [Last Fate]
             4480795 => 0.82,
+            
+            // Undercover Martyn [Basement HELL]
+            3118043 => 0.7857,
+            
+            // Reverie on the Onyx [Death crawls into the sky]
+            3945419 => 0.824156,
 
             _ => 1.0,
         };
