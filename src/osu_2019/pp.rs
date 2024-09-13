@@ -264,17 +264,23 @@ impl<'m> OsuPP<'m> {
 
             if streams_nerf < 1.05 {
                 let acc_factor = (1.0 - self.acc.unwrap()).abs();
-                if self.acc.unwrap() < 0.95 {
+                let accuracy = self.acc.unwrap();
+                
+                if accuracy < 0.70 {
+                    acc_depression = (0.3 + acc_factor).min(1.2);
+                } else if accuracy < 0.80 {
+                    acc_depression = (0.45 + acc_factor).min(1.2);
+                } else if accuracy < 0.90 {
+                    acc_depression = (0.6 + acc_factor).min(1.2);
+                } else if accuracy < 0.95 {
                     acc_depression = (0.75 + acc_factor).min(1.2);
-                } else if self.acc.unwrap() < 0.90 {
-                    acc_depression = (0.85 + acc_factor).min(1.2);
                 } else {
                     acc_depression = (0.9 + acc_factor).min(1.2);
                 }
         
                 if acc_depression > 0.0 {
                     speed_value *= acc_depression;
-                } 
+                }
             }
 
         let nodt_bonus = match !self.mods.change_speed() {
