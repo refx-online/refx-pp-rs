@@ -257,14 +257,20 @@ impl<'m> OsuPP<'m> {
         let streams_nerf =
             ((difficulty.speed_strain / difficulty.aim_strain) * 100.0).round() / 100.0;
 
-        if streams_nerf < 1.05 {
-            let acc_factor = (1.0 - self.acc.unwrap()).abs();
-            acc_depression = (0.9 + acc_factor).min(1.2);
-
-            if acc_depression > 0.0 {
-                speed_value *= acc_depression;
+            if streams_nerf < 1.05 {
+                let acc_factor = (1.0 - self.acc.unwrap()).abs();
+                if self.acc.unwrap() < 0.95 {
+                    acc_depression = (0.75 + acc_factor).min(1.2);
+                } else if self.acc.unwrap() < 0.90 {
+                    acc_depression = (0.85 + acc_factor).min(1.2);
+                } else {
+                    acc_depression = (0.9 + acc_factor).min(1.2);
+                }
+        
+                if acc_depression > 0.0 {
+                    speed_value *= acc_depression;
+                } 
             }
-        }
 
         let nodt_bonus = match !self.mods.change_speed() {
             true => 1.02,
@@ -310,9 +316,6 @@ impl<'m> OsuPP<'m> {
             
             // Undercover Martyn [Basement HELL]
             3118043 => 0.7857,
-            
-            // Reverie on the Onyx [Death crawls into the sky]
-            3945419 => 0.824156,
 
             _ => 1.0,
         };
