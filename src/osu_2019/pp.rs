@@ -242,10 +242,15 @@ impl<'m> OsuPP<'m> {
         self.assert_hitresults();
 
         let total_hits = self.total_hits() as f32;
-        let multiplier = 1.09;
+        let mut multiplier = 1.09;
 
         let effective_miss_count = self.calculate_effective_miss_count();
 
+        // SO penalty
+        if self.mods.so() {
+            multiplier *=
+                1.0 - (self.attributes.as_ref().unwrap().n_spinners as f32 / total_hits).powf(0.85);
+        }
 
         let aim_value = self.compute_aim_value(total_hits, effective_miss_count);
         let mut speed_value = self.compute_speed_value(total_hits, effective_miss_count);
