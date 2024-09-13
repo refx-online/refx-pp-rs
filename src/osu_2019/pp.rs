@@ -486,6 +486,14 @@ impl<'m> OsuPP<'m> {
             acc_value *= 1.02;
         }
 
+        acc_value *= match better_acc_percentage {
+            acc if acc < 0.70 => 0.5 + (acc - 0.60) * 0.2 / 0.1, // Drastically reduce for <70%
+            acc if acc < 0.80 => 0.7 + (acc - 0.70) * 0.3 / 0.1,
+            acc if acc < 0.90 => 0.85 + (acc - 0.80) * 0.15 / 0.1,
+            acc if acc < 0.95 => 0.95 + (acc - 0.90) * 0.05 / 0.05,
+            _ => 1.0,
+        };
+
         acc_value
     }
 
