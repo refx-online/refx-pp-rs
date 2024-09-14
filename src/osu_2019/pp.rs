@@ -288,12 +288,13 @@ impl<'m> OsuPP<'m> {
 
         // yeah im not fucking up acc_value lets just do this lazily
         let accuracy = self.acc.unwrap();
-        if accuracy < 0.93 {
+        if accuracy < 0.96 {
             let scaling_factor = match accuracy {
-                a if a < 0.70 => 0.65,
-                a if a < 0.80 => 0.65 + (a - 0.70) * (0.77 - 0.65) / 0.10,
-                a if a < 0.90 => 0.77 + (a - 0.80) * (0.85 - 0.77) / 0.10,
-                _ => 0.85 + (accuracy - 0.90) * (0.90 - 0.85) / 0.03,
+                a if a < 0.70 => 0.60,
+                a if a < 0.80 => 0.60 + (a - 0.70) * (0.72 - 0.60) / 0.10,
+                a if a < 0.90 => 0.72 + (a - 0.80) * (0.80 - 0.72) / 0.10,
+                a if a < 0.93 => 0.80 + (a - 0.90) * (0.85 - 0.80) / 0.03,
+                _ => 0.85 + (accuracy - 0.93) * (0.90 - 0.85) / 0.03,
             };
             pp *= scaling_factor;
         }
