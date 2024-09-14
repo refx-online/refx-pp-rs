@@ -262,26 +262,14 @@ impl<'m> OsuPP<'m> {
         let streams_nerf =
             ((difficulty.speed_strain / difficulty.aim_strain) * 100.0).round() / 100.0;
 
-            if streams_nerf < 1.05 {
-                let acc_factor = (1.0 - self.acc.unwrap()).abs();
-                let accuracy = self.acc.unwrap();
+        if streams_nerf < 1.05 {
+            let acc_factor = (1.0 - self.acc.unwrap()).abs();
+            acc_depression = (0.9 + acc_factor).min(1.2);
 
-                if accuracy < 0.70 {
-                    acc_depression = (0.1 + acc_factor).min(1.2);
-                } else if accuracy < 0.80 {
-                    acc_depression = (0.3 + acc_factor).min(1.2);
-                } else if accuracy < 0.90 {
-                    acc_depression = (0.5 + acc_factor).min(1.2);
-                } else if accuracy < 0.95 {
-                    acc_depression = (0.7 + acc_factor).min(1.2);
-                } else {
-                    acc_depression = (0.9 + acc_factor).min(1.2);
-                }
-        
-                if acc_depression > 0.0 {
-                    speed_value *= acc_depression;
-                }
+            if acc_depression > 0.0 {
+                speed_value *= acc_depression;
             }
+        }
 
         let nodt_bonus = match !self.mods.change_speed() {
             true => 1.02,
@@ -298,9 +286,17 @@ impl<'m> OsuPP<'m> {
             pp *= 1.025;
         }
 
-        if self.map.creator == "quantumvortex" || self.map.creator == "LaurKappita"{
-            pp *= 0.9;
-        }       
+        // yeah im not fucking up acc_value lets just do this lazily
+        let accuracy = self.acc.unwrap();
+        if accuracy < 0.93 {
+            let scaling_factor = match accuracy {
+                a if a < 0.70 => 0.65,
+                a if a < 0.80 => 0.65 + (a - 0.70) * (0.77 - 0.65) / 0.10,
+                a if a < 0.90 => 0.77 + (a - 0.80) * (0.85 - 0.77) / 0.10,
+                _ => 0.85 + (accuracy - 0.90) * (0.90 - 0.85) / 0.03,
+            };
+            pp *= scaling_factor;
+        }
         
         pp *= match self.map.title.to_lowercase().as_str() {
 
@@ -326,7 +322,7 @@ impl<'m> OsuPP<'m> {
             4480795 => 0.82,
             
             // Undercover Martyn [Basement HELL]
-            3118043 => 0.7857,
+            3118043 => 0.8257,
 
             _ => 1.0,
         };
@@ -485,14 +481,6 @@ impl<'m> OsuPP<'m> {
         if self.mods.fl() {
             acc_value *= 1.02;
         }
-
-        acc_value *= match better_acc_percentage {
-            acc if acc < 0.70 => 0.5 + (acc - 0.60) * 0.2 / 0.1, // Drastically reduce for <70%
-            acc if acc < 0.80 => 0.7 + (acc - 0.70) * 0.3 / 0.1,
-            acc if acc < 0.90 => 0.85 + (acc - 0.80) * 0.15 / 0.1,
-            acc if acc < 0.95 => 0.95 + (acc - 0.90) * 0.05 / 0.05,
-            _ => 1.0,
-        };
 
         acc_value
     }
