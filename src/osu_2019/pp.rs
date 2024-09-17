@@ -304,7 +304,7 @@ impl<'m> OsuPP<'m> {
                 max_scale
             }
         } else {
-            0.90
+            1.0
         };
         
         pp *= acc_scaling_factor;
