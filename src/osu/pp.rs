@@ -475,9 +475,6 @@ impl OsuPpInner {
         };
 
         pp *= match self.map.beatmap_id {
-            // Tenbin no ue de [Last Fate]
-            4480795 => 0.853,
-    
             // Akari no Arika [My Angel's 9* Eroge Fantasy]
             2399767 => 0.763,
 

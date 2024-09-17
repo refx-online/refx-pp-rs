@@ -288,17 +288,36 @@ impl<'m> OsuPP<'m> {
 
         // yeah im not fucking up acc_value lets just do this lazily
         let accuracy = self.acc.unwrap();
-        if accuracy < 0.96 {
-            let scaling_factor = match accuracy {
-                a if a < 0.70 => 0.60,
-                a if a < 0.80 => 0.60 + (a - 0.70) * (0.72 - 0.60) / 0.10,
-                a if a < 0.90 => 0.72 + (a - 0.80) * (0.80 - 0.72) / 0.10,
-                a if a < 0.93 => 0.80 + (a - 0.90) * (0.85 - 0.80) / 0.03,
-                _ => 0.85 + (accuracy - 0.93) * (0.90 - 0.85) / 0.03,
-            };
-            pp *= scaling_factor;
-        }
+        let acc_scaling_factor = if accuracy < 0.96 {
+            let min_acc = 0.70;
+            let max_acc = 0.96;
+            let min_scale = 0.60;
+            let max_scale = 0.90;
         
+            if accuracy < min_acc {
+                min_scale
+            } else if accuracy < max_acc {
+                let progress = (accuracy - min_acc) / (max_acc - min_acc);
+                let smooth_progress = progress * progress;
+                min_scale + (max_scale - min_scale) * smooth_progress
+            } else {
+                max_scale
+            }
+        } else {
+            0.90
+        };
+        
+        pp *= acc_scaling_factor;
+
+        let attributes = self.attributes.as_ref().unwrap();
+        let cs_threshold = 6.2;
+
+        if (attributes.cs as f32) > cs_threshold {
+            let cs_excess = (attributes.cs as f32) - cs_threshold;
+            let nerf_factor = 1.0 - (cs_excess * 0.32517);
+            pp *= nerf_factor.max(0.2);
+        }
+
         pp *= match self.map.title.to_lowercase().as_str() {
 
             title if title.contains("jump pack") => 0.86434,
@@ -383,11 +402,6 @@ impl<'m> OsuPP<'m> {
                     * 0.3
                     * ((total_hits - 200.0) / 300.0).min(1.0)
                 + (total_hits > 500.0) as u8 as f32 * (total_hits - 500.0) / 1500.0; 
-        }
-    
-        if (attributes.cs as f32) > 6.2 {
-            let cs_factor = 0.65 - 0.18 * ((attributes.cs as f32) - 6.2);
-            aim_value *= cs_factor.max(0.25);
         }
     
         if self.mods.ez() {
@@ -504,22 +518,7 @@ impl<'m> OsuPP<'m> {
 
     #[inline]
     fn calculate_effective_miss_count(&self) -> f32 {
-        let mut combo_based_miss_count = 0.0;
-
-        let attributes = self.attributes.as_ref().unwrap();
-        let combo = self.combo.unwrap_or(attributes.max_combo) as f32;
-        let n100 = self.n100.unwrap_or(0) as f32;
-        let n50 = self.n50.unwrap_or(0) as f32;
-
-        if attributes.n_sliders > 0 {
-            let fc_threshold = attributes.max_combo as f32 - (0.1 * attributes.n_sliders as f32);
-            if combo < fc_threshold {
-                combo_based_miss_count = fc_threshold / combo.max(1.0);
-            }
-        }
-
-        combo_based_miss_count = combo_based_miss_count.min(n100 + n50 + self.n_misses as f32);
-        combo_based_miss_count.max(self.n_misses as f32)
+        self.n_misses as f32
     }
 }
 
