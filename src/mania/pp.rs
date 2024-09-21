@@ -579,6 +579,7 @@ impl<'map> From<OsuPP<'map>> for ManiaPP<'map> {
             passed_objects,
             clock_rate,
             hitresult_priority,
+            ..
         } = osu;
 
         Self {

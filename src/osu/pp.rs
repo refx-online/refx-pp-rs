@@ -51,6 +51,10 @@ pub struct OsuPP<'map> {
     pub(crate) passed_objects: Option<usize>,
     pub(crate) clock_rate: Option<f64>,
     pub(crate) hitresult_priority: Option<HitResultPriority>,
+
+    pub(crate) ac: Option<usize>,
+    pub(crate) arc: Option<f64>,
+    pub(crate) hdr: Option<bool>,
 }
 
 impl<'map> OsuPP<'map> {
@@ -71,6 +75,10 @@ impl<'map> OsuPP<'map> {
             passed_objects: None,
             clock_rate: None,
             hitresult_priority: None,
+
+            ac: None,
+            arc: None,
+            hdr: None
         }
     }
 
@@ -176,6 +184,24 @@ impl<'map> OsuPP<'map> {
     pub fn clock_rate(mut self, clock_rate: f64) -> Self {
         self.clock_rate = Some(clock_rate);
 
+        self
+    }
+
+    #[inline]
+    pub fn ac(mut self, ac: usize) -> Self {
+        self.ac = Some(ac);  // Set hdr to Some(hdr)
+        self
+    }
+
+    #[inline]
+    pub fn arc(mut self, arc: f64) -> Self {
+        self.arc = Some(arc);  // Set hdr to Some(hdr)
+        self
+    }
+
+    #[inline]
+    pub fn hdr(mut self, hdr: bool) -> Self {
+        self.hdr = Some(hdr);  // Set hdr to Some(hdr)
         self
     }
 
@@ -373,7 +399,11 @@ impl<'map> OsuPP<'map> {
             acc: state.accuracy(),
             state,
             effective_miss_count,
-            map: self.map.clone()
+            map: self.map.clone(),
+
+            ac: self.ac.unwrap_or(50),
+            arc: self.arc.unwrap_or(0.0),
+            hdr: self.hdr.unwrap_or(false)
         };
 
         inner.calculate()
@@ -387,6 +417,10 @@ struct OsuPpInner {
     state: OsuScoreState,
     effective_miss_count: f64,
     map: Beatmap,
+
+    ac: usize,
+    arc: f64,
+    hdr: bool
 }
 
 impl OsuPpInner {
@@ -438,18 +472,20 @@ impl OsuPpInner {
         let speed_value = self.compute_speed_value();
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
+        let cheat_value = self.compute_cheat_value();
 
         /*let nodt_bonus = match !self.mods.change_speed() {
             true => 1.02,
             false => 1.0,
         };*/
 
-        let mut pp = (aim_value.powf(1.1)/* * nodt_bonus)*/
-            + speed_value.powf(1.1)
-            + acc_value.powf(1.1)
-            + flashlight_value.powf(1.1))
-        .powf(1.0 / 1.1)
-            * multiplier;
+        let mut pp = (
+            aim_value.powf(1.1) +
+            speed_value.powf(1.1) +
+            acc_value.powf(1.1) +
+            flashlight_value.powf(1.1) +
+            cheat_value.powf(1.1)
+        ).powf(1.0 / 1.1) * multiplier;
 
         if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
             pp *= 0.9;
@@ -495,6 +531,34 @@ impl OsuPpInner {
             pp,
             effective_miss_count: self.effective_miss_count,
         }
+    }
+
+    fn compute_cheat_value(&self) -> f64 {
+        
+        let mut cheat_value = 0.0;
+        let weight = 250.0;
+        let arc;
+
+        if self.arc == -1.0 {
+            arc = 1.0 * weight;
+        } else if self.arc > 10.0 {
+            let multiplier = (self.arc - 10.0) / 2.0;
+            arc = multiplier.min(1.0) * weight;
+        } else if self.arc < 9.0 {
+            let multiplier = (9.0 - self.arc) / 9.0;
+            arc = multiplier.min(1.0) * weight;
+        } else {
+            arc = 0.0;
+        }
+
+        cheat_value += arc;
+
+        let ac_value = 1.0 - (self.ac as f64 / 80.0).min(1.0);
+        cheat_value += ac_value * 250.0;
+
+        cheat_value *= if self.hdr { 0.7 } else { 1.0 };
+
+        cheat_value
     }
 
     fn compute_aim_value(&self) -> f64 {

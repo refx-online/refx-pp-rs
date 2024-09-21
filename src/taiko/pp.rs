@@ -402,6 +402,7 @@ impl<'map> From<OsuPP<'map>> for TaikoPP<'map> {
             passed_objects,
             clock_rate,
             hitresult_priority,
+            ..
         } = osu;
 
         Self {

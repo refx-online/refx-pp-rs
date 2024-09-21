@@ -249,6 +249,34 @@ impl<'map> AnyPP<'map> {
             Self::Mania(m) => Self::Mania(m.n320(n_geki)),
         }
     }
+
+    #[inline]
+    pub fn ac(self, ac: usize) -> Self {
+        match self {
+            Self::Osu(o) => Self::Osu(o.ac(ac)),
+            Self::Taiko(_) => self,
+            Self::Catch(_) => self,
+            Self::Mania(_) => self,
+        }
+    }
+    #[inline]
+    pub fn arc(self, arc: f64) -> Self {
+        match self {
+            Self::Osu(o) => Self::Osu(o.arc(arc)),
+            Self::Taiko(_) => self,
+            Self::Catch(_) => self,
+            Self::Mania(_) => self,
+        }
+    }
+    #[inline]
+    pub fn hdr(self, hdr: bool) -> Self {
+        match self {
+            Self::Osu(o) => Self::Osu(o.hdr(hdr)),
+            Self::Taiko(_) => self,
+            Self::Catch(_) => self,
+            Self::Mania(_) => self,
+        }
+    }
 }
 
 /// While generating remaining hitresults, decide how they should be distributed.
