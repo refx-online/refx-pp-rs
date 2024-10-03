@@ -482,12 +482,12 @@ impl<'m> OsuPP<'m> {
 
         multiplier += arc_multiplier;
 
-        let tw_multiplier: f64 = if tw == 150 {
+        let tw_multiplier: f64 = if tw == 100 {
             0.0
-        } else if tw < 150 {
-            (150 - tw) as f64 / 150.0
+        } else if tw < 100 {
+            -((100 - tw) as f64 / 100.0)
         } else {
-            ((tw - 150) as f64 / 200.0).min(0.3)
+            ((100 - tw) as f64 / 200.0).min(0.3)
         };
 
         multiplier += tw_multiplier;

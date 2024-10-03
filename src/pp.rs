@@ -277,24 +277,6 @@ impl<'map> AnyPP<'map> {
             Self::Mania(_) => self,
         }
     }
-    #[inline]
-    pub fn tw(self, tw: usize) -> Self {
-        match self {
-            Self::Osu(o) => Self::Osu(o.tw(tw)),
-            Self::Taiko(_) => self,
-            Self::Catch(_) => self,
-            Self::Mania(_) => self,
-        }
-    }
-    #[inline]
-    pub fn cs(self, cs: bool) -> Self {
-        match self {
-            Self::Osu(o) => Self::Osu(o.cs(cs)),
-            Self::Taiko(_) => self,
-            Self::Catch(_) => self,
-            Self::Mania(_) => self,
-        }
-    }
 }
 
 /// While generating remaining hitresults, decide how they should be distributed.

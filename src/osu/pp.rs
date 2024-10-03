@@ -55,9 +55,6 @@ pub struct OsuPP<'map> {
     pub(crate) ac: Option<usize>,
     pub(crate) arc: Option<f64>,
     pub(crate) hdr: Option<bool>,
-
-    pub(crate) tw: Option<usize>,
-    pub(crate) cs: Option<bool>,
 }
 
 impl<'map> OsuPP<'map> {
@@ -81,10 +78,7 @@ impl<'map> OsuPP<'map> {
 
             ac: None,
             arc: None,
-            hdr: None,
-
-            tw: None,
-            cs: None
+            hdr: None
         }
     }
 
@@ -208,18 +202,6 @@ impl<'map> OsuPP<'map> {
     #[inline]
     pub fn hdr(mut self, hdr: bool) -> Self {
         self.hdr = Some(hdr);  // Set hdr to Some(hdr)
-        self
-    }
-
-    #[inline]
-    pub fn tw(mut self, tw: usize) -> Self {
-        self.tw = Some(tw);  // Set tw to Some(tw)
-        self
-    }
-
-    #[inline]
-    pub fn cs(mut self, cs: bool) -> Self {
-        self.cs = Some(cs);  // Set cs to Some(cs)
         self
     }
 

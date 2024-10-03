@@ -173,8 +173,8 @@
     clippy::all,
     nonstandard_style,
     rust_2018_idioms,
-    unused,
-    warnings,
+    // unused,
+    // warnings,
     missing_debug_implementations
 )]
 
