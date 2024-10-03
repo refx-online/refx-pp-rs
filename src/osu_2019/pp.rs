@@ -41,6 +41,12 @@ pub struct OsuPP<'m> {
     n50: Option<usize>,
     n_misses: usize,
     passed_objects: Option<usize>,
+
+    ac: Option<usize>,
+    arc: Option<f64>,
+    hdr: Option<bool>,
+    tw: Option<usize>,
+    cs: Option<bool>,
 }
 
 impl<'m> OsuPP<'m> {
@@ -59,6 +65,12 @@ impl<'m> OsuPP<'m> {
             n50: None,
             n_misses: 0,
             passed_objects: None,
+
+            ac: None,
+            arc: None,
+            hdr: None,
+            tw: None,
+            cs: None,
         }
     }
 
@@ -131,6 +143,36 @@ impl<'m> OsuPP<'m> {
     pub fn passed_objects(mut self, passed_objects: usize) -> Self {
         self.passed_objects.replace(passed_objects);
 
+        self
+    }
+
+    #[inline]
+    pub fn ac(mut self, ac: usize) -> Self {
+        self.ac = Some(ac);  // Set hdr to Some(hdr)
+        self
+    }
+
+    #[inline]
+    pub fn arc(mut self, arc: f64) -> Self {
+        self.arc = Some(arc);  // Set hdr to Some(hdr)
+        self
+    }
+
+    #[inline]
+    pub fn hdr(mut self, hdr: bool) -> Self {
+        self.hdr = Some(hdr);  // Set hdr to Some(hdr)
+        self
+    }
+
+    #[inline]
+    pub fn tw(mut self, tw: usize) -> Self {
+        self.tw = Some(tw);  // Set hdr to Some(hdr)
+        self
+    }
+
+    #[inline]
+    pub fn cs(mut self, cs: bool) -> Self {
+        self.cs = Some(cs);  // Set hdr to Some(hdr)
         self
     }
 
@@ -255,6 +297,12 @@ impl<'m> OsuPP<'m> {
         let aim_value = self.compute_aim_value(total_hits, effective_miss_count);
         let mut speed_value = self.compute_speed_value(total_hits, effective_miss_count);
         let acc_value = self.compute_accuracy_value(total_hits);
+        let cheat_value = self.compute_cheat_value(
+            self.ac.unwrap_or(0),
+            self.arc.unwrap_or(0.0),
+            self.tw.unwrap_or(150),
+            self.cs.unwrap_or(false)
+        );
 
         let mut acc_depression = 1.0;
 
@@ -278,9 +326,8 @@ impl<'m> OsuPP<'m> {
 
         let mut pp = (aim_value.powf(1.185 * nodt_bonus)
             + speed_value.powf(0.83 * acc_depression)
-            + acc_value.powf(1.14 * nodt_bonus))
-        .powf(1.0 / 1.1)
-            * multiplier;
+            + acc_value.powf(1.14 * nodt_bonus)
+        ).powf(1.0 / 1.1) * multiplier * cheat_value;
 
         if self.mods.dt() && self.mods.hr() {
             pp *= 1.025;
@@ -391,7 +438,7 @@ impl<'m> OsuPP<'m> {
     
         aim_value *= 1.0 + ar_factor as f32 * len_bonus;
     
-        if self.mods.hd() {
+        if self.mods.hd() && !self.hdr.unwrap() {
             aim_value *= 1.0 + 0.06 * (11.0 - attributes.ar) as f32;
         }
     
@@ -418,6 +465,40 @@ impl<'m> OsuPP<'m> {
         aim_value *= 0.99 + attributes.od as f32 * attributes.od as f32 / 2400.0;
     
         aim_value
+    }
+
+    fn compute_cheat_value(&self, ac: usize, arc: f64, tw: usize, cs: bool) -> f32 {
+        let mut multiplier: f64 = 1.0;
+
+        let ac_multiplier: f64 = 1.0 - (ac as f64 / 80.0);
+
+        multiplier += ac_multiplier * 0.3;
+
+        let arc_multiplier: f64 = if (9.0..=10.0).contains(&arc) {
+            0.0
+        } else {
+            ((arc - 9.5).abs() / 5.0).min(0.2)
+        };
+
+        multiplier += arc_multiplier;
+
+        let tw_multiplier: f64 = if tw == 150 {
+            0.0
+        } else if tw < 150 {
+            (150 - tw) as f64 / 150.0
+        } else {
+            ((tw - 150) as f64 / 200.0).min(0.3)
+        };
+
+        multiplier += tw_multiplier;
+
+        if cs {
+            multiplier -= 0.5;
+        }
+
+        multiplier = multiplier.min(1.3);
+
+        multiplier as f32
     }
 
     fn compute_speed_value(&self, total_hits: f32, effective_miss_count: f32) -> f32 {
@@ -454,7 +535,7 @@ impl<'m> OsuPP<'m> {
         }
     
         // HD bonus
-        if self.mods.hd() {
+        if self.mods.hd() && !self.hdr.unwrap() {
             speed_value *= 1.0 + 0.1 * (11.0 - attributes.ar) as f32;
         }
     
@@ -488,7 +569,7 @@ impl<'m> OsuPP<'m> {
         acc_value *= ((n_circles as f32 / 1000.0).powf(0.3)).min(1.15);
 
         // HD bonus
-        if self.mods.hd() {
+        if self.mods.hd() && !self.hdr.unwrap(){
             acc_value *= 1.08;
         }
 

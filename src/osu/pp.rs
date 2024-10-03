@@ -55,6 +55,9 @@ pub struct OsuPP<'map> {
     pub(crate) ac: Option<usize>,
     pub(crate) arc: Option<f64>,
     pub(crate) hdr: Option<bool>,
+
+    pub(crate) tw: Option<usize>,
+    pub(crate) cs: Option<bool>,
 }
 
 impl<'map> OsuPP<'map> {
@@ -78,7 +81,10 @@ impl<'map> OsuPP<'map> {
 
             ac: None,
             arc: None,
-            hdr: None
+            hdr: None,
+
+            tw: None,
+            cs: None
         }
     }
 
@@ -202,6 +208,18 @@ impl<'map> OsuPP<'map> {
     #[inline]
     pub fn hdr(mut self, hdr: bool) -> Self {
         self.hdr = Some(hdr);  // Set hdr to Some(hdr)
+        self
+    }
+
+    #[inline]
+    pub fn tw(mut self, tw: usize) -> Self {
+        self.tw = Some(tw);  // Set tw to Some(tw)
+        self
+    }
+
+    #[inline]
+    pub fn cs(mut self, cs: bool) -> Self {
+        self.cs = Some(cs);  // Set cs to Some(cs)
         self
     }
 
@@ -483,9 +501,8 @@ impl OsuPpInner {
             aim_value.powf(1.1) +
             speed_value.powf(1.1) +
             acc_value.powf(1.1) +
-            flashlight_value.powf(1.1) +
-            cheat_value.powf(1.1)
-        ).powf(1.0 / 1.1) * multiplier;
+            flashlight_value.powf(1.1)
+        ).powf(1.0 / 1.1) * multiplier * cheat_value;
 
         if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
             pp *= 0.9;
@@ -534,31 +551,23 @@ impl OsuPpInner {
     }
 
     fn compute_cheat_value(&self) -> f64 {
-        
-        let mut cheat_value = 0.0;
-        let weight = 250.0;
-        let arc;
+        let mut multiplier: f64 = 1.0;
 
-        if self.arc == -1.0 {
-            arc = 1.0 * weight;
-        } else if self.arc > 10.0 {
-            let multiplier = (self.arc - 10.0) / 2.0;
-            arc = multiplier.min(1.0) * weight;
-        } else if self.arc < 9.0 {
-            let multiplier = (9.0 - self.arc) / 9.0;
-            arc = multiplier.min(1.0) * weight;
+        let ac_multiplier: f64 = 1.0 - (self.ac as f64 / 50.0);
+    
+        multiplier += ac_multiplier * 0.3;
+    
+        let arc_multiplier: f64 = if (9.0..=10.0).contains(&self.arc) {
+            0.0
         } else {
-            arc = 0.0;
-        }
-
-        cheat_value += arc;
-
-        let ac_value = 1.0 - (self.ac as f64 / 80.0).min(1.0);
-        cheat_value += ac_value * 250.0;
-
-        cheat_value *= if self.hdr { 0.7 } else { 1.0 };
-
-        cheat_value
+            ((self.arc - 9.5).abs() / 5.0).min(0.2)
+        };
+    
+        multiplier += arc_multiplier;
+    
+        multiplier = multiplier.min(1.3);
+    
+        multiplier
     }
 
     fn compute_aim_value(&self) -> f64 {
@@ -595,9 +604,13 @@ impl OsuPpInner {
 
         aim_value *= 1.0 + ar_factor * len_bonus;
     
-        /*if self.mods.hd() {
-            aim_value *= 1.0 + 0.05 * (12.0 - self.attrs.ar);
-        }*/
+        
+        if self.mods.hd() {
+            if self.hdr {} else {
+                aim_value *= 1.0 + 0.05 * (12.0 - self.attrs.ar);
+            }
+        }
+        
 
         let estimate_diff_sliders = self.attrs.n_sliders as f64 * 0.2;
     
@@ -650,9 +663,11 @@ impl OsuPpInner {
     
         speed_value *= 1.0 + ar_factor * len_bonus;
     
-        //if self.mods.hd() { HD Remover exist :sob:
-        //    speed_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
-        //}
+        if self.mods.hd() {
+            if self.hdr {} else {
+                speed_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
+            }
+        }
     
         let relevant_total_diff = total_hits - self.attrs.speed_note_count;
         let relevant_n300 = (self.state.n300 as f64 - relevant_total_diff).max(0.0);
@@ -715,7 +730,9 @@ impl OsuPpInner {
 
         // * Increasing the accuracy value by object count for Blinds isn't ideal, so the minimum buff is given.
         if self.mods.hd() {
-            acc_value *= 1.08;
+            if self.hdr {} else {
+                acc_value *= 1.08;
+            }
         }
 
         if self.mods.fl() {
