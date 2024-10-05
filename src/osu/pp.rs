@@ -516,10 +516,13 @@ impl OsuPpInner {
             _ => 1.0,
         };
 
-        if self.attrs.cs > 6.2 {
-            let cs_factor = 0.65 - 0.18 * (self.attrs.cs - 6.2);
-            pp *= cs_factor.max(0.25);
-        } 
+        let cs_threshold = 6.2;
+
+        if (self.attrs.cs as f32) > cs_threshold {
+            let cs_excess = (attributes.cs as f32) - cs_threshold;
+            let nerf_factor = 1.0 - (cs_excess * 0.32517);
+            pp *= nerf_factor.max(0.2);
+        }
 
         OsuPerformanceAttributes {
             difficulty: self.attrs,
@@ -786,7 +789,7 @@ fn calculate_effective_misses(_attrs: &OsuDifficultyAttributes, state: &OsuScore
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
     let base_penalty = 0.96 / ((miss_count / (2.0 * difficult_strain_count.ln().powf(0.94))) + 1.0);
 
-    base_penalty * (0.98_f64.powf(miss_count.powf(1.2)))
+    base_penalty * (0.98_f64.powf(miss_count.powf(0.8)))
 }
 
 /// Abstract type to provide flexibility when passing difficulty attributes to a performance calculation.
