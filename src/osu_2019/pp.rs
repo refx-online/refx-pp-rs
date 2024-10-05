@@ -469,7 +469,7 @@ impl<'m> OsuPP<'m> {
 
     fn compute_cheat_value(&self, ac: usize, arc: f64, tw: usize, cs: bool) -> f32 {
         let mut multiplier: f64 = 1.0;
-
+        let attributes = self.attributes.as_ref().unwrap();
         let ac_multiplier: f64 = 1.0 - (ac as f64 / 80.0);
 
         multiplier += ac_multiplier * 0.3;
@@ -482,18 +482,21 @@ impl<'m> OsuPP<'m> {
 
         multiplier += arc_multiplier;
 
-        let tw_multiplier: f64 = if (tw == 100) {
+        let tw_multiplier: f64 = if tw == 100 {
             0.0
         } else if tw < 100 {
-            -((100 - tw) as f64 / 100.0)
+            -((100 - tw).pow(2) as f64 / 10000.0)
         } else {
             ((100 - tw) as f64 / 200.0).min(0.3)
         };
+        
+        multiplier += tw_multiplier;        
 
-        multiplier += tw_multiplier;
+        let circlesize = attributes.cs;
 
         if cs {
-            multiplier -= 0.5;
+            let cs_penalty = (circlesize / 10.0).max(0.1);
+            multiplier -= cs_penalty;
         }
 
         multiplier = multiplier.min(1.3);
