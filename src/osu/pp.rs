@@ -542,18 +542,22 @@ impl OsuPpInner {
     
         multiplier += ac_multiplier * 0.3;
     
+        let arc_multiplier: f64 = if (9.0..=10.0).contains(&self.arc) {
+            0.0
+        } else {
+            ((self.arc - 9.5).abs() / 5.0).min(0.2)
+        };
+    
+        multiplier += arc_multiplier;
+    
         multiplier = multiplier.min(1.3);
     
         multiplier
     }
 
-    fn compute_aim_value(&mut self) -> f64 {
+    fn compute_aim_value(&self) -> f64 {
         if self.mods.ap() {
             return 0.0;
-        }
-        
-        if self.arc != 0.0 {
-            self.attrs.ar = self.arc;
         }
     
         let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 80_000.0;
@@ -612,13 +616,9 @@ impl OsuPpInner {
         aim_value
     }
 
-    fn compute_speed_value(&mut self) -> f64 {
+    fn compute_speed_value(&self) -> f64 {
         if self.mods.rx() || self.mods.ap() {
             return 0.0;
-        }
-
-        if self.arc != 0.0 {
-            self.attrs.ar = self.arc;
         }
     
         let mut speed_value = (4.5 * (self.attrs.speed / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
