@@ -485,9 +485,9 @@ impl<'m> OsuPP<'m> {
         let tw_multiplier: f64 = if tw == 100 {
             0.0
         } else if tw < 100 {
-            -((100 - tw).pow(2) as f64 / 10000.0)
+            -((100.0 - tw as f64).powf(2.0) / 200.0).min(0.50)
         } else {
-            ((100 - tw) as f64 / 200.0).min(0.3)
+            ((tw as f64).powi(2) - 10000.0).max(0.0) / 10000.0
         };
         
         multiplier += tw_multiplier;        
