@@ -519,9 +519,9 @@ impl OsuPpInner {
         let cs_threshold = 6.2;
 
         if (self.attrs.cs as f32) > cs_threshold {
-            let cs_excess = (attributes.cs as f32) - cs_threshold;
+            let cs_excess = (self.attrs.cs as f32) - cs_threshold;
             let nerf_factor = 1.0 - (cs_excess * 0.32517);
-            pp *= nerf_factor.max(0.2);
+            pp *= nerf_factor.max(0.2) as f64;
         }
 
         OsuPerformanceAttributes {
@@ -542,22 +542,18 @@ impl OsuPpInner {
     
         multiplier += ac_multiplier * 0.3;
     
-        let arc_multiplier: f64 = if (9.0..=10.0).contains(&self.arc) {
-            0.0
-        } else {
-            ((self.arc - 9.5).abs() / 5.0).min(0.2)
-        };
-    
-        multiplier += arc_multiplier;
-    
         multiplier = multiplier.min(1.3);
     
         multiplier
     }
 
-    fn compute_aim_value(&self) -> f64 {
+    fn compute_aim_value(&mut self) -> f64 {
         if self.mods.ap() {
             return 0.0;
+        }
+        
+        if self.arc != 0.0 {
+            self.attrs.ar = self.arc;
         }
     
         let mut aim_value = (5.0 * (self.attrs.aim / 0.0675).max(1.0) - 4.0).powi(3) / 80_000.0;
@@ -619,6 +615,10 @@ impl OsuPpInner {
     fn compute_speed_value(&self) -> f64 {
         if self.mods.rx() || self.mods.ap() {
             return 0.0;
+        }
+
+        if self.arc != 0.0 {
+            self.attrs.ar = self.arc;
         }
     
         let mut speed_value = (4.5 * (self.attrs.speed / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
