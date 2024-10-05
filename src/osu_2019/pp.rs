@@ -485,7 +485,7 @@ impl<'m> OsuPP<'m> {
         let tw_multiplier: f64 = if tw == 100 {
             0.0
         } else if tw < 100 {
-            -((100.0 - tw as f64).powf(2.0) / 200.0).min(0.50)
+            -((100.0 - tw as f64).pow(2.0) / 300.0).min(0.25) 
         } else {
             ((tw as f64).powi(2) - 10000.0).max(0.0) / 10000.0
         };
@@ -495,7 +495,7 @@ impl<'m> OsuPP<'m> {
         let circlesize = attributes.cs;
 
         if cs {
-            let cs_penalty = ((10.0 - circlesize) / 20.0).clamp(0.05, 0.40);
+            let cs_penalty = ((10.0 - circlesize) / 25.0).clamp(0.05, 0.25);
             multiplier -= cs_penalty;
         }
 
