@@ -612,7 +612,7 @@ impl OsuPpInner {
         aim_value
     }
 
-    fn compute_speed_value(&self) -> f64 {
+    fn compute_speed_value(&mut self) -> f64 {
         if self.mods.rx() || self.mods.ap() {
             return 0.0;
         }
