@@ -516,12 +516,9 @@ impl OsuPpInner {
             _ => 1.0,
         };
 
-        let cs_threshold = 6.2;
-
-        if (self.attrs.cs as f32) > cs_threshold {
-            let cs_excess = (self.attrs.cs as f32) - cs_threshold;
-            let nerf_factor = 1.0 - (cs_excess * 0.32517);
-            pp *= nerf_factor.max(0.2) as f64;
+        if self.attrs.cs > 6.2 {
+            let cs_factor = 0.65 - 0.18 * (self.attrs.cs - 6.2);
+            pp *= cs_factor.max(0.25);
         }
 
         OsuPerformanceAttributes {
