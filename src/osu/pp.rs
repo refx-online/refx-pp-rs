@@ -539,10 +539,12 @@ impl OsuPpInner {
     
         multiplier += ac_multiplier * 0.3;
     
-        let arc_multiplier: f64 = if (9.0..=10.0).contains(&self.arc) {
-            0.0
+        let arc_multiplier: f64 = if self.arc < 9.0 {
+            -((9.0 - self.arc).exp() - 1.0).min(0.2)
+        } else if self.arc <= 10.0 {
+            ((self.arc - 9.0) / 1.0) * 0.1
         } else {
-            ((self.arc - 9.5).abs() / 5.0).min(0.2)
+            ((self.arc - 10.0).exp() - 1.0) / 10.0
         };
     
         multiplier += arc_multiplier;
