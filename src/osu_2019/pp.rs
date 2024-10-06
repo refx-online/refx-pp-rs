@@ -474,10 +474,19 @@ impl<'m> OsuPP<'m> {
 
         multiplier += ac_multiplier * 0.3;
 
-        let arc_multiplier: f64 = if (9.0..=10.0).contains(&arc) {
-            0.0
+        let arc_multiplier: f64 = if tw < 95 { // kinda lazy attempt to balance this but eh it works
+            match arc {
+                x if x < 9.0 => (0.1 + ((9.0 - x).exp() - 1.0).min(0.025)).min(0.2),
+                x if x >= 9.0 && x < 10.0 => (0.1 + ((9.0 - x).exp() / 8.0).min(0.03)).min(0.2),
+                x if x >= 10.0 && x <= 10.4 => (0.1 + ((x - 10.0).exp() / 5.0).min(0.15)).min(0.2),
+                _ => (0.1 - ((arc - 10.4).exp() / 15.0).min(0.1)).min(0.2),
+            }
         } else {
-            ((arc - 9.5).abs() / 5.0).min(0.2)
+            if arc < 10.0 {
+                (0.1 + ((10.0 - arc).exp() / 20.0)).min(0.2)
+            } else {
+                (0.1 + ((tw as f64 - 95.0).exp() - 1.0) / 20.0).min(0.2)
+            }
         };
 
         multiplier += arc_multiplier;
