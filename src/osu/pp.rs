@@ -544,7 +544,8 @@ impl OsuPpInner {
         } else if self.arc <= 10.0 {
             ((self.arc - 9.0) / 1.0) * 0.1
         } else {
-            ((self.arc - 10.0).exp() - 1.0) / 10.0
+            (((self.arc - 10.0).exp() - 1.0) / 10.0)
+                .min(0.2)
         };
     
         multiplier += arc_multiplier;
