@@ -491,10 +491,12 @@ impl<'m> OsuPP<'m> {
 
         multiplier += arc_multiplier;
 
-        let tw_multiplier: f64 = if tw <= 100 {
-            -((0.25 * (100.0 - tw as f64) / 100.0).powf(1.5)).min(0.25)
+        let tw_multiplier: f64 = if tw == 100 {
+            0.0
+        } else if tw < 100 {
+            -((4.0 * (100.0 - tw as f64) / 100.0).powi(2)).max(-0.1)
         } else {
-            (tw as f64 - 100.0) / (100.0 + 50.0)
+            (tw as f64 - 100.0) / 150.0 // https://www.desmos.com/calculator/tbjzd7wcai
         };
         
         multiplier += tw_multiplier;        
