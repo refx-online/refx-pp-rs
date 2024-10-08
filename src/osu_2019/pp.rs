@@ -489,7 +489,7 @@ impl<'m> OsuPP<'m> {
             }
         };
 
-        multiplier += arc_multiplier;
+        multiplier += arc_multiplier * 0.5;
 
         let tw_multiplier: f64 = if tw == 100 {
             0.0

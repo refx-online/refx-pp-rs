@@ -474,13 +474,13 @@ impl OsuPpInner {
         let flashlight_value = self.compute_flashlight_value();
         let cheat_value = self.compute_cheat_value();
 
-        /*let nodt_bonus = match !self.mods.change_speed() {
+        let nodt_bonus = match !self.mods.change_speed() {
             true => 1.02,
             false => 1.0,
-        };*/
+        };
 
         let mut pp = (
-            aim_value.powf(1.1) +
+            aim_value.powf(1.1 * nodt_bonus) +
             speed_value.powf(1.1) +
             acc_value.powf(1.1) +
             flashlight_value.powf(1.1)
@@ -488,10 +488,6 @@ impl OsuPpInner {
 
         if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
             pp *= 0.9;
-        }
-
-        if self.map.creator == "nebuwua" {
-            pp *= 0.8;
         }
 
         pp *= match self.map.title.to_lowercase().as_str() {
@@ -515,11 +511,6 @@ impl OsuPpInner {
 
             _ => 1.0,
         };
-
-        if self.attrs.cs > 6.2 {
-            let cs_factor = 0.65 - 0.18 * (self.attrs.cs - 6.2);
-            pp *= cs_factor.max(0.25);
-        }
 
         OsuPerformanceAttributes {
             difficulty: self.attrs,
@@ -737,30 +728,41 @@ impl OsuPpInner {
             return 0.0;
         }
 
-        let mut flashlight_value = self.attrs.flashlight * self.attrs.flashlight * 25.0;
+        let mut flashlight_value = self.attrs.flashlight * self.attrs.flashlight * 30.0;
 
         let total_hits = self.total_hits();
 
         // * Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
-            flashlight_value *= 0.97
-                * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
-                    .powf(self.effective_miss_count.powf(0.875));
+            flashlight_value *= 0.98
+                * (1.0 - (self.effective_miss_count / total_hits).powf(0.725))
+                    .powf(self.effective_miss_count.powf(0.825));
         }
 
+        flashlight_value *= self.get_combo_scaling_factor();
+
         // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
-        flashlight_value *= 0.7
-            + 0.1 * (total_hits / 200.0).min(1.0)
-            + (total_hits > 200.0) as u8 as f64 * 0.2 * ((total_hits - 200.0) / 200.0).min(1.0);
+        flashlight_value *= 0.8
+            + 0.15 * (total_hits / 200.0).min(1.0)
+            + (total_hits > 200.0) as u8 as f64 * 0.25 * ((total_hits - 200.0) / 200.0).min(1.0);
 
         // * Scale the flashlight value with accuracy _slightly_.
-        flashlight_value *= 0.5 + self.acc / 2.0;
+        flashlight_value *= 0.6 + self.acc / 1.8;
         // * It is important to also consider accuracy difficulty when doing that.
-        flashlight_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
+        flashlight_value *= 1.0 + self.attrs.od * self.attrs.od / 2400.0;
 
         flashlight_value
     }
 
+    fn get_combo_scaling_factor(&self) -> f64 {
+        if self.attrs.max_combo == 0 {
+            1.0
+        } else {
+            ((self.state.max_combo as f64).powf(0.8) / (self.attrs.max_combo as f64).powf(0.8))
+                .min(1.0)
+        }
+    }
+    
     fn total_hits(&self) -> f64 {
         self.state.total_hits() as f64
     }
