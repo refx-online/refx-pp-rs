@@ -299,7 +299,6 @@ impl<'m> OsuPP<'m> {
         let acc_value = self.compute_accuracy_value(total_hits);
         let cheat_value = self.compute_cheat_value(
             self.ac.unwrap_or(0),
-            self.arc.unwrap_or(0.0),
             self.tw.unwrap_or(150),
             self.cs.unwrap_or(false)
         );
@@ -467,29 +466,12 @@ impl<'m> OsuPP<'m> {
         aim_value
     }
 
-    fn compute_cheat_value(&self, ac: usize, arc: f64, tw: usize, cs: bool) -> f32 {
+    fn compute_cheat_value(&self, ac: usize, tw: usize, cs: bool) -> f32 {
         let mut multiplier: f64 = 1.0;
         let attributes = self.attributes.as_ref().unwrap();
         let ac_multiplier: f64 = 1.0 - (ac as f64 / 80.0);
 
         multiplier += ac_multiplier * 0.3;
-
-        let arc_multiplier: f64 = if tw < 95 { // kinda lazy attempt to balance this but eh it works
-            match arc {
-                x if x < 9.0 => (0.1 + ((9.0 - x).exp() - 1.0).min(0.025)).min(0.2),
-                x if x >= 9.0 && x < 10.0 => (0.1 + ((9.0 - x).exp() / 8.0).min(0.03)).min(0.2),
-                x if x >= 10.0 && x <= 10.4 => (0.1 + ((x - 10.0).exp() / 5.0).min(0.15)).min(0.2),
-                _ => (0.1 - ((arc - 10.4).exp() / 15.0).min(0.1)).min(0.2),
-            }
-        } else {
-            if arc < 10.0 {
-                (0.1 + ((10.0 - arc).exp() / 20.0)).min(0.2)
-            } else {
-                (0.1 + ((tw as f64 - 95.0).exp() - 1.0) / 20.0).min(0.2)
-            }
-        };
-
-        multiplier += arc_multiplier * 0.5;
 
         let tw_multiplier: f64 = if tw == 100 {
             0.0
