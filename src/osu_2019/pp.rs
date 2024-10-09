@@ -491,7 +491,7 @@ impl<'m> OsuPP<'m> {
             multiplier -= cs_penalty;
         }
 
-        if self.hdr.unwarp() {
+        if self.hdr.unwrap() {
             multiplier += 0.05 // yh
         }
 
