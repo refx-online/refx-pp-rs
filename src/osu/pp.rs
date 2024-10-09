@@ -506,6 +506,9 @@ impl OsuPpInner {
         pp *= match self.map.beatmap_id {
             // Akari no Arika [My Angel's 9* Eroge Fantasy]
             2399767 => 0.763,
+            
+            // MixxioN [FINAL]
+            3759944 => 0.5,
 
             _ => 1.0,
         };
