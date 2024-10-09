@@ -540,7 +540,7 @@ impl OsuPpInner {
         multiplier += arc_multiplier;
 
         if self.hdr {
-            multiplier += 0.05 // yh
+            multiplier += 0.1 // yh
         }
     
         multiplier = multiplier.min(1.3);

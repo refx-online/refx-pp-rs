@@ -477,7 +477,7 @@ impl<'m> OsuPP<'m> {
         multiplier += ac_multiplier * 0.3;
 
         let tw_multiplier: f64 = if tw < 100 {
-            -((4.0 * (100.0 - tw as f64) / 100.0).powi(2)).max(-0.06)
+            -((4.0 * (100.0 - tw as f64) / 100.0).powi(2)).max(-0.055)
         } else {
             (tw as f64 - 100.0) / 150.0 // https://www.desmos.com/calculator/tbjzd7wcai
         };
@@ -492,7 +492,7 @@ impl<'m> OsuPP<'m> {
         }
 
         if self.hdr.unwrap() {
-            multiplier += 0.05 // yh
+            multiplier += 0.1 // yh
         }
 
         multiplier = multiplier.min(1.3) * 1.28; // man
