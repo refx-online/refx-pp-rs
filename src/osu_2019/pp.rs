@@ -440,7 +440,7 @@ impl<'m> OsuPP<'m> {
     
         aim_value *= 1.0 + ar_factor as f32 * len_bonus;
     
-        if self.mods.hd() && !self.hdr.unwrap() {
+        if self.mods.hd() {
             aim_value *= 1.0 + 0.06 * (11.0 - attributes.ar) as f32;
         }
     
@@ -492,7 +492,7 @@ impl<'m> OsuPP<'m> {
         }
 
         if self.hdr.unwrap() {
-            multiplier += 0.1 // yh
+            multiplier -= 0.05 // yh
         }
 
         multiplier = multiplier.min(1.3) * 1.28; // man
@@ -534,7 +534,7 @@ impl<'m> OsuPP<'m> {
         }
     
         // HD bonus
-        if self.mods.hd() && !self.hdr.unwrap() {
+        if self.mods.hd() {
             speed_value *= 1.0 + 0.1 * (11.0 - attributes.ar) as f32;
         }
     
@@ -568,7 +568,7 @@ impl<'m> OsuPP<'m> {
         acc_value *= ((n_circles as f32 / 1000.0).powf(0.3)).min(1.15);
 
         // HD bonus
-        if self.mods.hd() && !self.hdr.unwrap(){
+        if self.mods.hd() {
             acc_value *= 1.08;
         }
 

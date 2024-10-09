@@ -540,7 +540,7 @@ impl OsuPpInner {
         multiplier += arc_multiplier;
 
         if self.hdr {
-            multiplier += 0.1 // yh
+            multiplier -= 0.05 // yh
         }
     
         multiplier = multiplier.min(1.3);
@@ -584,9 +584,7 @@ impl OsuPpInner {
     
         
         if self.mods.hd() {
-            if self.hdr {} else {
-                aim_value *= 1.0 + 0.05 * (12.0 - self.attrs.ar);
-            }
+            aim_value *= 1.0 + 0.05 * (12.0 - self.attrs.ar);
         }
         
 
@@ -642,9 +640,7 @@ impl OsuPpInner {
         speed_value *= 1.0 + ar_factor * len_bonus;
     
         if self.mods.hd() {
-            if self.hdr {} else {
-                speed_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
-            }
+            speed_value *= 1.0 + 0.03 * (12.0 - self.attrs.ar);
         }
     
         let relevant_total_diff = total_hits - self.attrs.speed_note_count;
@@ -708,9 +704,7 @@ impl OsuPpInner {
 
         // * Increasing the accuracy value by object count for Blinds isn't ideal, so the minimum buff is given.
         if self.mods.hd() {
-            if self.hdr {} else {
-                acc_value *= 1.08;
-            }
+            acc_value *= 1.08;
         }
 
         if self.mods.fl() {
