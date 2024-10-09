@@ -488,7 +488,7 @@ impl<'m> OsuPP<'m> {
             multiplier -= cs_penalty;
         }
 
-        multiplier = multiplier.min(1.3) * 1.21;
+        multiplier = multiplier.min(1.3) * 1.28; // man
 
         multiplier as f32
     }
