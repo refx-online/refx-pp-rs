@@ -491,10 +491,6 @@ impl<'m> OsuPP<'m> {
             multiplier -= cs_penalty;
         }
 
-        if self.hdr.unwrap() {
-            multiplier -= 0.05 // yh
-        }
-
         multiplier = multiplier.min(1.3) * 1.28; // man
 
         multiplier as f32
