@@ -475,7 +475,7 @@ impl OsuPpInner {
         let cheat_value = self.compute_cheat_value();
 
         let nodt_bonus = match !self.mods.change_speed() {
-            true => 1.02,
+            true => 1.07,
             false => 1.0,
         };
 
@@ -762,7 +762,7 @@ impl OsuPpInner {
                 .min(1.0)
         }
     }
-    
+
     fn total_hits(&self) -> f64 {
         self.state.total_hits() as f64
     }
