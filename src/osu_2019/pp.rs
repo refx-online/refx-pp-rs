@@ -389,6 +389,9 @@ impl<'m> OsuPP<'m> {
             
             // Undercover Martyn [Basement HELL]
             3118043 => 0.8257,
+            
+            // cold weather [Niilo's I didnt miss the cold weather]
+            4730348 => 0.6,
 
             _ => 1.0,
         };
