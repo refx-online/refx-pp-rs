@@ -497,8 +497,6 @@ impl OsuPpInner {
             title if title.contains("gamma") => 0.4,
     
             title if title.contains("mario paint") => 0.74,
-            
-            title if title.contains("glass phantoms") => 0.8,
 
             title if title.contains("yekteniya") => 0.6,
             
