@@ -190,6 +190,9 @@ pub mod osu;
 /// osu! 2019 (for relax)
 pub mod osu_2019;
 
+/// osu! 2019 (for others that arent using refx client)
+pub mod osu_2019_2;
+
 /// Everything about osu!taiko.
 pub mod taiko;
 
