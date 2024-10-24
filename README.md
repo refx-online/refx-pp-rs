@@ -6,5 +6,5 @@ this is a fork from [akatsuki-pp-rs](https://github.com/osuAkatsuki/akatsuki-pp-
 this calculation scales with the player's skill level; as a player's skill increases, the calculation applies more penalties.
 ### Bindings
 
-Using refx-pp from other languages than Rust:
+Using refx-pp from other languages than Rust: <br>
 Python: [refx-pp-py](https://github.com/refx-online/refx-pp-py)

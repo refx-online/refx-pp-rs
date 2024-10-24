@@ -261,7 +261,7 @@ impl<'m> OsuPP<'m> {
 
         OsuPerformanceAttributes {
             difficulty: self.attributes.unwrap(),
-            pp_acc: 0.0,
+            pp_acc: acc_value as f64,
             pp_aim: aim_value as f64,
             pp_flashlight: 0.0,
             pp_speed: speed_value as f64,
