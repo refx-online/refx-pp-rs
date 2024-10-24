@@ -252,7 +252,7 @@ impl<'m> OsuPP<'m> {
                 1.0 - (self.attributes.as_ref().unwrap().n_spinners as f32 / total_hits).powf(0.85);
         }
 
-        let mut aim_value = self.compute_aim_value(total_hits, effective_miss_count);
+        let mut aim_value = self.compute_aim_value(effective_miss_count);
         let speed_value = self.compute_speed_value(total_hits, effective_miss_count);
         let acc_value = self.compute_accuracy_value(total_hits);
 
@@ -288,7 +288,7 @@ impl<'m> OsuPP<'m> {
         }
     }
 
-    fn compute_aim_value(&self, total_hits: f32, effective_miss_count: f32) -> f32 {
+    fn compute_aim_value(&self, effective_miss_count: f32) -> f32 {
         let attributes = self.attributes.as_ref().unwrap();
 
         // TD penalty
@@ -300,12 +300,6 @@ impl<'m> OsuPP<'m> {
 
         let mut aim_value = (5.0 * (raw_aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
 
-        // Longer maps are worth more
-        let len_bonus = 0.88
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f32 * 0.5 * (total_hits / 2000.0).log10();
-        aim_value *= len_bonus;
-
         // Penalize misses
         if effective_miss_count > 0.0 {
             let miss_penalty = self.calculate_miss_penalty(effective_miss_count);
@@ -315,30 +309,6 @@ impl<'m> OsuPP<'m> {
         // Combo scaling
         if let Some(combo) = self.combo.filter(|_| attributes.max_combo > 0) {
             aim_value *= ((combo as f32 / attributes.max_combo as f32).powf(0.8)).min(1.0);
-        }
-
-        // AR bonus
-        let mut ar_factor = if attributes.ar > 10.33 {
-            0.3 * (attributes.ar - 10.33)
-        } else {
-            0.0
-        };
-
-        if attributes.ar < 8.0 {
-            ar_factor = 0.025 * (8.0 - attributes.ar);
-        }
-
-        aim_value *= 1.0 + ar_factor as f32 * len_bonus;
-
-        // EZ bonus
-        if self.mods.ez() {
-            let mut base_buff = 1.08_f32;
-
-            if attributes.ar <= 8.0 {
-                base_buff += (7.0 - attributes.ar as f32) / 100.0;
-            }
-
-            aim_value *= base_buff;
         }
 
         // Scale with accuracy
@@ -354,12 +324,6 @@ impl<'m> OsuPP<'m> {
         let mut speed_value =
             (5.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
 
-        // Longer maps are worth more
-        let len_bonus = 0.88
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + (total_hits > 2000.0) as u8 as f32 * 0.5 * (total_hits / 2000.0).log10();
-        speed_value *= len_bonus;
-
         // Penalize misses
         if effective_miss_count > 0.0 {
             let miss_penalty = self.calculate_miss_penalty(effective_miss_count);
@@ -369,21 +333,6 @@ impl<'m> OsuPP<'m> {
         // Combo scaling
         if let Some(combo) = self.combo.filter(|_| attributes.max_combo > 0) {
             speed_value *= ((combo as f32 / attributes.max_combo as f32).powf(0.8)).min(1.0);
-        }
-
-        // AR bonus
-        if attributes.ar > 10.33 {
-            let mut ar_factor = if attributes.ar > 10.33 {
-                0.3 * (attributes.ar - 10.33)
-            } else {
-                0.0
-            };
-
-            if attributes.ar < 8.0 {
-                ar_factor = 0.025 * (8.0 - attributes.ar);
-            }
-
-            speed_value *= 1.0 + ar_factor as f32 * len_bonus;
         }
 
         // Scaling the speed value with accuracy and OD
