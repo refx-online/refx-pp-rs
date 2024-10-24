@@ -857,6 +857,9 @@ mod test {
             n_spinners: 1,
             stars: 5.669858729379631,
             max_combo: 909,
+            speed_difficult_strain_count: 0.0,
+            aim_difficult_strain_count: 0.0,
+            cs: 0.0
         };
 
         (map, attrs)

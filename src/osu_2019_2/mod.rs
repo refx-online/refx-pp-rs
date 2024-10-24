@@ -8,7 +8,7 @@ mod osu_object;
 use osu_object::OsuObject;
 
 mod pp;
-pub use pp::{OsuAttributeProvider, OsuPP};
+pub use pp::{OsuAttributeProvider, FxPP};
 
 mod skill;
 use skill::Skill;

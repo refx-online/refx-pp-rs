@@ -29,7 +29,7 @@ use crate::{Beatmap, Mods};
 /// println!("PP: {} | Stars: {}", next_result.pp(), next_result.stars());
 /// ```
 #[derive(Clone, Debug)]
-pub struct OsuPP<'m> {
+pub struct FxPP<'m> {
     map: &'m Beatmap,
     attributes: Option<OsuDifficultyAttributes>,
     mods: u32,
@@ -43,10 +43,10 @@ pub struct OsuPP<'m> {
     passed_objects: Option<usize>,
 }
 
-impl<'m> OsuPP<'m> {
+impl<'m> FxPP<'m> {
     /// Creates a new calculator for the given map.
     #[inline]
-    pub fn new(map: &'m Beatmap) -> Self {
+    pub fn new_from_map(map: &'m Beatmap) -> Self {
         Self {
             map,
             attributes: None,
@@ -425,7 +425,7 @@ mod test {
         let total_objects = 1234;
         let target_acc = 97.5;
 
-        let calculator = OsuPP::new(&map)
+        let calculator = FxPP::new_from_map(&map)
             .passed_objects(total_objects)
             .accuracy(target_acc);
 
@@ -451,7 +451,7 @@ mod test {
         let target_acc = 97.5;
         let n50 = 30;
 
-        let calculator = OsuPP::new(&map)
+        let calculator = FxPP::new_from_map(&map)
             .passed_objects(total_objects)
             .n50(n50)
             .accuracy(target_acc);
@@ -486,7 +486,7 @@ mod test {
         let n100 = 200;
         let n50 = 30;
 
-        let mut calculator = OsuPP::new(&map)
+        let mut calculator = FxPP::new_from_map(&map)
             .passed_objects(total_objects)
             .n300(n300)
             .n100(n100)
