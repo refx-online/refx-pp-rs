@@ -1,4 +1,4 @@
-use rosu_pp::{Beatmap, CatchPP, GameMode, ManiaPP, OsuPP, TaikoPP};
+use refx_pp::{Beatmap, CatchPP, GameMode, ManiaPP, OsuPP, TaikoPP};
 
 #[test]
 fn osu() {

@@ -1,4 +1,4 @@
-use rosu_pp::{
+use refx_pp::{
     catch::CatchDifficultyAttributes, mania::ManiaDifficultyAttributes,
     osu::OsuDifficultyAttributes, taiko::TaikoDifficultyAttributes,
 };
@@ -43,6 +43,9 @@ impl_mode! {
         n_spinners: 1,
         stars: 5.669858729379628,
         max_combo: 909,
+        cs: 1.0,
+        aim_difficult_strain_count: 1.0,
+        speed_difficult_strain_count: 1.0,
     };
     Taiko: 1028484, TaikoDifficultyAttributes {
         stamina: 1.4528845068865617,

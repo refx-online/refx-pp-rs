@@ -1,4 +1,4 @@
-use rosu_pp::{Beatmap, GameMode};
+use refx_pp::{Beatmap, GameMode};
 
 use crate::common::{Catch, Mania, Osu, Taiko};
 

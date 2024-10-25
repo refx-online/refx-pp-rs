@@ -1,6 +1,6 @@
 #![cfg(not(any(feature = "async_tokio", feature = "async_std")))]
 
-use rosu_pp::{
+use refx_pp::{
     taiko::{TaikoGradualDifficultyAttributes, TaikoGradualPerformanceAttributes, TaikoScoreState},
     Beatmap, TaikoPP, TaikoStars,
 };

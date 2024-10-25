@@ -1,6 +1,6 @@
 #![cfg(not(any(feature = "async_tokio", feature = "async_std")))]
 
-use rosu_pp::{
+use refx_pp::{
     mania::{ManiaGradualDifficultyAttributes, ManiaGradualPerformanceAttributes, ManiaScoreState},
     Beatmap, ManiaPP, ManiaStars,
 };

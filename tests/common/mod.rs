@@ -1,6 +1,6 @@
 mod mode;
 
-use rosu_pp::Beatmap;
+use refx_pp::Beatmap;
 
 pub use self::mode::{Catch, Mania, Mode, Osu, Taiko};
 
