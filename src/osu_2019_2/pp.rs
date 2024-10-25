@@ -294,11 +294,6 @@ impl<'m> FxPP<'m> {
             aim_value *= miss_penalty;
         }
 
-        // Combo scaling
-        if let Some(combo) = self.combo.filter(|_| attributes.max_combo > 0) {
-            aim_value *= ((combo as f32 / attributes.max_combo as f32).powf(0.8)).min(1.0);
-        }
-
         // Scale with accuracy
         aim_value *= 0.5 + self.acc.unwrap() / 2.0;
         aim_value *= 0.98 + attributes.od as f32 * attributes.od as f32 / 2500.0;
@@ -322,11 +317,6 @@ impl<'m> FxPP<'m> {
         if effective_miss_count > 0.0 {
             let miss_penalty = self.calculate_miss_penalty(effective_miss_count);
             speed_value *= miss_penalty;
-        }
-
-        // Combo scaling
-        if let Some(combo) = self.combo.filter(|_| attributes.max_combo > 0) {
-            speed_value *= ((combo as f32 / attributes.max_combo as f32).powf(0.8)).min(1.0);
         }
 
         // Scaling the speed value with accuracy and OD
