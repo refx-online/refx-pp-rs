@@ -475,14 +475,14 @@ impl OsuPpInner {
         let cheat_value = self.compute_cheat_value();
 
         let nodt_bonus = match !self.mods.change_speed() {
-            true => 1.02,
+            true => 1.03,
             false => 1.0,
         };
 
         let mut pp = (
             aim_value.powf(1.1 * nodt_bonus) +
             speed_value.powf(1.1) +
-            acc_value.powf(1.1) +
+            acc_value.powf(1.1 * nodt_bonus) +
             flashlight_value.powf(1.1)
         ).powf(1.0 / 1.1) * multiplier * cheat_value;
 
