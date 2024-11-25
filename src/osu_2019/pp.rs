@@ -332,29 +332,6 @@ impl<'m> OsuPP<'m> {
             pp *= 1.025;
         }
 
-        // yeah im not fucking up acc_value lets just do this lazily
-        let accuracy = self.acc.unwrap();
-        let acc_scaling_factor = if accuracy < 0.96 {
-            let min_acc = 0.70;
-            let max_acc = 0.96;
-            let min_scale = 0.60;
-            let max_scale = 0.90;
-        
-            if accuracy < min_acc {
-                min_scale
-            } else if accuracy < max_acc {
-                let progress = (accuracy - min_acc) / (max_acc - min_acc);
-                let smooth_progress = progress * progress;
-                min_scale + (max_scale - min_scale) * smooth_progress
-            } else {
-                max_scale
-            }
-        } else {
-            1.0
-        };
-        
-        pp *= acc_scaling_factor;
-
         let attributes = self.attributes.as_ref().unwrap();
         let cs_threshold = 6.2;
 
@@ -389,16 +366,13 @@ impl<'m> OsuPP<'m> {
             
             // Undercover Martyn [Basement HELL]
             3118043 => 0.8257,
-            
-            // cold weather [Niilo's I didnt miss the cold weather]
-            4730348 => 0.6,
 
             _ => 1.0,
         };
 
         OsuPerformanceAttributes {
             difficulty: self.attributes.unwrap(),
-            pp_acc: 0.0,
+            pp_acc: acc_value as f64,
             pp_aim: aim_value as f64,
             pp_flashlight: 0.0,
             pp_speed: speed_value as f64,
@@ -470,17 +444,16 @@ impl<'m> OsuPP<'m> {
     }
 
     fn compute_cheat_value(&self, ac: usize, tw: usize, cs: bool) -> f32 {
+        // TODO: refactor this whole cheat calculation
+        // - it look very cancerous and stupid
+        // - need more opinion from people too
         let mut multiplier: f64 = 1.0;
         let attributes = self.attributes.as_ref().unwrap();
         let ac_multiplier: f64 = 1.0 - (ac as f64 / 80.0);
 
         multiplier += ac_multiplier * 0.3;
 
-        let tw_multiplier: f64 = if tw < 100 {
-            -((4.0 * (100.0 - tw as f64) / 100.0).powi(2)).max(-0.048)
-        } else {
-            (tw as f64 - 100.0) / 150.0 // https://www.desmos.com/calculator/tbjzd7wcai
-        };
+        let tw_multiplier: f64 = self.calculate_tw_multiplier(tw as f64);
         
         multiplier += tw_multiplier;        
 
@@ -491,11 +464,40 @@ impl<'m> OsuPP<'m> {
             multiplier -= cs_penalty;
         }
 
+        // this is just a dumb bonus to make people adapt slowly to the new calculation
+        // maybe im being too generous
         multiplier = multiplier.min(1.3) * 1.28; // man
 
         multiplier as f32
     }
 
+    fn calculate_tw_multiplier(&self, tw: f64) -> f64 {
+        // punish for tw less than 100:
+        // - calculate a penalty based on how far tw is below 100.
+        // - we use a quadratic scaling factor: (4.0 * (100.0 - tw) / 100.0)^2.
+        // - then cap the result at a maximum of -0.048 to avoid excessive penalties.
+        // - multiply by the condition (tw < 100.0) as a boolean (cast to u8, then to f64).\
+        // - tbh i should rework this.. 90-95 is -0.048. thats bad
+        -((4.0 * (100.0 - tw) / 100.0)
+            .powi(2))
+            .min(0.048) * 
+        (tw < 100.0) as u8 as f64
+
+        // award for tw more than 100:
+        // - calculate a scaling factor based on how far tw is above 100.
+        // - use an exponential scaling factor: (1.02)^((tw - 100.0) / 5.0 - 1.0).
+        // - we adjust the result by dividing by 150.0.
+        // - then multiply by the condition (tw > 103.0) as a boolean (cast to u8, then to f64).
+        // - why we checks for tw > 103.0 instead of 100.0? because 101.0 gives around 0.006666666666666667 multiplier, we dont want that
+        + ((tw - 100.0) * (1.02_f64)
+            .powf((tw - 100.0)
+            .max(0.0) / 5.0 - 1.0) / 150.0) * 
+        (tw > 103.0) as u8 as f64
+
+        // why is as "u8" instead of if checks?
+        // look funny :p should be look more cancerous tho
+    }
+    
     fn compute_speed_value(&self, total_hits: f32, effective_miss_count: f32) -> f32 {
         let attributes = self.attributes.as_ref().unwrap();
     
