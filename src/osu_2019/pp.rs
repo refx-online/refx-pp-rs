@@ -472,6 +472,8 @@ impl<'m> OsuPP<'m> {
     }
 
     fn calculate_tw_multiplier(&self, tw: f64) -> f64 {
+        // https://github.com/anoleto/tw-calc
+        
         // punish for tw less than 100:
         // - calculate a penalty based on how far tw is below 100.
         // - we use a quadratic scaling factor: (4.0 * (100.0 - tw) / 100.0)^2.

@@ -280,7 +280,7 @@ impl<'m> FxPP<'m> {
             attributes.aim_strain as f32
         };
 
-        let mut aim_value = (5.0 * (raw_aim / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0;
+        let mut aim_value = (5.0 * (raw_aim / 0.0670).max(1.0) - 4.0).powi(3) / 100_000.0;
 
         // Longer maps are worth more
         let len_bonus = 0.95
@@ -358,8 +358,8 @@ impl<'m> FxPP<'m> {
     fn calculate_miss_penalty(&self, effective_miss_count: f32) -> f32 {
         let total_hits = self.total_hits() as f32;
 
-        0.97 * (1.0 - (effective_miss_count / total_hits).powf(0.5))
-            .powf(1.0 + (effective_miss_count / 1.5))
+        0.97 * (1.0 - (effective_miss_count / total_hits).powf(0.7)) 
+            .powf(1.0 + (effective_miss_count / 2.0))
     }
 
     #[inline]
