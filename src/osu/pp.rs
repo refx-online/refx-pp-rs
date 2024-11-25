@@ -527,9 +527,9 @@ impl OsuPpInner {
     fn compute_cheat_value(&self) -> f64 {
         let mut multiplier: f64 = 1.0;
 
-        let ac_multiplier: f64 = 1.0 - (self.ac as f64 / 50.0);
+        let ac_multiplier: f64 = 1.5 - ((self.ac as f64) / 50.0).log(2.0) * 0.5;
     
-        multiplier += ac_multiplier * 0.3;
+        multiplier += ac_multiplier * 0.3;        
     
         let arc_multiplier: f64 = if self.arc < 9.0 {
             -((9.0 - self.arc).exp() - 1.0).min(0.2)
