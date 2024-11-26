@@ -452,6 +452,10 @@ impl<'m> OsuPP<'m> {
         
         multiplier += tw_multiplier;        
 
+        // so, what this do is we nerf circlesize changer usage
+        // the smaller the circlesize (cs) is, more penalty
+        // by i mean smaller is, the bigger circle
+        // so cs=2 penalty is more harsher than cs=3
         let circlesize = attributes.cs;
 
         if cs {
