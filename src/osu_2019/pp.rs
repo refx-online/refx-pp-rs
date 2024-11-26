@@ -461,7 +461,8 @@ impl<'m> OsuPP<'m> {
 
         // this is just a dumb bonus to make people adapt slowly to the new calculation
         // maybe im being too generous
-        multiplier = multiplier.min(1.3) * 1.28; // man
+        // multiplier = multiplier.min(1.3) * 1.28; // man
+        multiplier = multiplier.min(1.3);
 
         multiplier as f32
     }
