@@ -318,14 +318,9 @@ impl<'m> OsuPP<'m> {
             }
         }
 
-        let nodt_bonus = match !self.mods.change_speed() {
-            true => 1.02,
-            false => 1.0,
-        };
-
-        let mut pp = (aim_value.powf(1.185 * nodt_bonus)
+        let mut pp = (aim_value.powf(1.185)
             + speed_value.powf(0.83 * acc_depression)
-            + acc_value.powf(1.14 * nodt_bonus)
+            + acc_value.powf(1.14)
         ).powf(1.0 / 1.1) * multiplier * cheat_value;
 
         if self.mods.dt() && self.mods.hr() {
@@ -457,6 +452,10 @@ impl<'m> OsuPP<'m> {
         
         multiplier += tw_multiplier;        
 
+        // so, what this do is we nerf circlesize changer usage
+        // the smaller the circlesize (cs) is, more penalty
+        // by i mean smaller is, the bigger circle
+        // so cs=2 penalty is more harsher than cs=3
         let circlesize = attributes.cs;
 
         if cs {
@@ -466,12 +465,15 @@ impl<'m> OsuPP<'m> {
 
         // this is just a dumb bonus to make people adapt slowly to the new calculation
         // maybe im being too generous
-        multiplier = multiplier.min(1.3) * 1.28; // man
+        // multiplier = multiplier.min(1.3) * 1.28; // man
+        multiplier = multiplier.min(1.3);
 
         multiplier as f32
     }
 
     fn calculate_tw_multiplier(&self, tw: f64) -> f64 {
+        // https://github.com/anoleto/tw-calc
+
         // punish for tw less than 100:
         // - calculate a penalty based on how far tw is below 100.
         // - we use a quadratic scaling factor: (4.0 * (100.0 - tw) / 100.0)^2.

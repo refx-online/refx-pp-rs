@@ -475,14 +475,14 @@ impl OsuPpInner {
         let cheat_value = self.compute_cheat_value();
 
         let nodt_bonus = match !self.mods.change_speed() {
-            true => 1.02,
+            true => 1.03,
             false => 1.0,
         };
 
         let mut pp = (
             aim_value.powf(1.1 * nodt_bonus) +
             speed_value.powf(1.1) +
-            acc_value.powf(1.1) +
+            acc_value.powf(1.1 * nodt_bonus) +
             flashlight_value.powf(1.1)
         ).powf(1.0 / 1.1) * multiplier * cheat_value;
 
@@ -527,9 +527,9 @@ impl OsuPpInner {
     fn compute_cheat_value(&self) -> f64 {
         let mut multiplier: f64 = 1.0;
 
-        let ac_multiplier: f64 = 1.0 - (self.ac as f64 / 50.0);
+        let ac_multiplier: f64 = 1.0 - (self.ac as f64 / 50.0) * 0.7;
     
-        multiplier += ac_multiplier * 0.3;
+        multiplier += ac_multiplier * 0.3;        
     
         let arc_multiplier: f64 = if self.arc < 9.0 {
             -((9.0 - self.arc).exp() - 1.0).min(0.2)
@@ -542,7 +542,7 @@ impl OsuPpInner {
     
         multiplier += arc_multiplier;
     
-        multiplier = multiplier.min(1.3);
+        multiplier = multiplier.min(1.4);
     
         multiplier
     }
