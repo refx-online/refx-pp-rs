@@ -55,7 +55,7 @@ impl Skill for Strain {
 }
 
 impl StrainSkill for Strain {
-    const DECAY_WEIGHT: f64 = 0.9;
+    const DECAY_WEIGHT: f64 = 1.1;
 
     #[inline]
     fn curr_section_end(&self) -> f64 {
@@ -160,7 +160,10 @@ impl StrainDecaySkill for Strain {
             start_time - self.start_times[col],
             Self::INDIVIDUAL_DECAY_BASE,
         );
-        self.individual_strains[col] += 1.5 * hold_factor;
+        // Small speed bonus
+        let speed_factor = if curr.delta_time < 100.0 { 1.02 } else { 1.0 };
+
+        self.individual_strains[col] += 1.5 * hold_factor * speed_factor;
 
         // * For notes at the same time (in a chord), the individualStrain should be the hardest individualStrain out of those columns
         self.individual_strain = if mania_curr.delta_time <= 1.0 {
@@ -175,7 +178,7 @@ impl StrainDecaySkill for Strain {
             curr.delta_time,
             Self::OVERALL_DECAY_BASE,
         );
-        self.overall_strain += (1.0 + hold_addition) * hold_factor;
+        self.overall_strain += (1.0 + hold_addition) * hold_factor * speed_factor;
 
         // * Update startTimes and endTimes arrays
         self.start_times[col] = start_time;
