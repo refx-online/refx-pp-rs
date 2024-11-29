@@ -294,6 +294,40 @@ impl<'m> FxPP<'m> {
             aim_value *= miss_penalty;
         }
 
+        // Combo scaling and acc scaling using combo scaling
+        // If players doesn't play on relax, we give them acc scaling. else combo scaling
+        // This accuracy scaling's key idea is to penalize accuracy more heavily when the player's combo is low
+        let scaling = if !self.mods.rx() {
+            self.acc.unwrap_or_default().powf(1.0 + (1.0 - self.get_combo_scaling_factor(attributes.max_combo)).powf(1.2))
+        } else {
+            // If rx
+            self.get_combo_scaling_factor(attributes.max_combo)
+        };
+
+        aim_value *= scaling;
+        // AR bonus
+        let ar_factor = if attributes.ar > 10.33 {
+            0.3 * (attributes.ar - 10.33)
+        } else if attributes.ar < 8.0 {
+            0.01 * (8.0 - attributes.ar)
+        } else {
+            0.0
+        };
+        aim_value *= 1.0 + ar_factor as f32;
+
+        // HD bonus
+        if self.mods.hd() {
+            aim_value *= 1.0 + 0.04 * (12.0 - attributes.ar) as f32;
+        }
+
+        // FL bonus
+        if self.mods.fl() {
+            aim_value *= 1.0
+                + 0.35 * (total_hits / 200.0).min(1.0)
+                + (total_hits > 200.0) as u8 as f32 * 0.3 * ((total_hits - 200.0) / 300.0).min(1.0)
+                + (total_hits > 500.0) as u8 as f32 * (total_hits - 500.0) / 1200.0;
+        }
+
         // Scale with accuracy
         aim_value *= 0.5 + self.acc.unwrap() / 2.0;
         aim_value *= 0.98 + attributes.od as f32 * attributes.od as f32 / 2500.0;
@@ -317,6 +351,36 @@ impl<'m> FxPP<'m> {
         if effective_miss_count > 0.0 {
             let miss_penalty = self.calculate_miss_penalty(effective_miss_count);
             speed_value *= miss_penalty;
+        }
+
+        // Combo scaling and acc scaling using combo scaling
+        // If players doesn't play on relax, we give them acc scaling. else combo scaling
+        // This accuracy scaling's key idea is to penalize accuracy more heavily when the player's combo is low
+        let scaling = if !self.mods.rx() {
+            self.acc.unwrap_or_default().powf(1.0 + (1.0 - self.get_combo_scaling_factor(attributes.max_combo)).powf(1.2))
+        } else {
+            // If rx
+            self.get_combo_scaling_factor(attributes.max_combo)
+        };
+
+        speed_value *= scaling;
+
+        // AR bonus
+        if attributes.ar > 10.33 {
+            let ar_factor = 0.3 * (attributes.ar - 10.33);
+            speed_value *= 1.0 + ar_factor as f32;
+        }
+
+        // HD bonus
+        if self.mods.hd() {
+            speed_value *= 1.0 + 0.04 * (12.0 - attributes.ar as f32);
+        }
+
+        // RX Nerf
+        if self.mods.rx() {
+            // Reduce effectiveness based on speed strain
+            let rx_nerf_factor = 0.5 + 0.5 * (attributes.speed_strain as f32 / 1000.0).min(0.5);
+            speed_value *= rx_nerf_factor;
         }
 
         // Scaling the speed value with accuracy and OD
@@ -344,6 +408,10 @@ impl<'m> FxPP<'m> {
         acc_value *= ((n_circles / 1000.0).powf(0.3)).min(1.15);
 
         acc_value
+    }
+
+    fn get_combo_scaling_factor(&self, max_combo: usize) -> f32 {
+        self.combo.filter(|_| max_combo > 0).map(|combo| ((combo as f32 / max_combo as f32).powf(0.8)).min(1.0)).unwrap_or(1.0)
     }
 
     #[inline]
