@@ -51,10 +51,6 @@ pub struct OsuPP<'map> {
     pub(crate) passed_objects: Option<usize>,
     pub(crate) clock_rate: Option<f64>,
     pub(crate) hitresult_priority: Option<HitResultPriority>,
-
-    pub(crate) ac: Option<usize>,
-    pub(crate) arc: Option<f64>,
-    pub(crate) hdr: Option<bool>,
 }
 
 impl<'map> OsuPP<'map> {
@@ -74,11 +70,7 @@ impl<'map> OsuPP<'map> {
             n_misses: None,
             passed_objects: None,
             clock_rate: None,
-            hitresult_priority: None,
-
-            ac: None,
-            arc: None,
-            hdr: None
+            hitresult_priority: None
         }
     }
 
@@ -381,7 +373,7 @@ impl<'map> OsuPP<'map> {
             acc: state.accuracy(),
             state,
             effective_miss_count,
-            map: self.map.clone(),
+            //map: self.map.clone(),
         };
 
         inner.calculate()
@@ -394,7 +386,7 @@ struct OsuPpInner {
     acc: f64,
     state: OsuScoreState,
     effective_miss_count: f64,
-    map: Beatmap
+    //map: Beatmap
 }
 
 impl OsuPpInner {
