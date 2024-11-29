@@ -426,6 +426,25 @@ impl<'m> OsuPP<'m> {
         // Bonus for many hitcircles
         acc_value *= ((n_circles as f32 / 1000.0).powf(0.3)).min(1.15);
 
+        let acc_scaling_factor = if better_acc_percentage < 0.96 {
+            let min_acc = 0.70;
+            let max_acc = 0.96;
+            let min_scale = 0.60;
+            let max_scale = 0.90;
+    
+            if better_acc_percentage < min_acc {
+                min_scale
+            } else if better_acc_percentage < max_acc {
+                let progress = (better_acc_percentage - min_acc) / (max_acc - min_acc);
+                let smooth_progress = progress * progress;
+                min_scale + (max_scale - min_scale) * smooth_progress
+            } else {
+                max_scale
+            }
+        } else {
+            1.0
+        };
+
         // HD bonus
         if self.mods.hd() {
             acc_value *= 1.08;
@@ -435,6 +454,8 @@ impl<'m> OsuPP<'m> {
         if self.mods.fl() {
             acc_value *= 1.02;
         }
+
+        acc_value *= acc_scaling_factor;
 
         acc_value
     }
