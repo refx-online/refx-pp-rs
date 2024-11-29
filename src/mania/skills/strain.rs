@@ -19,8 +19,8 @@ pub(crate) struct Strain {
 }
 
 impl Strain {
-    const INDIVIDUAL_DECAY_BASE: f64 = 0.125;
-    const OVERALL_DECAY_BASE: f64 = 0.3;
+    const INDIVIDUAL_DECAY_BASE: f64 = 0.15;
+    const OVERALL_DECAY_BASE: f64 = 0.35;
     const RELEASE_THRESHOLD: f64 = 24.0;
 
     pub(crate) fn new(total_columns: usize) -> Self {
@@ -122,7 +122,7 @@ impl StrainDecaySkill for Strain {
         // * Lowest value we can assume with the current information
         let mut closest_end_time = (end_time - start_time).abs();
         // * Factor to all additional strains in case something else is held
-        let mut hold_factor = 1.0;
+        let mut hold_factor = 1.15;
         // * Addition to the current note in case it's a hold and has to be released awkwardly
         let mut hold_addition = 0.0;
 
@@ -151,7 +151,7 @@ impl StrainDecaySkill for Strain {
         // *         release_threshold
         if is_overlapping {
             hold_addition =
-                (1.0 + (0.5 * (Self::RELEASE_THRESHOLD - closest_end_time)).exp()).recip();
+                (0.75 + (0.5 * (Self::RELEASE_THRESHOLD - closest_end_time)).exp()).recip();
         }
 
         // * Decay and increase individualStrains in own column
@@ -160,7 +160,7 @@ impl StrainDecaySkill for Strain {
             start_time - self.start_times[col],
             Self::INDIVIDUAL_DECAY_BASE,
         );
-        self.individual_strains[col] += 2.0 * hold_factor;
+        self.individual_strains[col] += 1.5 * hold_factor;
 
         // * For notes at the same time (in a chord), the individualStrain should be the hardest individualStrain out of those columns
         self.individual_strain = if mania_curr.delta_time <= 1.0 {
