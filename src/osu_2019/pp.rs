@@ -41,12 +41,6 @@ pub struct OsuPP<'m> {
     n50: Option<usize>,
     n_misses: usize,
     passed_objects: Option<usize>,
-
-    ac: Option<usize>,
-    arc: Option<f64>,
-    hdr: Option<bool>,
-    tw: Option<usize>,
-    cs: Option<bool>,
 }
 
 impl<'m> OsuPP<'m> {
@@ -65,12 +59,6 @@ impl<'m> OsuPP<'m> {
             n50: None,
             n_misses: 0,
             passed_objects: None,
-
-            ac: None,
-            arc: None,
-            hdr: None,
-            tw: None,
-            cs: None,
         }
     }
 
@@ -143,36 +131,6 @@ impl<'m> OsuPP<'m> {
     pub fn passed_objects(mut self, passed_objects: usize) -> Self {
         self.passed_objects.replace(passed_objects);
 
-        self
-    }
-
-    #[inline]
-    pub fn ac(mut self, ac: usize) -> Self {
-        self.ac = Some(ac);  // Set hdr to Some(hdr)
-        self
-    }
-
-    #[inline]
-    pub fn arc(mut self, arc: f64) -> Self {
-        self.arc = Some(arc);  // Set hdr to Some(hdr)
-        self
-    }
-
-    #[inline]
-    pub fn hdr(mut self, hdr: bool) -> Self {
-        self.hdr = Some(hdr);  // Set hdr to Some(hdr)
-        self
-    }
-
-    #[inline]
-    pub fn tw(mut self, tw: usize) -> Self {
-        self.tw = Some(tw);  // Set hdr to Some(hdr)
-        self
-    }
-
-    #[inline]
-    pub fn cs(mut self, cs: bool) -> Self {
-        self.cs = Some(cs);  // Set hdr to Some(hdr)
         self
     }
 
@@ -297,11 +255,6 @@ impl<'m> OsuPP<'m> {
         let aim_value = self.compute_aim_value(total_hits, effective_miss_count);
         let mut speed_value = self.compute_speed_value(total_hits, effective_miss_count);
         let acc_value = self.compute_accuracy_value(total_hits);
-        let cheat_value = self.compute_cheat_value(
-            self.ac.unwrap_or(0),
-            self.tw.unwrap_or(150),
-            self.cs.unwrap_or(false)
-        );
 
         let mut acc_depression = 1.0;
 
@@ -318,52 +271,20 @@ impl<'m> OsuPP<'m> {
             }
         }
 
-        let mut pp = (aim_value.powf(1.185)
+        let nodt_bonus = match !self.mods.change_speed() {
+            true => 1.03,
+            false => 1.0,
+        };
+
+        let mut pp = (aim_value.powf(1.185 * nodt_bonus)
             + speed_value.powf(0.83 * acc_depression)
-            + acc_value.powf(1.14)
-        ).powf(1.0 / 1.1) * multiplier * cheat_value;
+            + acc_value.powf(1.14 * nodt_bonus))
+        .powf(1.0 / 1.1)
+            * multiplier;
 
         if self.mods.dt() && self.mods.hr() {
             pp *= 1.025;
         }
-
-        let attributes = self.attributes.as_ref().unwrap();
-        let cs_threshold = 6.2;
-
-        if (attributes.cs as f32) > cs_threshold {
-            let cs_excess = (attributes.cs as f32) - cs_threshold;
-            let nerf_factor = 1.0 - (cs_excess * 0.32517);
-            pp *= nerf_factor.max(0.2);
-        }
-
-        pp *= match self.map.title.to_lowercase().as_str() {
-
-            title if title.contains("jump pack") => 0.86434,
-
-            title if title.contains("farm pack") => 0.83421,
-
-            title if title.contains("fuquila pack") => 0.621,
-            
-            title if title.contains("speed-up map pack") => 0.732,
-
-            _ => 1.0,
-        };
-
-        pp *= match self.map.beatmap_id {
-            // Keikan no Senritsu (Cut Ver.) [Thorn Crown]
-            4268996 => 0.7132,
-
-            // Identity Part 4 [zluks' Ultimate Jumps]
-            4334268 => 0.7,
-
-            // Tenbin no ue de [Last Fate]
-            4480795 => 0.82,
-            
-            // Undercover Martyn [Basement HELL]
-            3118043 => 0.8257,
-
-            _ => 1.0,
-        };
 
         OsuPerformanceAttributes {
             difficulty: self.attributes.unwrap(),
@@ -438,68 +359,6 @@ impl<'m> OsuPP<'m> {
         aim_value
     }
 
-    fn compute_cheat_value(&self, ac: usize, tw: usize, cs: bool) -> f32 {
-        // TODO: refactor this whole cheat calculation
-        // - it look very cancerous and stupid
-        // - need more opinion from people too
-        let mut multiplier: f64 = 1.0;
-        let attributes = self.attributes.as_ref().unwrap();
-        let ac_multiplier: f64 = 1.0 - (ac as f64 / 80.0);
-
-        multiplier += ac_multiplier * 0.3;
-
-        let tw_multiplier: f64 = self.calculate_tw_multiplier(tw as f64);
-        
-        multiplier += tw_multiplier;        
-
-        // so, what this do is we nerf circlesize changer usage
-        // the smaller the circlesize (cs) is, more penalty
-        // by i mean smaller is, the bigger circle
-        // so cs=2 penalty is more harsher than cs=3
-        let circlesize = attributes.cs;
-
-        if cs {
-            let cs_penalty = ((10.0 - circlesize) / 25.0).clamp(0.05, 0.25);
-            multiplier -= cs_penalty;
-        }
-
-        // this is just a dumb bonus to make people adapt slowly to the new calculation
-        // maybe im being too generous
-        // multiplier = multiplier.min(1.3) * 1.28; // man
-        multiplier = multiplier.min(1.3);
-
-        multiplier as f32
-    }
-
-    fn calculate_tw_multiplier(&self, tw: f64) -> f64 {
-        // https://github.com/anoleto/tw-calc
-
-        // punish for tw less than 100:
-        // - calculate a penalty based on how far tw is below 100.
-        // - we use a quadratic scaling factor: (4.0 * (100.0 - tw) / 100.0)^2.
-        // - then cap the result at a maximum of -0.048 to avoid excessive penalties.
-        // - multiply by the condition (tw < 100.0) as a boolean (cast to u8, then to f64).\
-        // - tbh i should rework this.. 90-95 is -0.048. thats bad
-        -((4.0 * (100.0 - tw) / 100.0)
-            .powi(2))
-            .min(0.048) * 
-        (tw < 100.0) as u8 as f64
-
-        // award for tw more than 100:
-        // - calculate a scaling factor based on how far tw is above 100.
-        // - use an exponential scaling factor: (1.02)^((tw - 100.0) / 5.0 - 1.0).
-        // - we adjust the result by dividing by 150.0.
-        // - then multiply by the condition (tw > 103.0) as a boolean (cast to u8, then to f64).
-        // - why we checks for tw > 103.0 instead of 100.0? because 101.0 gives around 0.006666666666666667 multiplier, we dont want that
-        + ((tw - 100.0) * (1.02_f64)
-            .powf((tw - 100.0)
-            .max(0.0) / 5.0 - 1.0) / 150.0) * 
-        (tw > 103.0) as u8 as f64
-
-        // why is as "u8" instead of if checks?
-        // look funny :p should be look more cancerous tho
-    }
-    
     fn compute_speed_value(&self, total_hits: f32, effective_miss_count: f32) -> f32 {
         let attributes = self.attributes.as_ref().unwrap();
     

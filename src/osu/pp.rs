@@ -187,24 +187,6 @@ impl<'map> OsuPP<'map> {
         self
     }
 
-    #[inline]
-    pub fn ac(mut self, ac: usize) -> Self {
-        self.ac = Some(ac);  // Set hdr to Some(hdr)
-        self
-    }
-
-    #[inline]
-    pub fn arc(mut self, arc: f64) -> Self {
-        self.arc = Some(arc);  // Set hdr to Some(hdr)
-        self
-    }
-
-    #[inline]
-    pub fn hdr(mut self, hdr: bool) -> Self {
-        self.hdr = Some(hdr);  // Set hdr to Some(hdr)
-        self
-    }
-
     /// Provide parameters through an [`OsuScoreState`].
     #[inline]
     pub fn state(mut self, state: OsuScoreState) -> Self {
@@ -400,10 +382,6 @@ impl<'map> OsuPP<'map> {
             state,
             effective_miss_count,
             map: self.map.clone(),
-
-            ac: self.ac.unwrap_or(50),
-            arc: self.arc.unwrap_or(0.0),
-            hdr: self.hdr.unwrap_or(false)
         };
 
         inner.calculate()
@@ -416,15 +394,11 @@ struct OsuPpInner {
     acc: f64,
     state: OsuScoreState,
     effective_miss_count: f64,
-    map: Beatmap,
-
-    ac: usize,
-    arc: f64,
-    hdr: bool
+    map: Beatmap
 }
 
 impl OsuPpInner {
-    fn calculate(mut self) -> OsuPerformanceAttributes {
+    fn calculate(self) -> OsuPerformanceAttributes {
         let total_hits = self.state.total_hits();
 
         if total_hits == 0 {
@@ -445,73 +419,23 @@ impl OsuPpInner {
         if self.mods.so() && total_hits > 0.0 {
             multiplier *= 1.0 - (self.attrs.n_spinners as f64 / total_hits).powf(0.85);
         }
-        
-        if self.mods.rx() {
-            // * https://www.desmos.com/calculator/bc9eybdthb
-            // * we use OD13.3 as maximum since it's the value at which great hitwidow becomes 0
-            // * this is well beyond currently maximum achievable OD which is 12.17 (DTx2 + DA with OD11)
-            let (n100_mult, n50_mult) = if self.attrs.od > 0.0 {
-                (
-                    1.0 - (self.attrs.od / 13.33).powf(1.8),
-                    1.0 - (self.attrs.od / 13.33).powi(5),
-                )
-            } else {
-                (1.0, 1.0)
-            };
-
-            // * As we're adding Oks and Mehs to an approximated number of combo breaks the result can be
-            // * higher than total hits in specific scenarios (which breaks some calculations) so we need to clamp it.
-            self.effective_miss_count = (self.effective_miss_count
-                + self.state.n100 as f64
-                + n100_mult
-                + self.state.n50 as f64 * n50_mult)
-                .min(total_hits);
-        }
 
         let aim_value = self.compute_aim_value();
         let speed_value = self.compute_speed_value();
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
-        let cheat_value = self.compute_cheat_value();
 
         let nodt_bonus = match !self.mods.change_speed() {
             true => 1.03,
             false => 1.0,
         };
 
-        let mut pp = (
+        let pp = (
             aim_value.powf(1.1 * nodt_bonus) +
             speed_value.powf(1.1) +
             acc_value.powf(1.1 * nodt_bonus) +
             flashlight_value.powf(1.1)
-        ).powf(1.0 / 1.1) * multiplier * cheat_value;
-
-        if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
-            pp *= 0.9;
-        }
-
-        pp *= match self.map.title.to_lowercase().as_str() {
-
-            title if title.contains("sidetracked") => 0.77,
-            
-            title if title.contains("gamma") => 0.4,
-    
-            title if title.contains("mario paint") => 0.74,
-
-            title if title.contains("yekteniya") => 0.6,
-            
-            _ => 1.0,
-        };
-
-        pp *= match self.map.beatmap_id {
-            // Akari no Arika [My Angel's 9* Eroge Fantasy]
-            2399767 => 0.763,
-            
-            // MixxioN [FINAL]
-            3759944 => 0.5,
-
-            _ => 1.0,
-        };
+        ).powf(1.0 / 1.1) * multiplier;
 
         OsuPerformanceAttributes {
             difficulty: self.attrs,
@@ -522,29 +446,6 @@ impl OsuPpInner {
             pp,
             effective_miss_count: self.effective_miss_count,
         }
-    }
-
-    fn compute_cheat_value(&self) -> f64 {
-        let mut multiplier: f64 = 1.0;
-
-        let ac_multiplier: f64 = 1.0 - (self.ac as f64 / 50.0) * 0.7;
-    
-        multiplier += ac_multiplier * 0.3;        
-    
-        let arc_multiplier: f64 = if self.arc < 9.0 {
-            -((9.0 - self.arc).exp() - 1.0).min(0.2)
-        } else if self.arc <= 10.0 {
-            ((self.arc - 9.0) / 1.0) * 0.1
-        } else {
-            (((self.arc - 10.0).exp() - 1.0) / 10.0)
-                .min(0.2)
-        };
-    
-        multiplier += arc_multiplier;
-    
-        multiplier = multiplier.min(1.4);
-    
-        multiplier
     }
 
     fn compute_aim_value(&self) -> f64 {
@@ -633,7 +534,7 @@ impl OsuPpInner {
         } else if self.attrs.ar > 10.33 {
             0.2 * (self.attrs.ar - 10.33)
         } else {
-            0.0 // lets leave this so they can kinda get pp even tho they have ar changer
+            0.0
         };
     
         speed_value *= 1.0 + ar_factor * len_bonus;
@@ -763,9 +664,9 @@ impl OsuPpInner {
     }
 }
 
-fn calculate_effective_misses(_attrs: &OsuDifficultyAttributes, state: &OsuScoreState) -> f64 {
+fn calculate_effective_misses(attrs: &OsuDifficultyAttributes, state: &OsuScoreState) -> f64 {
     // * Guess the number of misses + slider breaks from combo
-    /*let mut combo_based_miss_count = 0.0;
+    let mut combo_based_miss_count = 0.0;
 
     if attrs.n_sliders > 0 {
         let full_combo_threshold = attrs.max_combo as f64 - 0.05 * attrs.n_sliders as f64; // Reduced the penalty threshold
@@ -779,8 +680,7 @@ fn calculate_effective_misses(_attrs: &OsuDifficultyAttributes, state: &OsuScore
     combo_based_miss_count =
         combo_based_miss_count.min((state.n100 + state.n50 + state.n_misses) as f64);
 
-    combo_based_miss_count.max(state.n_misses as f64)*/
-    state.n_misses as f64
+    combo_based_miss_count.max(state.n_misses as f64)
 }
 
 fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
