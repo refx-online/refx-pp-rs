@@ -56,13 +56,13 @@ impl SkillKind {
                     return 0.0;
                 }
 
-                let dist = SINGLE_SPACING_TRESHOLD.min(current.travel_dist + current.jump_dist);
-                let delta_time = MAX_SPEED_BONUS.max(current.delta);
+                let dist = SINGLE_SPACING_TRESHOLD.min(current.travel_dist + current.jump_dist * 1.2);
+                let delta_time = (MAX_SPEED_BONUS + 15.0).max(current.delta);
 
                 let mut speed_bonus = 1.0;
 
                 if delta_time < MIN_SPEED_BONUS {
-                    let exp_base = (MIN_SPEED_BONUS - delta_time) / SPEED_BALANCING_FACTOR;
+                    let exp_base = (MIN_SPEED_BONUS - delta_time) / (SPEED_BALANCING_FACTOR * 1.2);
                     speed_bonus += exp_base * exp_base;
                 }
 
@@ -70,10 +70,10 @@ impl SkillKind {
 
                 if let Some(angle) = current.angle.filter(|a| *a < SPEED_ANGLE_BONUS_BEGIN) {
                     let exp_base = (1.5 * (SPEED_ANGLE_BONUS_BEGIN - angle)).sin();
-                    angle_bonus = 1.0 + exp_base * exp_base / 3.57;
+                    angle_bonus = 1.0 + exp_base * exp_base / 3.3;
 
                     if angle < PI_OVER_2 {
-                        angle_bonus = 1.28;
+                        angle_bonus = 1.35;
 
                         if dist < 90.0 && angle < PI_OVER_4 {
                             angle_bonus += (1.0 - angle_bonus) * ((90.0 - dist) / 10.0).min(1.0);
@@ -85,10 +85,10 @@ impl SkillKind {
                     }
                 }
 
-                (1.0 + (speed_bonus - 1.0) * 0.75)
+                (1.0 + (speed_bonus - 1.0) * 0.85)
                     * angle_bonus
-                    * (0.95 + speed_bonus * (dist / SINGLE_SPACING_TRESHOLD).powf(3.5))
-                    / current.strain_time
+                    * (0.98 + speed_bonus * (dist / SINGLE_SPACING_TRESHOLD).powf(3.2))
+                    / (current.strain_time * 1.1)
             }
         }
     }
