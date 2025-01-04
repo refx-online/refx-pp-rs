@@ -37,18 +37,18 @@ impl SkillKind {
                             * (current.jump_dist - scale).max(0.0))
                         .sqrt();
 
-                        result = 1.5 * apply_diminishing_exp(angle_bonus.max(0.0))
-                            / (TIMING_THRESHOLD).max(prev_strain_time)
+                        result = 1.8 * apply_diminishing_exp(angle_bonus.max(0.0))
+                            / (prev_strain_time * 1.2).max(TIMING_THRESHOLD);
                     }
                 }
 
-                let jump_dist_exp = apply_diminishing_exp(current.jump_dist);
+                let jump_dist_exp = apply_diminishing_exp(current.jump_dist * 1.1);
                 let travel_dist_exp = apply_diminishing_exp(current.travel_dist);
 
                 let dist_exp =
                     jump_dist_exp + travel_dist_exp + (travel_dist_exp * jump_dist_exp).sqrt();
 
-                (result + dist_exp / (current.strain_time).max(TIMING_THRESHOLD))
+                (result + dist_exp / (current.strain_time * 0.9).max(TIMING_THRESHOLD))
                     .max(dist_exp / current.strain_time)
             }
             Self::Speed => {

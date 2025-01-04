@@ -277,7 +277,7 @@ impl<'m> OsuPP<'m> {
             false => 1.0,
         };
 
-        let pp = (aim_value.powf(1.185 * nodt_bonus)
+        let pp = (aim_value.powf(1.1 * nodt_bonus)
             + speed_value.powf(0.83 * acc_depression)
             + acc_value.powf(1.14 * nodt_bonus))
             + flashlight_value.powf(1.1)
