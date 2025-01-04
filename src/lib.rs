@@ -188,7 +188,7 @@ pub mod mania;
 pub mod osu;
 
 /// osu! 2019 (for relax)
-pub mod osu_2019;
+pub mod relax;
 
 /// osu! 2019 (future pp implementation)
 pub mod osu_2019_scorev2;
