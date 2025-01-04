@@ -253,24 +253,9 @@ impl<'m> OsuPP<'m> {
         }
 
         let aim_value = self.compute_aim_value(total_hits, effective_miss_count);
-        let mut speed_value = self.compute_speed_value(total_hits, effective_miss_count);
+        let speed_value = self.compute_speed_value(total_hits, effective_miss_count);
         let acc_value = self.compute_accuracy_value(total_hits);
         let flashlight_value = self.compute_flashlight_value(total_hits, effective_miss_count);
-
-        let mut acc_depression = 1.0;
-
-        let difficulty = self.attributes.as_ref().unwrap();
-        let streams_nerf =
-            ((difficulty.speed_strain / difficulty.aim_strain) * 100.0).round() / 100.0;
-
-        if streams_nerf < 1.05 {
-            let acc_factor = (1.0 - self.acc.unwrap()).abs();
-            acc_depression = (0.9 + acc_factor).min(1.2);
-
-            if acc_depression > 0.0 {
-                speed_value *= acc_depression;
-            }
-        }
 
         let nodt_bonus = match !self.mods.change_speed() {
             true => 1.03,
@@ -278,7 +263,7 @@ impl<'m> OsuPP<'m> {
         };
 
         let pp = (aim_value.powf(1.1 * nodt_bonus)
-            + speed_value.powf(0.83 * acc_depression)
+            + speed_value.powf(0.83)
             + acc_value.powf(1.14 * nodt_bonus))
             + flashlight_value.powf(1.1)
         .powf(1.0 / 1.1)
