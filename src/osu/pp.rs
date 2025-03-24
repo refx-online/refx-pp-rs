@@ -532,6 +532,8 @@ impl OsuPpInner {
 
             "Sotarks" => 0.7,
 
+            "Rita Summers" => 0.0000001,
+
             _ => 1.0,
         };
         
