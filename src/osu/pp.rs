@@ -486,10 +486,6 @@ impl OsuPpInner {
             flashlight_value.powf(1.1)
         ).powf(1.0 / 1.1) * multiplier * cheat_value;
 
-        if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
-            pp *= 0.9;
-        }
-
         pp *= match self.map.title.to_lowercase().as_str() {
 
             title if title.contains("sidetracked") => 0.77,
@@ -513,6 +509,34 @@ impl OsuPpInner {
             _ => 1.0,
         };
 
+        pp *= match self.map.creator.as_str() {
+            "RLC" | "Skystar" => 3.0,
+
+            "rrtyui" => 2.8,
+
+            "nold_1702" | "Ulysses" => 2.7,
+            
+            "byfar" => 2.4,
+
+            "Kalibe" => 2.2,
+
+            "kiddly" | "nhlx" => 2.0,
+
+            "lesjuh" | "tsuka" => 1.9,
+
+            "fanzhen0019" => 1.8,
+
+            "handsome" | "hehe" => 1.7,
+
+            "Rizia" => 1.4,
+
+            "Sotarks" => 0.7,
+
+            "Rita Summers" => 0.0000001,
+
+            _ => 1.0,
+        };
+        
         OsuPerformanceAttributes {
             difficulty: self.attrs,
             pp_acc: acc_value,
