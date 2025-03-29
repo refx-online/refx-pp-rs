@@ -323,9 +323,6 @@ impl<'m> OsuPP<'m> {
             + acc_value.powf(1.14)
         ).powf(1.0 / 1.1) * multiplier * cheat_value;
 
-        if self.mods.dt() && self.mods.hr() {
-            pp *= 1.025;
-        }
 
         let attributes = self.attributes.as_ref().unwrap();
         let cs_threshold = 6.1;
