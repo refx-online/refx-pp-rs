@@ -725,20 +725,20 @@ impl OsuPpInner {
 
         // * Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
-            flashlight_value *= 0.98
-                * (1.0 - (self.effective_miss_count / total_hits).powf(0.725))
-                    .powf(self.effective_miss_count.powf(0.825));
+            flashlight_value *= 0.97
+                * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
+                    .powf(self.effective_miss_count.powf(0.875));
         }
 
         // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
-        flashlight_value *= 0.8
-            + 0.15 * (total_hits / 200.0).min(1.0)
-            + (total_hits > 200.0) as u8 as f64 * 0.25 * ((total_hits - 200.0) / 200.0).min(1.0);
+        flashlight_value *= 0.7
+            + 0.1 * (total_hits / 200.0).min(1.0)
+            + (total_hits > 200.0) as u8 as f64 * 0.2 * ((total_hits - 200.0) / 200.0).min(1.0);
 
         // * Scale the flashlight value with accuracy _slightly_.
-        flashlight_value *= 0.6 + self.acc / 1.8;
+        flashlight_value *= 0.5 + self.acc / 2.0;
         // * It is important to also consider accuracy difficulty when doing that.
-        flashlight_value *= 1.0 + self.attrs.od * self.attrs.od / 2400.0;
+        flashlight_value *= 0.98 + self.attrs.od * self.attrs.od / 2500.0;
 
         flashlight_value
     }
