@@ -477,13 +477,13 @@ impl<'m> OsuPP<'m> {
 
         // punish for tw less than 100:
         // - calculate a penalty based on how far tw is below 100.
-        // - we use a quadratic scaling factor: (4.0 * (100.0 - tw) / 100.0)^2.
+        // - we use a quadratic scaling factor: (4.5 * (100.0 - tw) / 100.0)^2.
         // - then cap the result at a maximum of -0.048 to avoid excessive penalties.
         // - multiply by the condition (tw < 100.0) as a boolean (cast to u8, then to f64).\
         // - tbh i should rework this.. 90-95 is -0.048. thats bad
         -((4.5 * (100.0 - tw) / 100.0)
             .powi(2))
-            .min(0.055) * 
+            .min(0.048) * 
         (tw < 100.0) as u8 as f64
 
         // award for tw more than 100:
