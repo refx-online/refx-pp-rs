@@ -328,12 +328,16 @@ impl<'m> OsuPP<'m> {
         }
 
         let attributes = self.attributes.as_ref().unwrap();
-        let cs_threshold = 6.2;
+        let cs_threshold = 6.1;
 
+        // High cs nerf due to aim correction
+        // cs_threshold is the value where we start nerfing the pp
+        // to handle the fuckass pisseasy farm maps
+        // might be want to scale with aim correction value tho (TODO)
         if (attributes.cs as f32) > cs_threshold {
             let cs_excess = (attributes.cs as f32) - cs_threshold;
-            let nerf_factor = 1.0 - (cs_excess * 0.32517);
-            pp *= nerf_factor.max(0.2);
+            let nerf_factor = 1.0 - (cs_excess * 0.36);
+            pp *= nerf_factor.max(0.18);
         }
 
         pp *= match self.map.title.to_lowercase().as_str() {
