@@ -486,10 +486,6 @@ impl OsuPpInner {
             flashlight_value.powf(1.1)
         ).powf(1.0 / 1.1) * multiplier * cheat_value;
 
-        if self.map.creator == "quantumvortex" || self.map.creator == "Plasma"{
-            pp *= 0.9;
-        }
-
         pp *= match self.map.title.to_lowercase().as_str() {
 
             title if title.contains("sidetracked") => 0.77,
