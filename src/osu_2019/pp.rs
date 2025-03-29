@@ -459,7 +459,7 @@ impl<'m> OsuPP<'m> {
         let circlesize = attributes.cs;
 
         if cs {
-            let cs_penalty = ((10.0 - circlesize) / 25.0).clamp(0.05, 0.25);
+            let cs_penalty = ((10.0 - circlesize) / 18.0).clamp(0.05, 0.35);
             multiplier -= cs_penalty;
         }
 
