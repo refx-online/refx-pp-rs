@@ -730,8 +730,6 @@ impl OsuPpInner {
                     .powf(self.effective_miss_count.powf(0.825));
         }
 
-        flashlight_value *= self.get_combo_scaling_factor();
-
         // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
         flashlight_value *= 0.8
             + 0.15 * (total_hits / 200.0).min(1.0)
@@ -743,15 +741,6 @@ impl OsuPpInner {
         flashlight_value *= 1.0 + self.attrs.od * self.attrs.od / 2400.0;
 
         flashlight_value
-    }
-
-    fn get_combo_scaling_factor(&self) -> f64 {
-        if self.attrs.max_combo == 0 {
-            1.0
-        } else {
-            ((self.state.max_combo as f64).powf(0.8) / (self.attrs.max_combo as f64).powf(0.8))
-                .min(1.0)
-        }
     }
 
     fn total_hits(&self) -> f64 {
