@@ -1,4 +1,4 @@
-use std::{error, fmt};
+use std::{cmp, error, fmt, ops::ControlFlow};
 
 use rosu_map::{section::general::GameMode, util::Pos};
 
@@ -63,36 +63,89 @@ impl TooSuspicious {
             }
         }
 
-        #[inline]
-        fn too_dense(i: usize, curr: &HitObject, map: &Beatmap) -> bool {
-            const fn too_dense<const PER_1S: usize, const PER_10S: usize>(
-                i: usize,
-                curr: &HitObject,
-                hit_objects: &[HitObject],
-            ) -> bool {
-                (hit_objects.len() > i + PER_1S
-                    && hit_objects[i + PER_1S].start_time - curr.start_time < 1000.0)
-                    || (hit_objects.len() > i + PER_10S
-                        && hit_objects[i + PER_10S].start_time - curr.start_time < 10_000.0)
-            }
+        if unlikely(too_many_objects(map)) {
+            return Some(Self::ObjectCount);
+        } else if unlikely(too_long(&map.hit_objects)) {
+            return Some(Self::Length);
+        }
 
-            match map.mode {
-                GameMode::Mania => {
-                    // In mania it's more common to have a high note density
-                    const THRESHOLD_1S: usize = 200; // 200 4K notes per 1s = 3000BPM
-                    const THRESHOLD_10S: usize = 500; // 500 4K notes per 10s = 750BPM
+        match map.mode {
+            GameMode::Osu => Self::check_osu(map),
+            GameMode::Taiko => Self::check_taiko(map),
+            GameMode::Catch => Self::check_catch(map),
+            GameMode::Mania => Self::check_mania(map),
+        }
+    }
 
-                    too_dense::<THRESHOLD_1S, THRESHOLD_10S>(i, curr, &map.hit_objects)
-                }
-                _ => {
-                    const THRESHOLD_1S: usize = 100; // 100 notes per 1s = 6000BPM
-                    const THRESHOLD_10S: usize = 250; // 250 notes per 10s = 1500BPM
+    fn check_osu(map: &Beatmap) -> Option<Self> {
+        let mut state = SliderState::new();
+        let per_1s = THRESHOLD_1S;
+        let per_10s = THRESHOLD_10S;
 
-                    too_dense::<THRESHOLD_1S, THRESHOLD_10S>(i, curr, &map.hit_objects)
-                }
+        // Checking both note density and sliders
+        for (i, h) in map.hit_objects.iter().enumerate() {
+            if unlikely(Self::too_dense(&map.hit_objects, i, per_1s, per_10s)) {
+                return Some(Self::Density);
+            } else if unlikely(Self::suspicious_slider(h, &mut state).is_break()) {
+                return Some(Self::RedFlag);
             }
         }
 
+        state.eval()
+    }
+
+    fn check_taiko(map: &Beatmap) -> Option<Self> {
+        let per_1s = THRESHOLD_1S * 2;
+        let per_10s = THRESHOLD_10S * 2;
+
+        // Only checking note density
+        for i in 0..map.hit_objects.len() {
+            if unlikely(Self::too_dense(&map.hit_objects, i, per_1s, per_10s)) {
+                return Some(Self::Density);
+            }
+        }
+
+        None
+    }
+
+    fn check_catch(map: &Beatmap) -> Option<Self> {
+        let mut state = SliderState::new();
+
+        // Only checking sliders
+        for h in map.hit_objects.iter() {
+            if unlikely(Self::suspicious_slider(h, &mut state).is_break()) {
+                return Some(Self::RedFlag);
+            }
+        }
+
+        state.eval()
+    }
+
+    fn check_mania(map: &Beatmap) -> Option<Self> {
+        let keys_per_hand = cmp::max(1, map.cs as usize / 2);
+        let per_1s = THRESHOLD_1S * keys_per_hand;
+        let per_10s = THRESHOLD_10S * keys_per_hand;
+
+        // Only checking note density
+        for i in 0..map.hit_objects.len() {
+            if unlikely(Self::too_dense(&map.hit_objects, i, per_1s, per_10s)) {
+                return Some(Self::Density);
+            }
+        }
+
+        None
+    }
+
+    #[inline]
+    fn too_dense(hit_objects: &[HitObject], i: usize, per_1s: usize, per_10s: usize) -> bool {
+        (hit_objects.len() > i + per_1s
+            && hit_objects[i + per_1s].start_time - hit_objects[i].start_time < 1000.0)
+            || (hit_objects.len() > i + per_10s
+                && hit_objects[i + per_10s].start_time - hit_objects[i].start_time < 10_000.0)
+    }
+
+    #[inline]
+    const fn suspicious_slider(h: &HitObject, state: &mut SliderState) -> ControlFlow<()> {
         #[inline]
         const fn check_pos(pos: Pos) -> bool {
             /// osu!'s max value is `131_072` and the playfield is `512x384`
@@ -109,43 +162,48 @@ impl TooSuspicious {
             repeats > THRESHOLD
         }
 
-        if unlikely(too_many_objects(map)) {
-            return Some(Self::ObjectCount);
-        } else if unlikely(too_long(&map.hit_objects)) {
-            return Some(Self::Length);
-        }
-
-        let mut pos_beyond_threshold = 0;
-        let mut repeats_beyond_threshold = 0;
-
-        for (i, h) in map.hit_objects.iter().enumerate() {
-            if unlikely(too_dense(i, h, map)) {
-                return Some(Self::Density);
-            }
-
-            if let HitObjectKind::Slider(ref slider) = h.kind {
-                if unlikely(check_repeats(slider.repeats)) {
-                    if unlikely(
-                        check_pos(h.pos) && matches!(map.mode, GameMode::Osu | GameMode::Catch),
-                    ) {
-                        return Some(Self::RedFlag);
-                    }
-
-                    repeats_beyond_threshold += 1;
-                } else if unlikely(check_pos(h.pos)) {
-                    pos_beyond_threshold += 1;
+        if let HitObjectKind::Slider(ref slider) = h.kind {
+            if unlikely(check_repeats(slider.repeats)) {
+                if unlikely(check_pos(h.pos)) {
+                    return ControlFlow::Break(());
                 }
+
+                state.repeats_beyond_threshold += 1;
+            } else if unlikely(check_pos(h.pos)) {
+                state.pos_beyond_threshold += 1;
             }
         }
 
-        if matches!(map.mode, GameMode::Taiko | GameMode::Mania) {
-            // Taiko and Mania calculations aren't as susceptible to malicious
-            // slider values
-            None
-        } else if unlikely(pos_beyond_threshold > 256) {
-            Some(Self::SliderPositions)
-        } else if unlikely(repeats_beyond_threshold > 256) {
-            Some(Self::SliderRepeats)
+        ControlFlow::Continue(())
+    }
+}
+
+/// 200 notes per 1s = 12000 BPM
+const THRESHOLD_1S: usize = 200;
+
+/// 500 notes per 10s = 3000 BPM
+const THRESHOLD_10S: usize = 500;
+
+struct SliderState {
+    repeats_beyond_threshold: usize,
+    pos_beyond_threshold: usize,
+}
+
+impl SliderState {
+    const fn new() -> Self {
+        Self {
+            repeats_beyond_threshold: 0,
+            pos_beyond_threshold: 0,
+        }
+    }
+
+    const fn eval(self) -> Option<TooSuspicious> {
+        const CUTOFF: usize = 128;
+
+        if unlikely(self.pos_beyond_threshold > CUTOFF) {
+            Some(TooSuspicious::SliderPositions)
+        } else if unlikely(self.repeats_beyond_threshold > CUTOFF) {
+            Some(TooSuspicious::SliderRepeats)
         } else {
             None
         }
@@ -162,3 +220,9 @@ impl fmt::Display for TooSuspicious {
         )
     }
 }
+
+/*
+    Noteworthy loved maps:
+    [1175457, 1277504, 1594580, 1904970, 2140631, 2440314, 2573161, 2571051,
+    2573164, 2619200, 2923535, 3824509]
+*/
