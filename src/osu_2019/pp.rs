@@ -450,9 +450,18 @@ impl<'m> OsuPP<'m> {
     #[inline]
     fn calculate_miss_penalty(&self, effective_miss_count: f32) -> f32 {
         let total_hits = self.total_hits() as f32;
+        let attrs = self.attributes.as_ref().unwrap();
 
-        0.985 * (1.0 - (effective_miss_count / total_hits).powf(0.4))
-            .powf(1.0 + (effective_miss_count / 2.0))
+        let map_len_scale = (total_hits / 1500.0).min(1.0); // long maps scale down penalty
+        let strain_avg = (attrs.aim_strain + attrs.speed_strain) / 2.0;
+
+        // scale based on how hard the map strains are
+        let strain_scale = (1.0 - (strain_avg / 12.0).min(1.0)) * 0.5 + 0.75;
+
+        0.995 - 0.0025 * map_len_scale * 
+            (1.0 - (effective_miss_count / total_hits).powf(0.25 + 0.05 * (1.0 - map_len_scale)))
+            .powf(1.0 + (effective_miss_count / 4.0) * strain_scale as f32
+        )
     }
 
     #[inline]
