@@ -315,7 +315,7 @@ impl<'m> OsuPP<'m> {
     
         if effective_miss_count > 0.0 {
             let miss_penalty = self.calculate_miss_penalty(effective_miss_count);
-            aim_value *= miss_penalty * 0.95; 
+            aim_value *= miss_penalty; 
         }
     
         let mut ar_factor = if attributes.ar > 10.33 {
@@ -373,7 +373,7 @@ impl<'m> OsuPP<'m> {
     
         // Penalize misses
         if effective_miss_count > 0.0 {
-            let miss_penalty = self.calculate_miss_penalty(effective_miss_count).powf(0.863);
+            let miss_penalty = self.calculate_miss_penalty(effective_miss_count);
             speed_value *= miss_penalty;
         }
     
@@ -451,8 +451,8 @@ impl<'m> OsuPP<'m> {
     fn calculate_miss_penalty(&self, effective_miss_count: f32) -> f32 {
         let total_hits = self.total_hits() as f32;
 
-        0.97 * (1.0 - (effective_miss_count / total_hits).powf(0.5))
-            .powf(1.0 + (effective_miss_count / 1.5))
+        0.985 * (1.0 - (effective_miss_count / total_hits).powf(0.4))
+            .powf(1.0 + (effective_miss_count / 2.0))
     }
 
     #[inline]
