@@ -51,10 +51,6 @@ pub struct OsuPP<'map> {
     pub(crate) passed_objects: Option<usize>,
     pub(crate) clock_rate: Option<f64>,
     pub(crate) hitresult_priority: Option<HitResultPriority>,
-
-    pub(crate) ac: Option<usize>,
-    pub(crate) arc: Option<f64>,
-    pub(crate) hdr: Option<bool>,
 }
 
 impl<'map> OsuPP<'map> {
@@ -75,10 +71,6 @@ impl<'map> OsuPP<'map> {
             passed_objects: None,
             clock_rate: None,
             hitresult_priority: None,
-
-            ac: None,
-            arc: None,
-            hdr: None
         }
     }
 
