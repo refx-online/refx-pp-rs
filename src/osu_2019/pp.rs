@@ -452,16 +452,12 @@ impl<'m> OsuPP<'m> {
         let total_hits = self.total_hits() as f32;
         let attrs = self.attributes.as_ref().unwrap();
 
-        let map_len_scale = (total_hits / 1500.0).min(1.0); // long maps scale down penalty
+        let map_len_penalty = (1.0 - (total_hits / 1500.0).min(1.0)).powf(1.3);
         let strain_avg = (attrs.aim_strain + attrs.speed_strain) / 2.0;
 
-        // scale based on how hard the map strains are
-        let strain_scale = (1.0 - (strain_avg / 12.0).min(1.0)) * 0.5 + 0.75;
-
-        0.995 - 0.0025 * map_len_scale * 
-            (1.0 - (effective_miss_count / total_hits).powf(0.25 + 0.05 * (1.0 - map_len_scale)))
-            .powf(1.0 + (effective_miss_count / 4.0) * strain_scale as f32
-        )
+        0.985 + 0.005 * (strain_avg as f32 / 12.0).min(1.0) * 
+            (1.0 - (effective_miss_count / total_hits).powf(0.45))
+            .powf(1.0 + (effective_miss_count / 2.5) * (1.0 + map_len_penalty))
     }
 
     #[inline]
