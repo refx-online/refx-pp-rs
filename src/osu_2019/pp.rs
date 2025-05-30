@@ -319,40 +319,9 @@ impl<'m> OsuPP<'m> {
             let miss_penalty = self.calculate_miss_penalty(effective_miss_count);
             aim_value *= miss_penalty; 
         }
-    
-        let mut ar_factor = if attributes.ar > 10.33 {
-            0.32 * (attributes.ar - 10.33) 
-        } else {
-            0.0
-        };
-    
-        if attributes.ar < 8.0 {
-            ar_factor = 0.03 * (8.0 - attributes.ar); 
-        }
-    
-        aim_value *= 1.0 + ar_factor as f32 * len_bonus;
-    
+
         if self.mods.hd() {
-            aim_value *= 1.0 + 0.06 * (11.0 - attributes.ar) as f32;
-        }
-    
-        if self.mods.fl() {
-            aim_value *= 1.0
-                + 0.35 * (total_hits / 200.0).min(1.0) 
-                + (total_hits > 200.0) as u8 as f32
-                    * 0.3
-                    * ((total_hits - 200.0) / 300.0).min(1.0)
-                + (total_hits > 500.0) as u8 as f32 * (total_hits - 500.0) / 1500.0; 
-        }
-    
-        if self.mods.ez() {
-            let mut base_buff = 1.1_f32;
-    
-            if attributes.ar <= 8.0 {
-                base_buff += (7.0 - attributes.ar as f32) / 90.0;
-            }
-    
-            aim_value *= base_buff;
+            aim_value *= 1.0 + self.calculate_visibility_bonus(attributes.ar, 1.0) as f32;
         }
     
         aim_value *= 0.35 + self.acc.unwrap() / 1.9;
@@ -379,24 +348,9 @@ impl<'m> OsuPP<'m> {
             speed_value *= miss_penalty;
         }
     
-        // AR bonus
-        if attributes.ar > 10.33 {
-            let mut ar_factor = if attributes.ar > 10.33 {
-                0.5 * (attributes.ar - 10.33)
-            } else {
-                0.0
-            };
-    
-            if attributes.ar < 8.0 {
-                ar_factor = 0.04 * (8.0 - attributes.ar);
-            }
-    
-            speed_value *= 1.0 + ar_factor as f32 * len_bonus;
-        }
-    
         // HD bonus
         if self.mods.hd() {
-            speed_value *= 1.0 + 0.1 * (11.0 - attributes.ar) as f32;
+            speed_value *= 1.0 + self.calculate_visibility_bonus(attributes.ar, 1.0) as f32;
         }
     
         // Scaling the speed value with accuracy and OD
@@ -430,7 +384,7 @@ impl<'m> OsuPP<'m> {
 
         // HD bonus
         if self.mods.hd() {
-            acc_value *= 1.08;
+            acc_value *= 1.0 + 0.08 * ((11.5 - attributes.ar) / (11.5 - 10.0)).clamp(0.0, 1.0) as f32;
         }
 
         // FL bonus
@@ -477,6 +431,25 @@ impl<'m> OsuPP<'m> {
         flashlight_value *= 1.0 + attributes.od.powi(2) as f32 / 2400.0;
     
         flashlight_value
+    }
+
+    fn calculate_visibility_bonus(&self, approach_rate: f64, visibility_factor: f64) -> f64 {
+        // Start from normal curve, rewarding lower AR up to AR5
+        let mut reading_bonus = 0.04 * (12.0 - approach_rate.max(5.0));
+
+        reading_bonus *= visibility_factor;
+
+        // For AR up to 0 - reduce reward for very low ARs when object is visible
+        if approach_rate < 5.0 {
+            reading_bonus += if self.mods.hd() { 0.04 } else { 0.03 } * (5.0 - approach_rate.max(0.0));
+        }
+
+        // Starting from AR0 - cap values so they won't grow to infinity
+        if approach_rate < 0.0 {
+            reading_bonus += if self.mods.hd() { 0.1 } else { 0.075 } * (1.0 - 1.5_f64.powf(approach_rate));
+        }
+
+        reading_bonus
     }
 
     #[inline]
