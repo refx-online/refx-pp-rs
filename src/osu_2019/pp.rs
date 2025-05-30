@@ -254,6 +254,7 @@ impl<'m> OsuPP<'m> {
 
         let aim_value = self.compute_aim_value(total_hits, effective_miss_count);
         let mut speed_value = self.compute_speed_value(total_hits, effective_miss_count);
+        let flashlight_value = self.compute_flashlight_value(total_hits, effective_miss_count);
         let acc_value = self.compute_accuracy_value(total_hits);
 
         let mut acc_depression = 1.0;
@@ -278,7 +279,8 @@ impl<'m> OsuPP<'m> {
 
         let mut pp = (aim_value.powf(1.185 * nodt_bonus)
             + speed_value.powf(0.83 * acc_depression)
-            + acc_value.powf(1.14 * nodt_bonus))
+            + acc_value.powf(1.14 * nodt_bonus)
+            + flashlight_value.powf(1.1))
         .powf(1.0 / 1.1)
             * multiplier;
 
@@ -290,7 +292,7 @@ impl<'m> OsuPP<'m> {
             difficulty: self.attributes.unwrap(),
             pp_acc: acc_value as f64,
             pp_aim: aim_value as f64,
-            pp_flashlight: 0.0,
+            pp_flashlight: flashlight_value as f64,
             pp_speed: speed_value as f64,
             pp: pp as f64,
             effective_miss_count: effective_miss_count as f64,
@@ -437,6 +439,44 @@ impl<'m> OsuPP<'m> {
         }
 
         acc_value
+    }
+
+
+    fn compute_flashlight_value(&self, total_hits: f32, effective_miss_count: f32) -> f32 {
+        if !self.mods.fl() {
+            return 0.0;
+        }
+    
+        let attributes = self.attributes.as_ref().unwrap();
+        let mut flashlight_value = (attributes.aim_strain as f32 / 2.0).powi(2) * 30.0;
+    
+        // * Penalize misses by assessing # of misses relative to the total # of objects. 
+        // * Default a 3% reduction for any # of misses.
+        if effective_miss_count > 0.0 {
+            flashlight_value *= 0.98
+                * (1.0 - (effective_miss_count / total_hits).powf(0.725))
+                    .powf(effective_miss_count.powf(0.825));
+        }
+        
+        flashlight_value *= self.combo.filter(|_| attributes.max_combo > 0)
+            .map(|combo| 
+                ((combo as f32 / attributes.max_combo as f32)
+                .powf(0.8))
+                .min(1.0))
+                .unwrap_or(1.0);
+        
+        // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
+        flashlight_value *= 0.8
+            + 0.15 * (total_hits / 200.0).min(1.0)
+            + (total_hits > 200.0) as u8 as f32 * 0.25 * ((total_hits - 200.0) / 200.0).min(1.0);
+    
+        // * Scale the flashlight value with accuracy _slightly_.
+        flashlight_value *= 0.6 + self.acc.unwrap() / 1.8;
+    
+        // * It is important to also consider accuracy difficulty when doing that.
+        flashlight_value *= 1.0 + attributes.od.powi(2) as f32 / 2400.0;
+    
+        flashlight_value
     }
 
     #[inline]
