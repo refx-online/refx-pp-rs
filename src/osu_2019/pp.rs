@@ -449,19 +449,38 @@ impl<'m> OsuPP<'m> {
 
     #[inline]
     fn calculate_miss_penalty(&self, effective_miss_count: f32) -> f32 {
+        let difficulty = self.attributes.as_ref().unwrap();
         let total_hits = self.total_hits() as f32;
-        let attrs = self.attributes.as_ref().unwrap();
 
-        let map_len_penalty = (1.0 - (total_hits / 1500.0).min(1.0)).powf(1.3);
-        let strain_avg = (attrs.aim_strain + attrs.speed_strain) / 2.0;
+        let strain_count = (
+            difficulty.aim_difficult_strain_count + difficulty.speed_difficult_strain_count
+        ).max(1.0) as f32;
 
-        0.985 + 0.005 * (strain_avg as f32 / 12.0).min(1.0) * 
-            (1.0 - (effective_miss_count / total_hits).powf(0.45))
-            .powf(1.0 + (effective_miss_count / 2.5) * (1.0 + map_len_penalty))
+        0.97 * (1.0 - (effective_miss_count / total_hits).powf(0.5))
+            .powf(1.0 + (effective_miss_count / total_hits) * (1.0 / strain_count.sqrt()))
     }
 
     #[inline]
     fn calculate_effective_miss_count(&self) -> f32 {
+    /*
+        let mut combo_based_miss_count = 0.0;
+
+        let attributes = self.attributes.as_ref().unwrap();
+        let combo = self.combo.unwrap_or(attributes.max_combo as u32) as f32;
+        let n100 = self.n100.unwrap_or(0) as f32;
+        let n50 = self.n50.unwrap_or(0) as f32;
+
+        if attributes.n_sliders > 0 {
+            let fc_threshold = attributes.max_combo as f32 - (0.1 * attributes.n_sliders as f32);
+            if combo < fc_threshold {
+                combo_based_miss_count = fc_threshold / combo.max(1.0);
+            }
+        }
+
+        combo_based_miss_count = combo_based_miss_count.min(n100 + n50 + self.n_misses as f32);
+        combo_based_miss_count.max(self.n_misses as f32)
+    */
+        // just go with the misses for now
         self.n_misses as f32
     }
 }
