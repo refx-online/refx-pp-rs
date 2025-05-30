@@ -487,17 +487,17 @@ impl<'m> OsuPP<'m> {
             .min(n_objects)
     }
 
+    // * Miss penalty assumes that a player will miss on the hardest parts of a map,
+    // * so we use the amount of relatively difficult sections to adjust miss penalty
+    // * to make it more punishing on maps with lower amount of hard sections.
     #[inline]
     fn calculate_miss_penalty(&self, effective_miss_count: f32) -> f32 {
         let difficulty = self.attributes.as_ref().unwrap();
-        let total_hits = self.total_hits() as f32;
-
         let strain_count = (
             difficulty.aim_difficult_strain_count + difficulty.speed_difficult_strain_count
-        ).max(1.0) as f32;
+        ) as f32;
 
-        0.97 * (1.0 - (effective_miss_count / total_hits).powf(0.5))
-            .powf(1.0 + (effective_miss_count / total_hits) * (1.0 / strain_count.sqrt()))
+        0.98 / ((effective_miss_count / (5.0 * strain_count.ln().powf(0.8))) + 1.0)
     }
 
     #[inline]
