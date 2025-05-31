@@ -412,13 +412,6 @@ impl<'m> OsuPP<'m> {
                     .powf(effective_miss_count.powf(0.825));
         }
         
-        flashlight_value *= self.combo.filter(|_| attributes.max_combo > 0)
-            .map(|combo| 
-                ((combo as f32 / attributes.max_combo as f32)
-                .powf(0.8))
-                .min(1.0))
-                .unwrap_or(1.0);
-        
         // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
         flashlight_value *= 0.8
             + 0.15 * (total_hits / 200.0).min(1.0)

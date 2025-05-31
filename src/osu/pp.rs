@@ -373,7 +373,7 @@ impl<'map> OsuPP<'map> {
             acc: state.accuracy(),
             state,
             effective_miss_count,
-            map: self.map.clone(),
+            //map: self.map.clone(),
         };
 
         inner.calculate()
@@ -386,7 +386,7 @@ struct OsuPpInner {
     acc: f64,
     state: OsuScoreState,
     effective_miss_count: f64,
-    map: Beatmap
+    //map: Beatmap
 }
 
 impl OsuPpInner {
