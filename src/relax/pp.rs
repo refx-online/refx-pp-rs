@@ -257,20 +257,9 @@ impl<'m> OsuPP<'m> {
         let flashlight_value = self.compute_flashlight_value(total_hits, effective_miss_count);
         let acc_value = self.compute_accuracy_value(total_hits);
 
-        let mut acc_depression = 1.0;
-
         let difficulty = self.attributes.as_ref().unwrap();
-        let streams_nerf =
-            ((difficulty.speed_strain / difficulty.aim_strain) * 100.0).round() / 100.0;
-
-        if streams_nerf < 1.09 {
-            let acc_factor = (1.0 - self.acc.unwrap()).abs();
-            acc_depression = (0.86 + acc_factor).min(0.5);
-
-            if acc_depression > 0.0 {
-                speed_value *= acc_depression;
-            }
-        }
+        let (speed_nerf_mult, acc_depression) = self.calculate_streams_nerf(difficulty);
+        speed_value *= speed_nerf_mult;
 
         let nodt_bonus = match !self.mods.change_speed() {
             true => 1.04,
@@ -443,6 +432,32 @@ impl<'m> OsuPP<'m> {
         }
 
         reading_bonus
+    }
+
+    fn calculate_streams_nerf(&self, difficulty: &OsuDifficultyAttributes) -> (f32, f32) {
+        let streams_nerf = ((difficulty.speed_strain / difficulty.aim_strain) * 100.0).round() / 100.0;
+        
+        let mut speed_multiplier = 1.0;
+        let mut acc_depression = 1.0;
+        
+        if streams_nerf < 1.05 {
+            let acc_factor = (1.0 - self.acc.unwrap()).abs();
+
+            acc_depression = (0.82 + acc_factor * 0.08).min(0.45);
+            speed_multiplier = acc_depression;
+            
+            if streams_nerf < 0.95 {
+                speed_multiplier *= 0.92;
+                acc_depression *= 0.95;
+            }
+            
+            if self.acc.unwrap() < 0.95 {
+                let acc_penalty = 1.0 - (0.95 - self.acc.unwrap()) * 0.3;
+                speed_multiplier *= acc_penalty;
+            }
+        }
+        
+        (speed_multiplier, acc_depression)
     }
 
     #[inline]
