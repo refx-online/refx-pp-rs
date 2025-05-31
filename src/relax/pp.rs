@@ -321,12 +321,14 @@ impl<'m> OsuPP<'m> {
 
     fn compute_speed_value(&self, total_hits: f32, effective_miss_count: f32) -> f32 {
         let attributes = self.attributes.as_ref().unwrap();
-    
-        let mut speed_value =
-            (6.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 55_000.0;
-    
         let streams_nerf = ((attributes.speed_strain / attributes.aim_strain) * 100.0).round() / 100.0;
         let is_streams = streams_nerf > 1.05;
+
+        let mut speed_value = if is_streams {
+            (5.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 100_000.0
+        } else {
+            (6.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 55_000.0
+        };
 
         // Longer maps are worth more
         let len_bonus = if is_streams {
@@ -370,7 +372,7 @@ impl<'m> OsuPP<'m> {
         speed_value *= od_multiplier * self.acc.unwrap().powf(acc_exponent);
 
         let n50_penalty = if is_streams {
-            0.96_f32.powf(match (self.n50.unwrap() as f32) < total_hits / 500.0 {
+            0.98_f32.powf(match (self.n50.unwrap() as f32) < total_hits / 500.0 {
                 true => 0.0,
                 false => self.n50.unwrap() as f32 - total_hits / 500.0,
             })
