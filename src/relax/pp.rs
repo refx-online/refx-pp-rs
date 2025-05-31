@@ -326,7 +326,7 @@ impl<'m> OsuPP<'m> {
             (6.0 * (attributes.speed_strain as f32 / 0.0675).max(1.0) - 4.0).powi(3) / 55_000.0;
     
         let streams_nerf = ((attributes.speed_strain / attributes.aim_strain) * 100.0).round() / 100.0;
-        let is_streams = streams_nerf < 1.05;
+        let is_streams = streams_nerf > 1.05;
 
         // Longer maps are worth more
         let len_bonus = if is_streams {
@@ -469,13 +469,13 @@ impl<'m> OsuPP<'m> {
         let mut speed_multiplier = 1.0;
         let mut acc_depression = 1.0;
         
-        if streams_nerf < 1.05 {
+        if streams_nerf > 1.05 {
             let acc_factor = (1.0 - self.acc.unwrap()).abs();
-
+            
             acc_depression = (0.82 + acc_factor * 0.08).min(0.45);
             speed_multiplier = acc_depression;
             
-            if streams_nerf < 0.95 {
+            if streams_nerf > 1.15 {
                 speed_multiplier *= 0.92;
                 acc_depression *= 0.95;
             }
