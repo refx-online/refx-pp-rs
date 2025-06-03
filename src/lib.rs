@@ -16,6 +16,13 @@
 //! // Decode the map
 //! let map = rosu_pp::Beatmap::from_path("./resources/2785319.osu").unwrap();
 //!
+//! // Whereas osu! simply times out on malicious maps, rosu-pp does not. To
+//! // prevent potential performance/memory issues, it is recommended to check
+//! // beforehand whether a map is too suspicious for further calculation.
+//! if let Err(sus) = map.check_suspicion() {
+//!     panic!("{sus:?}");
+//! }
+//!
 //! // Calculate difficulty attributes
 //! let diff_attrs = rosu_pp::Difficulty::new()
 //!     .mods(8 + 16) // HDHR
