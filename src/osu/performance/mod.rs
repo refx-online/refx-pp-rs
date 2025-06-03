@@ -453,7 +453,7 @@ impl<'map> OsuPerformance<'map> {
 
                     match priority {
                         HitResultPriority::BestCase | HitResultPriority::Fastest => {
-                            n300 += remaining
+                            n300 += remaining;
                         }
                         HitResultPriority::WorstCase => n50 += remaining,
                     }
@@ -462,54 +462,51 @@ impl<'map> OsuPerformance<'map> {
                 (Some(_), None, Some(_)) => n100 = n_objects.saturating_sub(n300 + n50 + misses),
                 (None, Some(_), Some(_)) => n300 = n_objects.saturating_sub(n100 + n50 + misses),
                 (Some(_), None, None) => {
-                    match priority {
-                        HitResultPriority::Fastest => {
-                            //     (300N + S) - 300A - 50C - s = 100B
-                            // <=> (300N + S) - 50R - 250A - s = 50B
-                            // <=> ((300N + S) - 50R - 250A - s) / 50 = B
-                            n100 = (f64::round(target_total) as u32)
-                                .saturating_sub(50 * n_remaining + 250 * n300 + slider_acc_value)
-                                / 50;
-                            n50 = n_objects.saturating_sub(n300 + n100 + misses);
-                        }
-                        _ => {
-                            let mut best_dist = f64::MAX;
+                    if let HitResultPriority::Fastest = priority {
+                        //     (300N + S) - 300A - 50C - s = 100B
+                        // <=> (300N + S) - 50R - 250A - s = 50B
+                        // <=> ((300N + S) - 50R - 250A - s) / 50 = B
+                        n100 = (f64::round(target_total) as u32)
+                            .saturating_sub(50 * n_remaining + 250 * n300 + slider_acc_value)
+                            / 50;
+                        n50 = n_objects.saturating_sub(n300 + n100 + misses);
+                    } else {
+                        let mut best_dist = f64::MAX;
 
-                            n300 = cmp::min(n300, n_remaining);
-                            let n_remaining = n_remaining - n300;
+                        n300 = cmp::min(n300, n_remaining);
+                        let n_remaining = n_remaining - n300;
 
-                            let raw_n100 = (target_total
-                                - f64::from(50 * n_remaining + 300 * n300 + slider_acc_value))
-                                / 50.0;
-                            let min_n100 = cmp::min(n_remaining, raw_n100.floor() as u32);
-                            let max_n100 = cmp::min(n_remaining, raw_n100.ceil() as u32);
+                        let raw_n100 = (target_total
+                            - f64::from(50 * n_remaining + 300 * n300 + slider_acc_value))
+                            / 50.0;
+                        let min_n100 = cmp::min(n_remaining, raw_n100.floor() as u32);
+                        let max_n100 = cmp::min(n_remaining, raw_n100.ceil() as u32);
 
-                            for new100 in min_n100..=max_n100 {
-                                let new50 = n_remaining - new100;
+                        for new100 in min_n100..=max_n100 {
+                            let new50 = n_remaining - new100;
 
-                                let state = NoComboState {
-                                    n300,
-                                    n100: new100,
-                                    n50: new50,
-                                    misses,
-                                    large_tick_hits,
-                                    small_tick_hits,
-                                    slider_end_hits,
-                                };
+                            let state = NoComboState {
+                                n300,
+                                n100: new100,
+                                n50: new50,
+                                misses,
+                                large_tick_hits,
+                                small_tick_hits,
+                                slider_end_hits,
+                            };
 
-                                let dist = (acc - state.accuracy(origin)).abs();
+                            let dist = (acc - state.accuracy(origin)).abs();
 
-                                if dist < best_dist {
-                                    best_dist = dist;
-                                    n100 = new100;
-                                    n50 = new50;
-                                }
+                            if dist < best_dist {
+                                best_dist = dist;
+                                n100 = new100;
+                                n50 = new50;
                             }
                         }
                     }
                 }
-                (None, Some(_), None) => match priority {
-                    HitResultPriority::Fastest => {
+                (None, Some(_), None) => {
+                    if let HitResultPriority::Fastest = priority {
                         //     (300N + S)a - 100B - 50C - s = 300A
                         // <=> (300N + S)a - 50R - 50B - s = 250A
                         // <=> ((300N + S)a - 50R - 50B - s) / 250 = A
@@ -517,8 +514,7 @@ impl<'map> OsuPerformance<'map> {
                             .saturating_sub(50 * n_remaining + 50 * n100 + slider_acc_value)
                             / 250;
                         n50 = n_objects.saturating_sub(n300 + n100 + misses);
-                    }
-                    _ => {
+                    } else {
                         let mut best_dist = f64::MAX;
 
                         n100 = cmp::min(n100, n_remaining);
@@ -552,9 +548,9 @@ impl<'map> OsuPerformance<'map> {
                             }
                         }
                     }
-                },
-                (None, None, Some(_)) => match priority {
-                    HitResultPriority::Fastest => {
+                }
+                (None, None, Some(_)) => {
+                    if let HitResultPriority::Fastest = priority {
                         //     (300N + S)a - 100B - 50C - s = 300A
                         // <=> (300N + S)a - 100R + 50C - s = 200A
                         // <=> ((300N + S)a - 100R + 50C - s) / 200 = A
@@ -562,8 +558,7 @@ impl<'map> OsuPerformance<'map> {
                             .saturating_sub(100 * n_remaining + slider_acc_value)
                             / 200;
                         n100 = n_objects.saturating_sub(n300 + n50 + misses);
-                    }
-                    _ => {
+                    } else {
                         let mut best_dist = f64::MAX;
 
                         n50 = cmp::min(n50, n_remaining);
@@ -598,85 +593,77 @@ impl<'map> OsuPerformance<'map> {
                             }
                         }
                     }
-                },
+                }
                 (None, None, None) => {
-                    match priority {
-                        HitResultPriority::Fastest => {
-                            //     (300N + S)a - 100B - 50C - s = 300A
-                            // <=> (300N + S)a - 50R - 50B - s = 250A
-                            // <=> ((300N + S)a - 50R - 50B - s) / 250 = A
+                    if let HitResultPriority::Fastest = priority {
+                        //     (300N + S)a - 100B - 50C - s = 300A
+                        // <=> (300N + S)a - 50R - 50B - s = 250A
+                        // <=> ((300N + S)a - 50R - 50B - s) / 250 = A
 
-                            //     (300N + S)a - 300A - 50C - s = 100B
-                            // <=> (300N + S)a - 50R - 250A - s = 50B
-                            // <=> ((300N + S)a - 50R - 250A - s) / 50 = B
-                            let delta = (f64::round_ties_even(target_total) as u32)
-                                .saturating_sub(50 * n_remaining + slider_acc_value);
+                        //     (300N + S)a - 300A - 50C - s = 100B
+                        // <=> (300N + S)a - 50R - 250A - s = 50B
+                        // <=> ((300N + S)a - 50R - 250A - s) / 50 = B
+                        let delta = (f64::round_ties_even(target_total) as u32)
+                            .saturating_sub(50 * n_remaining + slider_acc_value);
 
-                            n300 = delta / 250;
-                            n100 = (delta % 250) / 50;
-                            n50 = n_objects.saturating_sub(n300 + n100 + misses);
+                        n300 = delta / 250;
+                        n100 = (delta % 250) / 50;
+                        n50 = n_objects.saturating_sub(n300 + n100 + misses);
+                    } else {
+                        let mut best_dist = f64::MAX;
+
+                        let raw_n300 =
+                            (target_total - f64::from(50 * n_remaining + slider_acc_value)) / 250.0;
+                        let min_n300 = cmp::min(n_remaining, raw_n300.floor() as u32);
+                        let max_n300 = cmp::min(n_remaining, raw_n300.ceil() as u32);
+
+                        for new300 in min_n300..=max_n300 {
+                            let raw_n100 = (target_total
+                                - f64::from(50 * n_remaining + 250 * new300 + slider_acc_value))
+                                / 50.0;
+                            let min_n100 = cmp::min(raw_n100.floor() as u32, n_remaining - new300);
+                            let max_n100 = cmp::min(raw_n100.ceil() as u32, n_remaining - new300);
+
+                            for new100 in min_n100..=max_n100 {
+                                let new50 = n_remaining - new300 - new100;
+
+                                let state = NoComboState {
+                                    n300: new300,
+                                    n100: new100,
+                                    n50: new50,
+                                    misses,
+                                    large_tick_hits,
+                                    small_tick_hits,
+                                    slider_end_hits,
+                                };
+
+                                let curr_dist = (acc - state.accuracy(origin)).abs();
+
+                                if curr_dist < best_dist {
+                                    best_dist = curr_dist;
+                                    n300 = new300;
+                                    n100 = new100;
+                                    n50 = new50;
+                                }
+                            }
                         }
-                        _ => {
-                            let mut best_dist = f64::MAX;
 
-                            let raw_n300 = (target_total
-                                - f64::from(50 * n_remaining + slider_acc_value))
-                                / 250.0;
-                            let min_n300 = cmp::min(n_remaining, raw_n300.floor() as u32);
-                            let max_n300 = cmp::min(n_remaining, raw_n300.ceil() as u32);
-
-                            for new300 in min_n300..=max_n300 {
-                                let raw_n100 = (target_total
-                                    - f64::from(
-                                        50 * n_remaining + 250 * new300 + slider_acc_value,
-                                    ))
-                                    / 50.0;
-                                let min_n100 =
-                                    cmp::min(raw_n100.floor() as u32, n_remaining - new300);
-                                let max_n100 =
-                                    cmp::min(raw_n100.ceil() as u32, n_remaining - new300);
-
-                                for new100 in min_n100..=max_n100 {
-                                    let new50 = n_remaining - new300 - new100;
-
-                                    let state = NoComboState {
-                                        n300: new300,
-                                        n100: new100,
-                                        n50: new50,
-                                        misses,
-                                        large_tick_hits,
-                                        small_tick_hits,
-                                        slider_end_hits,
-                                    };
-
-                                    let curr_dist = (acc - state.accuracy(origin)).abs();
-
-                                    if curr_dist < best_dist {
-                                        best_dist = curr_dist;
-                                        n300 = new300;
-                                        n100 = new100;
-                                        n50 = new50;
-                                    }
-                                }
+                        match priority {
+                            HitResultPriority::BestCase => {
+                                // Shift n50 to n100 by sacrificing n300
+                                let n = cmp::min(n300, n50 / 4);
+                                n300 -= n;
+                                n100 += 5 * n;
+                                n50 -= 4 * n;
                             }
-
-                            match priority {
-                                HitResultPriority::BestCase => {
-                                    // Shift n50 to n100 by sacrificing n300
-                                    let n = cmp::min(n300, n50 / 4);
-                                    n300 -= n;
-                                    n100 += 5 * n;
-                                    n50 -= 4 * n;
-                                }
-                                HitResultPriority::WorstCase => {
-                                    // Shift n100 to n50 by gaining n300
-                                    let n = n100 / 5;
-                                    n300 += n;
-                                    n100 -= 5 * n;
-                                    n50 += 4 * n;
-                                }
-                                HitResultPriority::Fastest => unreachable!(),
+                            HitResultPriority::WorstCase => {
+                                // Shift n100 to n50 by gaining n300
+                                let n = n100 / 5;
+                                n300 += n;
+                                n100 -= 5 * n;
+                                n50 += 4 * n;
                             }
+                            HitResultPriority::Fastest => unreachable!(),
                         }
                     }
                 }

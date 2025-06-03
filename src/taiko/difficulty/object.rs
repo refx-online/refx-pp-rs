@@ -158,7 +158,7 @@ impl TaikoDifficultyObjects {
         self.objects.push(hit_object);
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.objects.is_empty()
     }
 

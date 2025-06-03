@@ -52,7 +52,7 @@ impl TooSuspicious {
         }
 
         #[inline]
-        fn too_many_objects(map: &Beatmap) -> bool {
+        const fn too_many_objects(map: &Beatmap) -> bool {
             const THRESHOLD: usize = 500_000;
             /// Taiko calculation is especially expensive for high object counts
             const THRESHOLD_TAIKO: usize = 20_000;

@@ -640,7 +640,7 @@ impl<'map> ManiaPerformance<'map> {
 
                     match priority {
                         HitResultPriority::BestCase | HitResultPriority::Fastest => {
-                            n320 += remaining
+                            n320 += remaining;
                         }
                         HitResultPriority::WorstCase => n50 += remaining,
                     }

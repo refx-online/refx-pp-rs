@@ -21,7 +21,7 @@ impl MonoStreak {
         })
     }
 
-    pub fn run_len(&self) -> usize {
+    pub const fn run_len(&self) -> usize {
         self.hit_objects.len()
     }
 

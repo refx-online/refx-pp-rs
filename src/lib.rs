@@ -153,7 +153,8 @@
     clippy::cast_sign_loss,
     clippy::explicit_iter_loop,
     clippy::similar_names,
-    clippy::cast_possible_wrap
+    clippy::cast_possible_wrap,
+    clippy::manual_midpoint
 )]
 
 #[doc(inline)]
