@@ -1,4 +1,16 @@
-# v3.0.0 (2025-04-07)
+# v3.1.0 (2025-06-03)
+
+- Added the method `Beatmap::check_suspicion`.
+  Some maps are not meant to be played but just test the limits of osu! itself.
+  Calculating attributes on these maps may be very expensive so it is
+  recommended to always check an unknown map's suspicion before difficulty
+  and/or performance calculation. ([#56])
+- Added the variant `HitResultPriority::Fastest`.
+  It is highly recommended to specify this variant for performance calculation
+  if only accuracy is given but no specific hitresults. Otherwise, generating
+  hitresults that best match the given accuracy may be very slow. ([#58])
+
+## v3.0.0 (2025-04-07)
 
 Updated all modes' difficulty and performance calculation. See PR [#51] or osu!'s newspost for more info: <https://osu.ppy.sh/home/news/2025-03-06-performance-points-star-rating-updates>
 
@@ -441,6 +453,8 @@ Big changes including the most recent [osu!](https://osu.ppy.sh/home/news/2022-0
 [#36]: https://github.com/MaxOhn/rosu-pp/pull/36
 [#51]: https://github.com/MaxOhn/rosu-pp/pull/51
 [#53]: https://github.com/MaxOhn/rosu-pp/pull/53
+[#56]: https://github.com/MaxOhn/rosu-pp/pull/56
+[#58]: https://github.com/MaxOhn/rosu-pp/pull/58
 
 [ZST]: https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts
 [`rosu-map`]: https://github.com/MaxOhn/rosu-map
