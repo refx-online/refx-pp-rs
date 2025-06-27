@@ -50,7 +50,7 @@ impl<'a> OsuPerformanceCalculator<'a> {
 }
 
 impl OsuPerformanceCalculator<'_> {
-    pub fn calculate(mut self) -> OsuPerformanceAttributes {
+    pub fn calculate(self) -> OsuPerformanceAttributes {
         let total_hits = self.state.total_hits();
 
         if total_hits == 0 {
@@ -72,38 +72,19 @@ impl OsuPerformanceCalculator<'_> {
             multiplier *= 1.0 - (f64::from(self.attrs.n_spinners) / total_hits).powf(0.85);
         }
 
-        if self.mods.rx() {
-            let od = self.attrs.od();
-
-            // * https://www.desmos.com/calculator/bc9eybdthb
-            // * we use OD13.3 as maximum since it's the value at which great hitwidow becomes 0
-            // * this is well beyond currently maximum achievable OD which is 12.17 (DTx2 + DA with OD11)
-            let (n100_mult, n50_mult) = if od > 0.0 {
-                (
-                    (1.0 - (od / 13.33).powf(1.8)).max(0.0),
-                    (1.0 - (od / 13.33).powf(5.0)).max(0.0),
-                )
-            } else {
-                (1.0, 1.0)
-            };
-
-            // * As we're adding Oks and Mehs to an approximated number of combo breaks the result can be
-            // * higher than total hits in specific scenarios (which breaks some calculations) so we need to clamp it.
-            self.effective_miss_count = (self.effective_miss_count
-                + f64::from(self.state.n100) * n100_mult
-                + f64::from(self.state.n50) * n50_mult)
-                .min(total_hits);
-        }
-
         let speed_deviation = self.calculate_speed_deviation();
 
         let aim_value = self.compute_aim_value();
-        let speed_value = self.compute_speed_value(speed_deviation);
+        let mut speed_value = self.compute_speed_value(speed_deviation);
+        let (speed_mul, acc_dep) = self.calculate_rx_streams_nerf();
+
+        speed_value *= speed_mul;
+
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
 
         let pp = (aim_value.powf(1.1)
-            + speed_value.powf(1.1)
+            + speed_value.powf(if self.mods.rx() { 0.83 } else { 1.1 } * acc_dep)
             + acc_value.powf(1.1)
             + flashlight_value.powf(1.1))
         .powf(1.0 / 1.1)
@@ -183,9 +164,7 @@ impl OsuPerformanceCalculator<'_> {
             );
         }
 
-        let ar_factor = if self.mods.rx() {
-            0.0
-        } else if self.attrs.ar > 10.33 {
+        let ar_factor = if self.attrs.ar > 10.33 {
             0.3 * (self.attrs.ar - 10.33)
         } else if self.attrs.ar < 8.0 {
             0.05 * (8.0 - self.attrs.ar)
@@ -215,7 +194,7 @@ impl OsuPerformanceCalculator<'_> {
     }
 
     fn compute_speed_value(&self, speed_deviation: Option<f64>) -> f64 {
-        let Some(speed_deviation) = speed_deviation.filter(|_| !self.mods.rx()) else {
+        let Some(speed_deviation) = speed_deviation else {
             return 0.0;
         };
 
@@ -287,10 +266,6 @@ impl OsuPerformanceCalculator<'_> {
     }
 
     fn compute_accuracy_value(&self) -> f64 {
-        if self.mods.rx() {
-            return 0.0;
-        }
-
         // * This percentage only considers HitCircles of any value - in this part
         // * of the calculation we focus on hitting the timing hit window.
         let mut amount_hit_objects_with_acc = self.attrs.n_circles;
@@ -502,6 +477,32 @@ impl OsuPerformanceCalculator<'_> {
         adjusted_speed_value = f64::lerp(adjusted_speed_value, speed_value, lerp);
 
         adjusted_speed_value / speed_value
+    }
+
+    fn calculate_rx_streams_nerf(&self) -> (f64, f64) {
+        let streams_nerf = ((self.attrs.speed / self.attrs.aim) * 100.0).round() / 100.0;
+        
+        let mut speed_multiplier = 1.0;
+        let mut acc_depression = 1.0;
+        
+        if streams_nerf > 1.05 {
+            let acc_factor = (1.0 - self.acc).abs();
+            
+            acc_depression = (0.82 + acc_factor * 0.08).min(0.45);
+            speed_multiplier = acc_depression;
+            
+            if streams_nerf > 1.15 {
+                speed_multiplier *= 0.92;
+                acc_depression *= 0.95;
+            }
+            
+            if self.acc < 0.95 {
+                let acc_penalty = 1.0 - (0.95 - self.acc) * 0.3;
+                speed_multiplier *= acc_penalty;
+            }
+        }
+        
+        (speed_multiplier, acc_depression)
     }
 
     // * Miss penalty assumes that a player will miss on the hardest parts of a map,

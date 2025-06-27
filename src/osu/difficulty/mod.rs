@@ -158,9 +158,8 @@ impl DifficultyValues {
         }
 
         if mods.rx() {
-            aim_rating *= 0.9;
-            speed_rating = 0.0;
-            flashlight_rating *= 0.7;
+            speed_rating = 0.6;
+            flashlight_rating *= 0.9;
         } else if mods.ap() {
             speed_rating *= 0.5;
             aim_rating = 0.0;
