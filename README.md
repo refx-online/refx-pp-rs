@@ -20,7 +20,7 @@ News posts of the latest updates: <https://osu.ppy.sh/home/news/2025-03-06-perfo
 
 ```rust
 // Decode the map
-let map = rosu_pp::Beatmap::from_path("./resources/2785319.osu").unwrap();
+let map = refx_pp::Beatmap::from_path("./resources/2785319.osu").unwrap();
 
 // Whereas osu! simply times out on malicious maps, rosu-pp does not. To
 // prevent potential performance/memory issues, it is recommended to check
@@ -30,14 +30,14 @@ if let Err(sus) = map.check_suspicion() {
 }
 
 // Calculate difficulty attributes
-let diff_attrs = rosu_pp::Difficulty::new()
+let diff_attrs = refx_pp::Difficulty::new()
     .mods(8 + 16) // HDHR
     .calculate(&map);
 
 let stars = diff_attrs.stars();
 
 // Calculate performance attributes
-let perf_attrs = rosu_pp::Performance::new(diff_attrs)
+let perf_attrs = refx_pp::Performance::new(diff_attrs)
     // To speed up the calculation, we used the previous attributes.
     // **Note** that this should only be done if the map and all difficulty
     // settings stay the same, otherwise the final attributes will be incorrect!
@@ -68,7 +68,7 @@ and for performance attributes there is `GradualPerformance` which requires the 
 score state.
 
 ```rust
-use rosu_pp::{Beatmap, GradualPerformance, Difficulty, any::ScoreState};
+use refx_pp::{Beatmap, GradualPerformance, Difficulty, any::ScoreState};
 
 let map = Beatmap::from_path("./resources/1028484.osu").unwrap();
 
@@ -138,15 +138,13 @@ Calculating performances: Median: 40.57µs | Mean: 43.41µs
 ### Bindings
 
 Using `rosu-pp` from other languages than Rust:
-- JavaScript: [rosu-pp-js]
-- Python: [rosu-pp-py]
+- Python: [refx-pp-py]
 
 [osu!]: https://osu.ppy.sh/home
 [osu!lazer]: https://github.com/ppy/osu
 [osu!tools]: https://github.com/ppy/osu-tools
 [`tracing`]: https://docs.rs/tracing
-[rosu-pp-js]: https://github.com/MaxOhn/rosu-pp-js
-[rosu-pp-py]: https://github.com/MaxOhn/rosu-pp-py
+[refx-pp-py]: https://github.com/refx-online/refx-pp-py
 [benchmark]: https://gist.github.com/MaxOhn/625af10011f6d7e13a171b08ccf959ff
 
 <!-- cargo-rdme end -->
