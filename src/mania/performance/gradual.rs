@@ -17,8 +17,8 @@ use super::{ManiaPerformanceAttributes, ManiaScoreState};
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, Difficulty};
-/// use rosu_pp::mania::{Mania, ManiaGradualPerformance, ManiaScoreState};
+/// use refx_pp::{Beatmap, Difficulty};
+/// use refx_pp::mania::{Mania, ManiaGradualPerformance, ManiaScoreState};
 ///
 /// let map = Beatmap::from_path("./resources/1638954.osu").unwrap();
 ///
