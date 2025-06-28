@@ -35,8 +35,8 @@ use super::{
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, Difficulty};
-/// use rosu_pp::catch::{Catch, CatchGradualDifficulty};
+/// use refx_pp::{Beatmap, Difficulty};
+/// use refx_pp::catch::{Catch, CatchGradualDifficulty};
 ///
 /// let map = Beatmap::from_path("./resources/2118524.osu").unwrap();
 ///

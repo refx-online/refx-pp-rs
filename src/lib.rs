@@ -1,6 +1,6 @@
 //! Library to calculate difficulty and performance attributes for all [osu!] gamemodes.
 //!
-//! A large part of `rosu-pp` is a port of [osu!lazer]'s difficulty and performance calculation
+//! A large part of `refx-pp` is a port of [osu!lazer]'s difficulty and performance calculation
 //! with emphasis on a precise translation to Rust for the most [accurate results](#accuracy)
 //! while also providing a significant [boost in performance](#speed).
 //!
@@ -14,9 +14,9 @@
 //!
 //! ```
 //! // Decode the map
-//! let map = rosu_pp::Beatmap::from_path("./resources/2785319.osu").unwrap();
+//! let map = refx_pp::Beatmap::from_path("./resources/2785319.osu").unwrap();
 //!
-//! // Whereas osu! simply times out on malicious maps, rosu-pp does not. To
+//! // Whereas osu! simply times out on malicious maps, refx-pp does not. To
 //! // prevent potential performance/memory issues, it is recommended to check
 //! // beforehand whether a map is too suspicious for further calculation.
 //! if let Err(sus) = map.check_suspicion() {
@@ -24,14 +24,14 @@
 //! }
 //!
 //! // Calculate difficulty attributes
-//! let diff_attrs = rosu_pp::Difficulty::new()
+//! let diff_attrs = refx_pp::Difficulty::new()
 //!     .mods(8 + 16) // HDHR
 //!     .calculate(&map);
 //!
 //! let stars = diff_attrs.stars();
 //!
 //! // Calculate performance attributes
-//! let perf_attrs = rosu_pp::Performance::new(diff_attrs)
+//! let perf_attrs = refx_pp::Performance::new(diff_attrs)
 //!     // To speed up the calculation, we used the previous attributes.
 //!     // **Note** that this should only be done if the map and all difficulty
 //!     // settings stay the same, otherwise the final attributes will be incorrect!
@@ -62,7 +62,7 @@
 //! score state.
 //!
 //! ```
-//! use rosu_pp::{Beatmap, GradualPerformance, Difficulty, any::ScoreState};
+//! use refx_pp::{Beatmap, GradualPerformance, Difficulty, any::ScoreState};
 //!
 //! let map = Beatmap::from_path("./resources/1028484.osu").unwrap();
 //!
@@ -94,29 +94,29 @@
 //!
 //! ## Accuracy
 //!
-//! `rosu-pp` was tested against millions of real scores and delivered
+//! `refx-pp` was tested against millions of real scores and delivered
 //! values that matched osu!lazer perfectly down to the last decimal place.
 //!
 //! However, there is one small caveat: the values are only this precise on debug mode.
 //! On release mode, Rust's compiler performs optimizations that produce the tiniest discrepancies
-//! due to floating point inaccuracies. With this in mind, `rosu-pp` is still as accurate as can
+//! due to floating point inaccuracies. With this in mind, `refx-pp` is still as accurate as can
 //! be without targeting the .NET compiler itself.
 //! Realistically, the inaccuracies in release mode are negligibly small.
 //!
 //! ## Speed
 //!
-//! An important factor for `rosu-pp` is the calculation speed. Optimizations and an accurate translation
+//! An important factor for `refx-pp` is the calculation speed. Optimizations and an accurate translation
 //! unfortunately don't always go hand-in-hand. Nonetheless, performance improvements are still
 //! snuck in wherever possible, providing a significantly faster runtime than the native C# code.
 //!
-//! Results of a rudimentary [benchmark] of osu!lazer and rosu-pp:
+//! Results of a rudimentary [benchmark] of osu!lazer and refx-pp:
 //! ```txt
 //! osu!lazer:
 //! Decoding maps:            Median: 325.18ms | Mean: 325.50ms
 //! Calculating difficulties: Median: 568.63ms | Mean: 575.97ms
 //! Calculating performances: Median: 256.00µs | Mean: 240.40µs
 //!
-//! rosu-pp:
+//! refx-pp:
 //! Decoding maps:            Median: 46.03ms | Mean: 47.13ms
 //! Calculating difficulties: Median: 82.11ms | Mean: 84.27ms
 //! Calculating performances: Median: 40.57µs | Mean: 43.41µs
@@ -133,16 +133,16 @@
 //!
 //! ## Bindings
 //!
-//! Using `rosu-pp` from other languages than Rust:
-//! - JavaScript: [rosu-pp-js]
-//! - Python: [rosu-pp-py]
+//! Using `refx-pp` from other languages than Rust:
+//! - JavaScript: [refx-pp-js]
+//! - Python: [refx-pp-py]
 //!
 //! [osu!]: https://osu.ppy.sh/home
 //! [osu!lazer]: https://github.com/ppy/osu
 //! [osu!tools]: https://github.com/ppy/osu-tools
 //! [`tracing`]: https://docs.rs/tracing
-//! [rosu-pp-js]: https://github.com/MaxOhn/rosu-pp-js
-//! [rosu-pp-py]: https://github.com/MaxOhn/rosu-pp-py
+//! [refx-pp-js]: https://github.com/MaxOhn/refx-pp-js
+//! [refx-pp-py]: https://github.com/MaxOhn/refx-pp-py
 //! [benchmark]: https://gist.github.com/MaxOhn/625af10011f6d7e13a171b08ccf959ff
 //! [`GradualDifficulty`]: crate::any::GradualDifficulty
 //! [`GradualPerformance`]: crate::any::GradualPerformance
