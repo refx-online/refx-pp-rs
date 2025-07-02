@@ -1250,15 +1250,15 @@ mod tests {
         for _ in 0..CASES {
             const LIMIT: u32 = N_OBJECTS + N_HOLD_NOTES + 10;
 
-            let classic = rng.gen();
-            let acc = rng.gen_range(0.0..=1.0);
-            let n320 = rng.gen_bool(0.1).then(|| rng.gen_range(0..=LIMIT));
-            let n300 = rng.gen_bool(0.1).then(|| rng.gen_range(0..=LIMIT));
-            let n200 = rng.gen_bool(0.1).then(|| rng.gen_range(0..=LIMIT));
-            let n100 = rng.gen_bool(0.1).then(|| rng.gen_range(0..=LIMIT));
-            let n50 = rng.gen_bool(0.1).then(|| rng.gen_range(0..=LIMIT));
-            let n_misses = rng.gen_bool(0.2).then(|| rng.gen_range(0..=LIMIT));
-            let best_case = rng.gen();
+            let classic = rng.random();
+            let acc = rng.random_range(0.0..=1.0);
+            let n320 = rng.random_bool(0.1).then(|| rng.random_range(0..=LIMIT));
+            let n300 = rng.random_bool(0.1).then(|| rng.random_range(0..=LIMIT));
+            let n200 = rng.random_bool(0.1).then(|| rng.random_range(0..=LIMIT));
+            let n100 = rng.random_bool(0.1).then(|| rng.random_range(0..=LIMIT));
+            let n50 = rng.random_bool(0.1).then(|| rng.random_range(0..=LIMIT));
+            let n_misses = rng.random_bool(0.2).then(|| rng.random_range(0..=LIMIT));
+            let best_case = rng.random();
 
             eprintln!(
                 "classic={} | acc={} | n320={:?} | n300={:?} | n200={:?} | \
