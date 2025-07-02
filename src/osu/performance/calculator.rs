@@ -481,7 +481,7 @@ impl OsuPerformanceCalculator<'_> {
 
     fn calculate_rx_streams_nerf(&self) -> (f64, f64) {
         if !self.mods.rx() {
-            return 1.0, 1.0
+            return (1.0, 1.0)
         }
 
         let streams_nerf = ((self.attrs.speed / self.attrs.aim) * 100.0).round() / 100.0;
