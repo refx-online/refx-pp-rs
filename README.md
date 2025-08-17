@@ -4,4 +4,4 @@ Using `refx-pp` from other languages than Rust:
 - Python: [refx-pp-py]
 
 [rosu-pp]: https://github.com/MaxOhn/rosu-pp
-[rosu-pp-py]: https://github.com/refx-online/refx-pp-py
+[refx-pp-py]: https://github.com/refx-online/refx-pp-py
