@@ -479,6 +479,8 @@ impl OsuPerformanceCalculator<'_> {
         adjusted_speed_value / speed_value
     }
 
+    // * Applies a nerf to scores with Relax when stream difficulty exceeds aim difficulty.
+    // * higher ratio => heavier nerf on both speed and accuracy performance values.
     fn calculate_rx_streams_nerf(&self) -> (f64, f64) {
         if !self.mods.rx() {
             return (1.0, 1.0)
@@ -513,7 +515,7 @@ impl OsuPerformanceCalculator<'_> {
     // * so we use the amount of relatively difficult sections to adjust miss penalty
     // * to make it more punishing on maps with lower amount of hard sections.
     fn calculate_miss_penalty(miss_count: f64, diff_strain_count: f64) -> f64 {
-        0.96 / ((miss_count / (4.0 * diff_strain_count.ln().powf(0.94))) + 1.0)
+        0.018 + (0.96 - 0.018) / ((miss_count / (3.0 * diff_strain_count.ln().powf(0.94))).powf(1.9) + 1.0)
     }
 
     fn get_combo_scaling_factor(&self) -> f64 {

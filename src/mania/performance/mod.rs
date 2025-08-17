@@ -800,8 +800,7 @@ mod tests {
     use std::{cmp::Ordering, sync::OnceLock, time::Instant};
 
     use proptest::{
-        prelude::*,
-        test_runner::{RngAlgorithm, TestRng},
+        prelude::*
     };
     use rosu_map::section::general::GameMode;
     use rosu_mods::GameMod;
@@ -1210,65 +1209,6 @@ mod tests {
             best_case in prop::bool::ANY,
         ) {
             exec_mania_hitresults(classic, acc, n320, n300, n200, n100, n50, n_misses, best_case);
-        }
-    }
-
-    #[test]
-    fn rng_mania_hitresults() {
-        /// Generates a random seed by measuring the time it takes to calculate
-        /// all primes up to 10_000.
-        fn generate_seed() -> [u8; 16] {
-            let start = Instant::now();
-
-            const LIMIT: usize = 10_000;
-            let mut is_prime = vec![true; LIMIT + 1];
-            is_prime.iter_mut().step_by(2).for_each(|n| *n = false);
-            is_prime[1] = false;
-            is_prime[2] = true;
-
-            for n in (3..=LIMIT).step_by(2) {
-                if !is_prime[n] {
-                    continue;
-                }
-
-                for m in (n * n..=LIMIT).step_by(n) {
-                    is_prime[m] = false;
-                }
-            }
-
-            start.elapsed().as_nanos().to_le_bytes()
-        }
-
-        let seed = generate_seed();
-        eprintln!("seed={seed:?}");
-        let mut rng = TestRng::from_seed(RngAlgorithm::XorShift, &seed);
-
-        // Worst-case test cases can take over 5 minutes to bruteforce on debug
-        // mode so we shouldn't over do the amount here.
-        const CASES: usize = 4;
-
-        for _ in 0..CASES {
-            const LIMIT: u32 = N_OBJECTS + N_HOLD_NOTES + 10;
-
-            let classic = rng.random();
-            let acc = rng.random_range(0.0..=1.0);
-            let n320 = rng.random_bool(0.1).then(|| rng.random_range(0..=LIMIT));
-            let n300 = rng.random_bool(0.1).then(|| rng.random_range(0..=LIMIT));
-            let n200 = rng.random_bool(0.1).then(|| rng.random_range(0..=LIMIT));
-            let n100 = rng.random_bool(0.1).then(|| rng.random_range(0..=LIMIT));
-            let n50 = rng.random_bool(0.1).then(|| rng.random_range(0..=LIMIT));
-            let n_misses = rng.random_bool(0.2).then(|| rng.random_range(0..=LIMIT));
-            let best_case = rng.random();
-
-            eprintln!(
-                "classic={} | acc={} | n320={:?} | n300={:?} | n200={:?} | \
-                n100={:?} | n50={:?} | n_misses={:?} | best_case={}",
-                classic, acc, n320, n300, n200, n100, n50, n_misses, best_case,
-            );
-
-            exec_mania_hitresults(
-                classic, acc, n320, n300, n200, n100, n50, n_misses, best_case,
-            );
         }
     }
 
