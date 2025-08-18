@@ -20,6 +20,9 @@ use super::{n_large_tick_miss, n_slider_ends_dropped, total_imperfect_hits};
 // * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
 pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.15;
 
+// * Minimum penalty applied per miss, ensures score never drops below this.
+const MISS_PENALTY_FLOOR: f64 = 0.018;
+
 pub(super) struct OsuPerformanceCalculator<'mods> {
     attrs: OsuDifficultyAttributes,
     mods: &'mods GameMods,
@@ -515,7 +518,7 @@ impl OsuPerformanceCalculator<'_> {
     // * so we use the amount of relatively difficult sections to adjust miss penalty
     // * to make it more punishing on maps with lower amount of hard sections.
     fn calculate_miss_penalty(miss_count: f64, diff_strain_count: f64) -> f64 {
-        0.018 + (0.96 - 0.018) / ((miss_count / (3.0 * diff_strain_count.ln().powf(0.94))).powf(1.9) + 1.0)
+        MISS_PENALTY_FLOOR + (0.96 - MISS_PENALTY_FLOOR) / ((miss_count / (3.0 * diff_strain_count.ln().powf(0.94))).powf(1.9) + 1.0)
     }
 
     fn get_combo_scaling_factor(&self) -> f64 {
