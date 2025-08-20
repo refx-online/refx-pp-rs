@@ -48,6 +48,10 @@ pub struct OsuDifficultyAttributes {
     pub stars: f64,
     /// The maximum combo.
     pub max_combo: u32,
+    /// The aim top weighted slider factor.
+    pub aim_top_weighted_slider_factor: f64,
+    /// The speed top weighted slider factor.
+    pub speed_top_weighted_slider_factor: f64,
 }
 
 impl OsuDifficultyAttributes {

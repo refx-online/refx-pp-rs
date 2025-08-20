@@ -7,7 +7,7 @@ use crate::{
     },
     osu::difficulty::object::OsuDifficultyObject,
     util::{
-        difficulty::{milliseconds_to_bpm, reverse_lerp, smootherstep, smoothstep},
+        difficulty::{milliseconds_to_bpm, reverse_lerp, smootherstep, smoothstep, count_top_weighted_sliders},
         float_ext::FloatExt,
         strains_vec::StrainsVec,
     },
@@ -73,6 +73,14 @@ impl Aim {
             .copied()
             .map(|strain| 1.0 / (1.0 + f64::exp(-(strain / max_slider_strain * 12.0 - 6.0))))
             .sum()
+    }
+
+    pub fn count_top_weighted_sliders(&self) -> f64 {
+        if self.slider_strains.is_empty() {
+            return 0.0;
+        }
+
+        count_top_weighted_sliders(&self.slider_strains, self.current_strain)
     }
 
     // From `OsuStrainSkill`; native rather than trait function so that it has

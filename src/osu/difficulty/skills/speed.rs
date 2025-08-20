@@ -7,7 +7,7 @@ use crate::{
     },
     osu::difficulty::object::OsuDifficultyObject,
     util::{
-        difficulty::{bpm_to_milliseconds, logistic, milliseconds_to_bpm},
+        difficulty::{bpm_to_milliseconds, logistic, milliseconds_to_bpm, count_top_weighted_sliders},
         strains_vec::StrainsVec,
     },
 };
@@ -21,6 +21,7 @@ define_skill! {
         current_rhythm: f64 = 0.0,
         hit_window: f64,
         has_autopilot_mod: bool,
+        slider_strains: Vec<f64> = Vec::new(),
     }
 }
 
@@ -56,8 +57,14 @@ impl Speed {
             self.has_autopilot_mod,
         ) * Self::SKILL_MULTIPLIER;
         self.current_rhythm = RhythmEvaluator::evaluate_diff_of(curr, objects, self.hit_window);
+        
+        let total_strain = self.current_strain * self.current_rhythm;
 
-        self.current_strain * self.current_rhythm
+        if curr.base.is_slider() {
+            self.slider_strains.push(total_strain);
+        }
+
+        total_strain
     }
 
     pub fn relevant_note_count(&self) -> f64 {
@@ -73,6 +80,14 @@ impl Speed {
                         sum + (1.0 + f64::exp(-(strain / max_strain * 12.0 - 6.0))).recip()
                     })
             })
+    }
+
+    pub fn count_top_weighted_sliders(&self) -> f64 {
+        if self.slider_strains.is_empty() {
+            return 0.0;
+        }
+
+        count_top_weighted_sliders(&self.slider_strains, self.current_strain)
     }
 
     // From `OsuStrainSkill`; native rather than trait function so that it has

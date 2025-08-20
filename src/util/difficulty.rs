@@ -53,3 +53,21 @@ pub const fn smootherstep(x: f64, start: f64, end: f64) -> f64 {
 pub const fn reverse_lerp(x: f64, start: f64, end: f64) -> f64 {
     f64::clamp((x - start) / (end - start), 0.0, 1.0)
 }
+
+pub fn count_top_weighted_sliders(slider_strains: &[f64], difficulty_value: f64) -> f64 {
+    if slider_strains.is_empty() {
+        return 0.0;
+    }
+
+    // * What would the top strain be if all strain values were identical
+    let consistent_top_strain = difficulty_value / 10.0;
+    if consistent_top_strain == 0.0 {
+        return 0.0;
+    }
+
+    // * Use a weighted sum of all strains. Constants are arbitrary and give nice values
+    slider_strains
+        .iter()
+        .map(|&s| logistic(s / consistent_top_strain, 0.88, 10.0, Some(1.1)))
+        .sum()
+}

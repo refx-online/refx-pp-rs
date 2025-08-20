@@ -52,6 +52,8 @@ macro_rules! test_cases {
         n_spinners: $n_spinners:literal,
         stars: $stars:literal,
         max_combo: $max_combo:literal,
+        aim_top_weighted_slider_factor: $aim_top_weighted_slider_factor:literal,
+        speed_top_weighted_slider_factor: $speed_top_weighted_slider_factor:literal,
     }) => {
         OsuDifficultyAttributes {
             aim: $aim,
@@ -73,6 +75,8 @@ macro_rules! test_cases {
             n_spinners: $n_spinners,
             stars: $stars,
             max_combo: $max_combo,
+            aim_top_weighted_slider_factor: $aim_top_weighted_slider_factor,
+            speed_top_weighted_slider_factor: $speed_top_weighted_slider_factor,
         }
     };
     ( @Taiko {
@@ -159,6 +163,8 @@ fn basic_osu() {
                 n_spinners: 1,
                 stars: 5.598323709394254,
                 max_combo: 909,
+                aim_top_weighted_slider_factor: 322.2999999961483,
+                speed_top_weighted_slider_factor: 322.2999999990032,
             };
             HD => {
                 aim: 2.9877761929710887,
@@ -180,6 +186,8 @@ fn basic_osu() {
                 n_spinners: 1,
                 stars: 5.7929943581483005 ,
                 max_combo: 909,
+                aim_top_weighted_slider_factor: 322.2999999961483,
+                speed_top_weighted_slider_factor: 322.2999999990032,
             };
             HR => {
                 aim: 3.2739728718715706,
@@ -201,6 +209,8 @@ fn basic_osu() {
                 n_spinners: 1,
                 stars: 6.2197446399503775,
                 max_combo: 909,
+                aim_top_weighted_slider_factor: 322.29999999840106,
+                speed_top_weighted_slider_factor: 322.29999999999967, // SIIIX SEEEVEEENNN
             };
             DT => {
                 aim: 4.1651025516500315,
@@ -222,6 +232,8 @@ fn basic_osu() {
                 n_spinners: 1,
                 stars: 8.194262577850589,
                 max_combo: 909,
+                aim_top_weighted_slider_factor: 322.2999999999937,
+                speed_top_weighted_slider_factor: 322.3000000000003,
             };
             FL => {
                 aim: 2.887363596336323,
@@ -243,6 +255,8 @@ fn basic_osu() {
                 n_spinners: 1,
                 stars: 6.780888701896652,
                 max_combo: 909,
+                aim_top_weighted_slider_factor: 322.2999999961483,
+                speed_top_weighted_slider_factor: 322.2999999990032,
             };
             HD FL => {
                 aim: 2.9877761929710887,
@@ -264,6 +278,8 @@ fn basic_osu() {
                 n_spinners: 1,
                 stars: 7.197667893411615,
                 max_combo: 909,
+                aim_top_weighted_slider_factor: 322.2999999961483,
+                speed_top_weighted_slider_factor: 322.2999999990032,
             };
         }
     };
@@ -514,6 +530,8 @@ impl AssertEq for OsuDifficultyAttributes {
             n_spinners,
             stars,
             max_combo,
+            aim_top_weighted_slider_factor,
+            speed_top_weighted_slider_factor,
         } = self;
 
         assert_eq_float(*aim, expected.aim);
@@ -544,6 +562,14 @@ impl AssertEq for OsuDifficultyAttributes {
         assert_eq!(*n_spinners, expected.n_spinners);
         assert_eq_float(*stars, expected.stars);
         assert_eq!(*max_combo, expected.max_combo);
+        assert_eq_float(
+            *aim_top_weighted_slider_factor,
+            expected.aim_top_weighted_slider_factor,
+        );
+        assert_eq_float(
+            *speed_top_weighted_slider_factor,
+            expected.speed_top_weighted_slider_factor,
+        );
     }
 }
 
