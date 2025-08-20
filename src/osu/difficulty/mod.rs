@@ -262,6 +262,11 @@ impl DifficultyValues {
             aim_rating *= 0.9;
         }
 
+        if mods.mg() {
+            let magnetised_strength = mods.attraction_strength().unwrap_or(0.0);
+            aim_rating *= 1.0 - magnetised_strength;
+        }
+
         let mut rating_multiplier = 1.0;
 
         let approach_rate_length_bonus = 0.95 + 0.4 * f64::min(1.0, total_hits as f64 / 2000.0)
@@ -303,6 +308,12 @@ impl DifficultyValues {
 
         if mods.ap() {
             speed_rating *= 0.5;
+        }
+
+        if mods.mg() {
+            // * Reduce speed rating because of the speed distance scaling, with maximum reduction being 0.7x
+            let magnetised_strength = mods.attraction_strength().unwrap_or(0.0);
+            speed_rating *= 1.0 - magnetised_strength * 0.3;
         }
 
         let mut rating_multiplier = 1.0;
@@ -354,6 +365,11 @@ impl DifficultyValues {
             flashlight_rating *= 0.7;
         } else if mods.ap() {
             flashlight_rating *= 0.4;
+        }
+
+        if mods.mg() {
+            let magnetised_strength = mods.attraction_strength().unwrap_or(0.0);
+            flashlight_rating *= 1.0 - magnetised_strength;
         }
 
         let mut rating_multiplier = 1.0;

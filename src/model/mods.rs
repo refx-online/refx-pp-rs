@@ -256,6 +256,17 @@ impl GameMods {
             })
             .map(|seed| seed as i32)
     }
+
+    pub(crate) fn attraction_strength(&self) -> Option<f64> {
+        let Self::Lazer(mods) = self else { return None };
+
+        mods.iter()
+            .find_map(|m| match m {
+                GameMod::MagnetisedOsu(m) => m.attraction_strength,
+                _ => None,
+            })
+            .map(|attraction_strength| attraction_strength as f64)
+    }
 }
 
 macro_rules! impl_map_attr {
@@ -340,6 +351,7 @@ impl_has_mod! {
     invert: - Invert ["Invert"],
     ho: - HoldOff ["HoldOff"],
     tc: - Traceable ["Traceable"],
+    mg: - Magnetised ["Magnetised"],
 }
 
 impl Default for GameMods {
