@@ -5,12 +5,16 @@ use skills::{aim::Aim, flashlight::Flashlight, speed::Speed, strain::OsuStrainSk
 
 use crate::{
     any::difficulty::{skills::StrainSkill, Difficulty},
-    model::{beatmap::BeatmapAttributes, mode::ConvertError, mods::GameMods},
+    model::{
+        beatmap::BeatmapAttributes, 
+        beatmap::HitWindows, 
+        mode::ConvertError, 
+        mods::GameMods
+    },
     osu::{
         convert::convert_objects,
         difficulty::{object::OsuDifficultyObject, scaling_factor::ScalingFactor},
         object::OsuObject,
-        performance::PERFORMANCE_BASE_MULTIPLIER,
     },
     Beatmap,
 };
@@ -24,7 +28,10 @@ mod object;
 pub mod scaling_factor;
 pub mod skills;
 
+// * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
+const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.15;
 const DIFFICULTY_MULTIPLIER: f64 = 0.0675;
+const STAR_RATING_MULTIPLIER: f64 = 0.0265;
 
 const HD_FADE_IN_DURATION_MULTIPLIER: f64 = 0.4;
 const HD_FADE_OUT_DURATION_MULTIPLIER: f64 = 0.3;
@@ -38,10 +45,24 @@ pub fn difficulty(
     let DifficultyValues { skills, mut attrs } = DifficultyValues::calculate(difficulty, &map);
 
     let mods = difficulty.get_mods();
+    let hit_windows = map
+        .attributes()
+        .difficulty(difficulty)
+        .hit_windows();
 
-    DifficultyValues::eval(&mut attrs, mods, &skills);
+    DifficultyValues::eval(&mut attrs, mods, &skills, &hit_windows);
 
     Ok(attrs)
+}
+
+pub fn calculate_difficulty_multiplier(mods: &GameMods, total_hits: u32, spinner_count: u32) -> f64 {
+    let mut multiplier = PERFORMANCE_BASE_MULTIPLIER;
+
+    if mods.so() && total_hits > 0 {
+        multiplier *= 1.0 - ((spinner_count as f64 / total_hits as f64).powf(0.85));
+    }
+
+    multiplier
 }
 
 pub struct OsuDifficultySetup {
@@ -121,7 +142,7 @@ impl DifficultyValues {
     }
 
     /// Process the difficulty values and store the results in `attrs`.
-    pub fn eval(attrs: &mut OsuDifficultyAttributes, mods: &GameMods, skills: &OsuSkills) {
+    pub fn eval(attrs: &mut OsuDifficultyAttributes, mods: &GameMods, skills: &OsuSkills, hit_windows: &HitWindows) {
         let OsuSkills {
             aim,
             aim_no_sliders,
@@ -131,13 +152,58 @@ impl DifficultyValues {
 
         let aim_difficulty_value = aim.cloned_difficulty_value();
 
-        let mut aim_rating = aim_difficulty_value.sqrt() * DIFFICULTY_MULTIPLIER;
         let aim_difficult_strain_count = aim.count_top_weighted_strains(aim_difficulty_value);
 
         let difficult_sliders = aim.get_difficult_sliders();
+        
+        let speed_difficulty_value = speed.cloned_difficulty_value();
+        let speed_difficult_strain_count = speed.count_top_weighted_strains(speed_difficulty_value);
 
-        let aim_rating_no_sliders =
-            f64::sqrt(aim_no_sliders.cloned_difficulty_value()) * DIFFICULTY_MULTIPLIER;
+        let flashlight_difficulty_value = flashlight.cloned_difficulty_value();
+
+        let total_hits = attrs.n_circles + attrs.n_sliders + attrs.n_spinners;
+        let spinner_count = attrs.n_spinners;
+
+        let preempt = hit_windows.ar;
+
+        let approach_rate = if preempt > 1200.0 {
+            (1800.0 - preempt) / 120.0
+        } else {
+            (1200.0 - preempt) / 150.0 + 5.0
+        };
+        
+        let overall_difficulty = (80.0 - hit_windows.od_great) / 6.0;
+
+        let aim_rating = Self::compute_aim_rating(
+            aim_difficulty_value,
+            mods,
+            total_hits,
+            approach_rate,
+            overall_difficulty,
+        );
+
+        let aim_rating_no_sliders = Self::compute_aim_rating(
+            aim_no_sliders.cloned_difficulty_value(),
+            mods,
+            total_hits,
+            approach_rate,
+            overall_difficulty,
+        );
+
+        let speed_rating = Self::compute_speed_rating(
+            speed_difficulty_value,
+            mods,
+            total_hits,
+            approach_rate,
+            overall_difficulty,
+        );
+
+        let flashlight_rating = Self::compute_flashlight_rating(
+            flashlight_difficulty_value,
+            mods,
+            total_hits,
+            overall_difficulty,
+        );
 
         let slider_factor = if aim_rating > 0.0 {
             aim_rating_no_sliders / aim_rating
@@ -145,44 +211,20 @@ impl DifficultyValues {
             1.0
         };
 
-        let speed_difficulty_value = speed.cloned_difficulty_value();
-        let mut speed_rating = f64::sqrt(speed_difficulty_value) * DIFFICULTY_MULTIPLIER;
-        let speed_difficult_strain_count = speed.count_top_weighted_strains(speed_difficulty_value);
-
-        let mut flashlight_rating =
-            f64::sqrt(flashlight.cloned_difficulty_value()) * DIFFICULTY_MULTIPLIER;
-
-        if mods.td() {
-            aim_rating = aim_rating.powf(0.8);
-            flashlight_rating = flashlight_rating.powf(0.8);
-        }
-
-        if mods.rx() {
-            speed_rating = 0.6;
-            flashlight_rating *= 0.9;
-        } else if mods.ap() {
-            speed_rating *= 0.5;
-            aim_rating = 0.0;
-            flashlight_rating *= 0.4;
-        }
-
         let base_aim_performance = Aim::difficulty_to_performance(aim_rating);
         let base_speed_performance = Speed::difficulty_to_performance(speed_rating);
+        let base_flashlight_performance = Flashlight::difficulty_to_performance(flashlight_rating);
 
-        let base_flashlight_performance = if mods.fl() {
-            Flashlight::difficulty_to_performance(flashlight_rating)
-        } else {
-            0.0
-        };
-
-        let base_performance = ((base_aim_performance).powf(1.1)
-            + (base_speed_performance).powf(1.1)
+        let base_performance = ((base_aim_performance).powf(1.1) 
+            + (base_speed_performance).powf(1.1) 
             + (base_flashlight_performance).powf(1.1))
-        .powf(1.0 / 1.1);
+            .powf(1.0 / 1.1);
+
+        let multiplier =
+            calculate_difficulty_multiplier(mods, total_hits, spinner_count);
 
         let star_rating = if base_performance > 0.00001 {
-            PERFORMANCE_BASE_MULTIPLIER.cbrt()
-                * 0.027
+            multiplier.cbrt() * STAR_RATING_MULTIPLIER 
                 * ((100_000.0 / 2.0_f64.powf(1.0 / 1.1) * base_performance).cbrt() + 4.0)
         } else {
             0.0
@@ -197,6 +239,137 @@ impl DifficultyValues {
         attrs.speed_difficult_strain_count = speed_difficult_strain_count;
         attrs.stars = star_rating;
         attrs.speed_note_count = speed.relevant_note_count();
+    }
+
+    fn compute_aim_rating(
+        aim_difficulty_value: f64,
+        mods: &GameMods,
+        total_hits: u32,
+        approach_rate: f64,
+        overall_difficulty: f64,
+    ) -> f64 {
+        if mods.ap() {
+            return 0.0;
+        }
+
+        let mut aim_rating = f64::sqrt(aim_difficulty_value) * DIFFICULTY_MULTIPLIER;
+
+        if mods.td() {
+            aim_rating = aim_rating.powf(0.8);
+        }
+
+        if mods.rx() {
+            aim_rating *= 0.9;
+        }
+
+        let mut rating_multiplier = 1.0;
+
+        let approach_rate_length_bonus = 0.95 + 0.4 * f64::min(1.0, total_hits as f64 / 2000.0)
+            + if total_hits > 2000 {
+                f64::log10(total_hits as f64 / 2000.0) * 0.5
+            } else {
+                0.0
+            };
+
+        let ar_factor = if approach_rate > 10.33 {
+            0.3 * (approach_rate - 10.33)
+        } else if approach_rate < 8.0 {
+            0.05 * (8.0 - approach_rate)
+        } else {
+            0.0
+        };
+
+        rating_multiplier *= 1.0 + ar_factor * approach_rate_length_bonus;
+
+        if mods.hd() {
+            // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
+            rating_multiplier *= 1.0 + 0.04 * (12.0 - approach_rate);
+        }
+
+        // * It is important to consider accuracy difficulty when scaling with accuracy.
+        rating_multiplier *= 0.98 + f64::max(0.0, overall_difficulty).powf(2.0) / 2500.0;
+
+        aim_rating * rating_multiplier.cbrt()
+    }
+
+    fn compute_speed_rating(
+        speed_difficulty_value: f64,
+        mods: &GameMods,
+        total_hits: u32,
+        approach_rate: f64,
+        overall_difficulty: f64,
+    ) -> f64 {
+        let mut speed_rating = f64::sqrt(speed_difficulty_value) * DIFFICULTY_MULTIPLIER;
+
+        if mods.ap() {
+            speed_rating *= 0.5;
+        }
+
+        let mut rating_multiplier = 1.0;
+
+        let approach_rate_length_bonus = 0.95 + 0.4 * f64::min(1.0, total_hits as f64 / 2000.0)
+            + if total_hits > 2000 {
+                f64::log10(total_hits as f64 / 2000.0) * 0.5
+            } else {
+                0.0
+            };
+
+        let ar_factor = if mods.ap() {
+            0.0
+        } else if approach_rate > 10.33 {
+            0.3 * (approach_rate - 10.33)
+        } else {
+            0.0
+        };
+
+        rating_multiplier *= 1.0 + ar_factor * approach_rate_length_bonus;
+
+        if mods.hd() {
+            // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
+            rating_multiplier *= 1.0 + 0.04 * (12.0 - approach_rate);
+        }
+
+        rating_multiplier *= 0.95 + f64::max(0.0, overall_difficulty).powf(2.0) / 750.0;
+
+        speed_rating * rating_multiplier.cbrt()
+    }
+
+    fn compute_flashlight_rating(
+        flashlight_difficulty_value: f64,
+        mods: &GameMods,
+        total_hits: u32,
+        overall_difficulty: f64,
+    ) -> f64 {
+        if !mods.fl() {
+            return 0.0;
+        }
+
+        let mut flashlight_rating = f64::sqrt(flashlight_difficulty_value) * DIFFICULTY_MULTIPLIER;
+
+        if mods.td() {
+            flashlight_rating = flashlight_rating.powf(0.8);
+        }
+
+        if mods.rx() {
+            flashlight_rating *= 0.7;
+        } else if mods.ap() {
+            flashlight_rating *= 0.4;
+        }
+
+        let mut rating_multiplier = 1.0;
+
+        // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
+        rating_multiplier *= 0.7 + 0.1 * f64::min(1.0, total_hits as f64 / 200.0)
+            + if total_hits > 200 {
+                0.2 * f64::min(1.0, (total_hits - 200) as f64 / 200.0)
+            } else {
+                0.0
+            };
+
+        // * It is important to consider accuracy difficulty when scaling with accuracy.
+        rating_multiplier *= 0.98 + f64::max(0.0, overall_difficulty).powf(2.0) / 2500.0;
+
+        flashlight_rating * rating_multiplier.sqrt()
     }
 
     pub fn create_difficulty_objects<'a>(

@@ -3,7 +3,6 @@ use std::{borrow::Cow, cmp};
 use rosu_map::section::general::GameMode;
 
 use self::calculator::OsuPerformanceCalculator;
-pub use self::calculator::PERFORMANCE_BASE_MULTIPLIER;
 
 use crate::{
     any::{Difficulty, HitResultPriority, IntoModePerformance, IntoPerformance, Performance},

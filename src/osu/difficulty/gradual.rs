@@ -4,7 +4,7 @@ use rosu_map::section::general::GameMode;
 
 use crate::{
     any::difficulty::skills::StrainSkill,
-    model::mode::ConvertError,
+    model::{mode::ConvertError, beatmap::HitWindows},
     osu::{
         convert::convert_objects,
         object::{OsuObject, OsuObjectKind},
@@ -55,6 +55,7 @@ use super::{
 pub struct OsuGradualDifficulty {
     pub(crate) idx: usize,
     pub(crate) difficulty: Difficulty,
+    pub(crate) hit_windows: HitWindows,
     attrs: OsuDifficultyAttributes,
     skills: OsuSkills,
     // Lifetimes actually depend on `osu_objects` so this type is
@@ -112,10 +113,16 @@ impl OsuGradualDifficulty {
         let skills = OsuSkills::new(mods, &scaling_factor, &map_attrs, time_preempt);
         let diff_objects = extend_lifetime(diff_objects.into_boxed_slice());
 
+        let hit_windows = map
+            .attributes()
+            .difficulty(&difficulty)
+            .hit_windows();
+
         Ok(Self {
             idx: 0,
             difficulty,
             attrs,
+            hit_windows,
             skills,
             diff_objects,
             osu_objects,
@@ -172,7 +179,7 @@ impl Iterator for OsuGradualDifficulty {
 
         let mut attrs = self.attrs.clone();
 
-        DifficultyValues::eval(&mut attrs, self.difficulty.get_mods(), &self.skills);
+        DifficultyValues::eval(&mut attrs, self.difficulty.get_mods(), &self.skills, &self.hit_windows);
 
         Some(attrs)
     }

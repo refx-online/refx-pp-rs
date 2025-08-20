@@ -5,6 +5,7 @@ use crate::{
         difficulty::skills::{
             aim::Aim, flashlight::Flashlight, speed::Speed, strain::OsuStrainSkill,
         },
+        difficulty::calculate_difficulty_multiplier,
         OsuDifficultyAttributes, OsuPerformanceAttributes, OsuScoreState,
     },
     util::{
@@ -16,9 +17,6 @@ use crate::{
 };
 
 use super::{n_large_tick_miss, n_slider_ends_dropped, total_imperfect_hits};
-
-// * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
-pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.15;
 
 // * Minimum penalty applied per miss, ensures score never drops below this.
 const MISS_PENALTY_FLOOR: f64 = 0.018;
@@ -65,14 +63,11 @@ impl OsuPerformanceCalculator<'_> {
 
         let total_hits = f64::from(total_hits);
 
-        let mut multiplier = PERFORMANCE_BASE_MULTIPLIER;
+        let mut multiplier = 
+            calculate_difficulty_multiplier(self.mods, total_hits as u32, self.attrs.n_spinners);
 
         if self.mods.nf() {
             multiplier *= (1.0 - 0.02 * self.effective_miss_count).max(0.9);
-        }
-
-        if self.mods.so() && total_hits > 0.0 {
-            multiplier *= 1.0 - (f64::from(self.attrs.n_spinners) / total_hits).powf(0.85);
         }
 
         let speed_deviation = self.calculate_speed_deviation();
@@ -167,31 +162,19 @@ impl OsuPerformanceCalculator<'_> {
             );
         }
 
-        let ar_factor = if self.attrs.ar > 10.33 {
-            0.3 * (self.attrs.ar - 10.33)
-        } else if self.attrs.ar < 8.0 {
-            0.05 * (8.0 - self.attrs.ar)
-        } else {
-            0.0
-        };
-
-        // * Buff for longer maps with high AR.
-        aim_value *= 1.0 + ar_factor * len_bonus;
-
+        // * TC bonuses are excluded when blinds is present as the increased visual difficulty is unimportant when notes cannot be seen.
         if self.mods.bl() {
             aim_value *= 1.3
                 + (total_hits
                     * (0.0016 / (1.0 + 2.0 * self.effective_miss_count))
                     * self.acc.powf(16.0))
                     * (1.0 - 0.003 * self.attrs.hp * self.attrs.hp);
-        } else if self.mods.hd() || self.mods.tc() {
+        } else if self.mods.tc() {
             // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
             aim_value *= 1.0 + 0.04 * (12.0 - self.attrs.ar);
         }
 
         aim_value *= self.acc;
-        // * It is important to consider accuracy difficulty when scaling with accuracy.
-        aim_value *= 0.98 + f64::powf(f64::max(0.0, self.attrs.od()), 2.0) / 2500.0;
 
         aim_value
     }
@@ -218,22 +201,12 @@ impl OsuPerformanceCalculator<'_> {
             );
         }
 
-        let ar_factor = if self.mods.ap() {
-            0.0
-        } else if self.attrs.ar > 10.33 {
-            0.3 * (self.attrs.ar - 10.33)
-        } else {
-            0.0
-        };
-
-        // * Buff for longer maps with high AR.
-        speed_value *= 1.0 + ar_factor * len_bonus;
-
+        // * TC bonuses are excluded when blinds is present as the increased visual difficulty is unimportant when notes cannot be seen.
         if self.mods.bl() {
             // * Increasing the speed value by object count for Blinds isn't
             // * ideal, so the minimum buff is given.
             speed_value *= 1.12;
-        } else if self.mods.hd() || self.mods.tc() {
+        } else if self.mods.tc() {
             // * We want to give more reward for lower AR when it comes to aim and HD.
             // * This nerfs high AR and buffs lower AR.
             speed_value *= 1.0 + 0.04 * (12.0 - self.attrs.ar);
@@ -262,8 +235,7 @@ impl OsuPerformanceCalculator<'_> {
         let od = self.attrs.od();
 
         // * Scale the speed value with accuracy and OD.
-        speed_value *= (0.95 + f64::powf(f64::max(0.0, od), 2.0) / 750.0)
-            * f64::powf((self.acc + relevant_acc) / 2.0, (14.5 - od) / 2.0);
+        speed_value *= f64::powf((self.acc + relevant_acc) / 2.0, (14.5 - od) / 2.0);
 
         speed_value
     }
@@ -340,17 +312,8 @@ impl OsuPerformanceCalculator<'_> {
 
         flashlight_value *= self.get_combo_scaling_factor();
 
-        // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
-        flashlight_value *= 0.7
-            + 0.1 * (total_hits / 200.0).min(1.0)
-            + f64::from(u8::from(total_hits > 200.0))
-                * 0.2
-                * ((total_hits - 200.0) / 200.0).min(1.0);
-
         // * Scale the flashlight value with accuracy _slightly_.
         flashlight_value *= 0.5 + self.acc / 2.0;
-        // * It is important to also consider accuracy difficulty when doing that.
-        flashlight_value *= 0.98 + f64::powf(f64::max(0.0, self.attrs.od()), 2.0) / 2500.0;
 
         flashlight_value
     }

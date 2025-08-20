@@ -105,65 +105,65 @@ fn basic_osu() {
     test_cases! {
         Osu: OSU {
             NM => {
-                pp: 273.55482143018787,
+                pp: 273.6527021434685,
                 pp_acc: 97.62287463107766,
-                pp_aim: 98.91907543994563,
+                pp_aim: 98.93969568393551,
                 pp_flashlight: 0.0,
-                pp_speed: 65.89857918351103,
+                pp_speed: 65.97387258620209,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
             };
             HD => {
-                pp: 300.22543969392876,
+                pp: 300.7191681876457,
                 pp_acc: 105.43270460156388,
-                pp_aim: 109.6023348327671,
+                pp_aim: 109.83596784424736,
                 pp_flashlight: 0.0,
-                pp_speed: 73.01562523256396,
+                pp_speed: 73.2599477644965,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
             };
             EZ HD => {
-                pp: 186.89279040924507,
+                pp: 188.14221322855977,
                 pp_acc: 16.6270597231239,
-                pp_aim: 96.66495037071935,
+                pp_aim: 97.48356469978363,
                 pp_flashlight: 0.0,
-                pp_speed: 63.20254195234833,
+                pp_speed: 63.54240497383165,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(23.1539101317497),
             };
             HR => {
-                pp: 405.7923033508039,
+                pp: 405.97709798299877,
                 pp_acc: 161.55575439788055,
-                pp_aim: 145.16956208688748,
+                pp_aim: 145.21794260944918,
                 pp_flashlight: 0.0,
-                pp_speed: 81.7375074976892,
+                pp_speed: 81.87225769411754,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(8.857953596258472),
             };
             DT => {
-                pp: 741.3788121712137,
+                pp: 742.2688692411966,
                 pp_acc: 184.09450675506795,
-                pp_aim: 301.88645138363296,
+                pp_aim: 302.230696775626,
                 pp_flashlight: 0.0,
-                pp_speed: 224.91817628556774,
+                pp_speed: 225.42353095885375,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(7.873979522967204),
             };
             FL => {
-                pp: 403.31324405364177,
+                pp: 403.4073983223094,
                 pp_acc: 99.57533212369923,
-                pp_aim: 98.91907543994563,
+                pp_aim: 98.93969568393551,
                 pp_flashlight: 132.28811994208644,
-                pp_speed: 65.89857918351103,
+                pp_speed: 65.97387258620209,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
             };
             HD FL => {
-                pp: 470.3193633451629,
+                pp: 470.7914346012617,
                 pp_acc: 107.54135869359516,
-                pp_aim: 109.6023348327671,
-                pp_flashlight: 171.61406165164135,
-                pp_speed: 73.01562523256396,
+                pp_aim: 109.83596784424736,
+                pp_flashlight: 171.61406165164138,
+                pp_speed: 73.2599477644965,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
             };
