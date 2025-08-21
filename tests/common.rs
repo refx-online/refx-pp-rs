@@ -20,9 +20,11 @@ mod mods {
     pub const HD: u32 = 1 << 3;
     pub const HR: u32 = 1 << 4;
     pub const DT: u32 = 1 << 6;
+    pub const RX: u32 = 1 << 7;
     pub const HT: u32 = 1 << 8;
     pub const FL: u32 = 1 << 10;
     pub const SO: u32 = 1 << 12;
+    pub const AP: u32 = 1 << 13;
 }
 
 #[track_caller]

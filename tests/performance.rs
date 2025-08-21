@@ -167,6 +167,33 @@ fn basic_osu() {
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
             };
+            RX DT => {
+                pp: 577.2861031683238,
+                pp_acc: 184.09450675506795,
+                pp_aim: 302.230696775626,
+                pp_flashlight: 0.0,
+                pp_speed: 225.42353095885375,
+                effective_miss_count: 0.0,
+                speed_deviation: Some(7.873979522967204),
+            };
+            AP FL => {
+                pp: 138.16070283515998,
+                pp_acc: 99.57533212369923,
+                pp_aim: 0.0,
+                pp_flashlight: 21.166099190733835,
+                pp_speed: 6.2175437944275185,
+                effective_miss_count: 0.0,
+                speed_deviation: Some(12.13549995250626),
+            };
+            AP EZ FL => {
+                pp: 32.241727451222914,
+                pp_acc: 15.703334182950348,
+                pp_aim: 0.0,
+                pp_flashlight: 9.898414479880506,
+                pp_speed: 5.0964686481270975,
+                effective_miss_count: 0.0,
+                speed_deviation: Some(23.764692778482623),
+            };
         }
     };
 }
