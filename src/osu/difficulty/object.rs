@@ -22,6 +22,8 @@ pub struct OsuDifficultyObject<'a> {
     pub travel_dist: f64,
     pub travel_time: f64,
     pub angle: Option<f64>,
+
+    pub small_circle_bonus: f64,
 }
 
 impl<'a> OsuDifficultyObject<'a> {
@@ -57,6 +59,7 @@ impl<'a> OsuDifficultyObject<'a> {
             travel_dist: 0.0,
             travel_time: 0.0,
             angle: None,
+            small_circle_bonus: scaling_factor.small_circle_bonus,
         };
 
         this.set_distances(last_object, last_last_object, clock_rate, scaling_factor);

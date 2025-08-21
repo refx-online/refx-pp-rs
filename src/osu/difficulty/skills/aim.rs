@@ -235,6 +235,19 @@ impl AimEvaluator {
                         1.8,
                     )
                     * smootherstep(last_angle, f64::to_radians(110.0), f64::to_radians(60.0));
+
+                if let Some(osu_last2_obj) = curr.previous(2, diff_objects) {
+                    // * If objects just go back and forth through a middle point - don't give as much wide bonus
+                    // * Use Previous(2) and Previous(0) because angles calculation is done prevprev-prev-curr, so any object's angle's center point is always the previous object
+                    let last_base_object = &osu_last_obj.base;
+                    let last2_base_object = &osu_last2_obj.base;
+
+                    let distance = (last2_base_object.stacked_pos() - last_base_object.stacked_pos()).length() as f64;
+
+                    if distance < 1.0 {
+                        wide_angle_bonus *= 1.0 - 0.35 * (1.0 - distance);
+                    }
+                }
             }
         }
 
@@ -281,6 +294,8 @@ impl AimEvaluator {
         if with_slider_travel_dist {
             aim_strain += slider_bonus * Self::SLIDER_MULTIPLIER;
         }
+
+        aim_strain *= osu_curr_obj.small_circle_bonus;
 
         aim_strain
     }

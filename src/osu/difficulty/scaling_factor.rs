@@ -15,6 +15,7 @@ pub struct ScalingFactor {
     pub factor: f32,
     pub radius: f64,
     pub scale: f32,
+    pub small_circle_bonus: f64,
 }
 
 impl ScalingFactor {
@@ -25,16 +26,13 @@ impl ScalingFactor {
         let radius = f64::from(OsuObject::OBJECT_RADIUS * scale);
         let factor = OsuDifficultyObject::NORMALIZED_RADIUS as f32 / radius as f32;
 
-        let factor_with_small_circle_bonus = if radius < 30.0 {
-            factor * (1.0 + (30.0 - radius as f32).min(5.0) / 50.0)
-        } else {
-            factor
-        };
+        let small_circle_bonus = f64::max(1.0, 1.0 + (30.0 - radius) / 40.0);
 
         Self {
-            factor: factor_with_small_circle_bonus,
+            factor,
             radius,
             scale,
+            small_circle_bonus,
         }
     }
 

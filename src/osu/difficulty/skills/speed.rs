@@ -158,6 +158,8 @@ impl SpeedEvaluator {
         let mut dist_bonus =
             (dist / Self::SINGLE_SPACING_THRESHOLD).powf(3.95) * Self::DIST_MULTIPLIER;
 
+        dist_bonus *= osu_curr_obj.small_circle_bonus.sqrt();
+
         if autopilot {
             dist_bonus = 0.0;
         }
