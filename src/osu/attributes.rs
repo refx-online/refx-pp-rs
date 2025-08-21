@@ -95,6 +95,10 @@ pub struct OsuPerformanceAttributes {
     pub effective_miss_count: f64,
     /// Approximated unstable-rate
     pub speed_deviation: Option<f64>,
+    /// The aim estimated slider breaks.
+    pub aim_estimated_slider_breaks: f64,
+    /// The speed estimated slider breaks.
+    pub speed_estimated_slider_breaks: f64,
 }
 
 impl OsuPerformanceAttributes {

@@ -10,7 +10,7 @@ use crate::{
     mania::ManiaPerformance,
     model::{mode::ConvertError, mods::GameMods},
     taiko::TaikoPerformance,
-    util::map_or_attrs::MapOrAttrs,
+    util::{map_or_attrs::MapOrAttrs, difficulty::logistic},
     Beatmap,
 };
 
@@ -715,12 +715,37 @@ impl<'map> OsuPerformance<'map> {
         })
     }
 
+    fn calculate_estimated_sliderbreaks(
+        &self,
+        top_weighted_slider_factor: f64,
+        effective_miss_count: f64,
+        using_classic_slider_acc: bool,
+        max_combo: u32,
+        attributes: &OsuDifficultyAttributes,
+    ) -> f64 {
+        let n100 = self.n100.unwrap_or(0);
+        if !using_classic_slider_acc || n100 == 0 {
+            return 0.0;
+        }
+
+        let missed_combo_percent = 1.0 - (max_combo as f64 / attributes.max_combo as f64);
+
+        let estimated_sliderbreaks =
+            (n100 as f64).min(effective_miss_count * top_weighted_slider_factor);
+
+        // * Scores with more oks are more likely to have sliderbreaks
+        let ok_adjustment = ((n100 as f64 - estimated_sliderbreaks) + 0.5) / n100 as f64;
+
+        estimated_sliderbreaks * ok_adjustment
+            * logistic(missed_combo_percent, 0.33, 15.0, None)
+    }
+
     /// Calculate all performance related values, including pp and stars.
     pub fn calculate(mut self) -> Result<OsuPerformanceAttributes, ConvertError> {
         let state = self.generate_state()?;
 
-        let attrs = match self.map_or_attrs {
-            MapOrAttrs::Attrs(attrs) => attrs,
+        let attrs = match &self.map_or_attrs {
+            MapOrAttrs::Attrs(attrs) => attrs.clone(),
             MapOrAttrs::Map(ref map) => self.difficulty.calculate_for_mode::<Osu>(map)?,
         };
 
@@ -776,12 +801,20 @@ impl<'map> OsuPerformance<'map> {
 
         let acc = state.accuracy(origin);
 
+        let aim_estimated_slider_breaks =
+            self.calculate_estimated_sliderbreaks(attrs.aim_top_weighted_slider_factor, effective_miss_count, using_classic_slider_acc, state.max_combo, &attrs);
+
+        let speed_estimated_slider_breaks =
+            self.calculate_estimated_sliderbreaks(attrs.speed_top_weighted_slider_factor, effective_miss_count, using_classic_slider_acc, state.max_combo, &attrs);
+
         let inner = OsuPerformanceCalculator::new(
             attrs,
             mods,
             acc,
             state,
             effective_miss_count,
+            aim_estimated_slider_breaks,
+            speed_estimated_slider_breaks,
             using_classic_slider_acc,
         );
 

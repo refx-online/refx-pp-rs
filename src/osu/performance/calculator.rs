@@ -9,7 +9,7 @@ use crate::{
         OsuDifficultyAttributes, OsuPerformanceAttributes, OsuScoreState,
     },
     util::{
-        difficulty::{reverse_lerp, logistic},
+        difficulty::reverse_lerp,
         float_ext::FloatExt,
         special_functions::{erf, erf_inv},
     },
@@ -27,6 +27,8 @@ pub(super) struct OsuPerformanceCalculator<'mods> {
     acc: f64,
     state: OsuScoreState,
     effective_miss_count: f64,
+    aim_estimated_slider_breaks: f64,
+    speed_estimated_slider_breaks: f64,
     using_classic_slider_acc: bool,
 }
 
@@ -37,6 +39,8 @@ impl<'a> OsuPerformanceCalculator<'a> {
         acc: f64,
         state: OsuScoreState,
         effective_miss_count: f64,
+        aim_estimated_slider_breaks: f64,
+        speed_estimated_slider_breaks: f64,
         using_classic_slider_acc: bool,
     ) -> Self {
         Self {
@@ -45,6 +49,8 @@ impl<'a> OsuPerformanceCalculator<'a> {
             acc,
             state,
             effective_miss_count,
+            aim_estimated_slider_breaks,
+            speed_estimated_slider_breaks,
             using_classic_slider_acc,
         }
     }
@@ -96,6 +102,8 @@ impl OsuPerformanceCalculator<'_> {
             pp_speed: speed_value,
             pp,
             effective_miss_count: self.effective_miss_count,
+            aim_estimated_slider_breaks: self.aim_estimated_slider_breaks,
+            speed_estimated_slider_breaks: self.speed_estimated_slider_breaks,
             speed_deviation,
         }
     }
@@ -156,10 +164,8 @@ impl OsuPerformanceCalculator<'_> {
         aim_value *= len_bonus;
 
         if self.effective_miss_count > 0.0 {
-            let estimated_sliderbreaks =
-                self.calculate_estimated_sliderbreaks(self.attrs.aim_top_weighted_slider_factor, &self.attrs);
             aim_value *= Self::calculate_miss_penalty(
-                self.effective_miss_count + estimated_sliderbreaks,
+                self.effective_miss_count + self.aim_estimated_slider_breaks,
                 self.attrs.aim_difficult_strain_count,
             );
         }
@@ -197,10 +203,8 @@ impl OsuPerformanceCalculator<'_> {
         speed_value *= len_bonus;
 
         if self.effective_miss_count > 0.0 {
-            let estimated_sliderbreaks =
-                self.calculate_estimated_sliderbreaks(self.attrs.speed_top_weighted_slider_factor, &self.attrs);
             speed_value *= Self::calculate_miss_penalty(
-                self.effective_miss_count + estimated_sliderbreaks,
+                self.effective_miss_count + self.speed_estimated_slider_breaks,
                 self.attrs.speed_difficult_strain_count,
             );
         }
@@ -242,29 +246,6 @@ impl OsuPerformanceCalculator<'_> {
         speed_value *= f64::powf((self.acc + relevant_acc) / 2.0, (14.5 - od) / 2.0);
 
         speed_value
-    }
-
-    fn calculate_estimated_sliderbreaks(
-        &self,
-        top_weighted_slider_factor: f64,
-        attributes: &OsuDifficultyAttributes,
-    ) -> f64 {
-        if !self.using_classic_slider_acc || self.state.n100 == 0 {
-            return 0.0;
-        }
-
-        let missed_combo_percent =
-            1.0 - (self.attrs.max_combo as f64 / attributes.max_combo as f64);
-
-        let estimated_sliderbreaks =
-            (self.state.n100 as f64).min(self.effective_miss_count * top_weighted_slider_factor);
-
-        // * Scores with more oks are more likely to have sliderbreaks
-        let ok_adjustment = ((self.state.n100 as f64 - estimated_sliderbreaks) + 0.5)
-            / self.state.n100 as f64;
-
-        estimated_sliderbreaks * ok_adjustment
-            * logistic(missed_combo_percent, 0.33, 15.0, None)
     }
 
     fn compute_accuracy_value(&self) -> f64 {

@@ -36,6 +36,8 @@ macro_rules! test_cases {
         pp_speed: $pp_speed:expr,
         effective_miss_count: $effective_miss_count:expr,
         speed_deviation: $speed_deviation:expr,
+        aim_estimated_slider_breaks: $aim_estimated_slider_breaks:expr,
+        speed_estimated_slider_breaks: $speed_estimated_slider_breaks:expr,
     }) => {
         (
             OsuPerformance::from(&$map).lazer(true),
@@ -47,6 +49,8 @@ macro_rules! test_cases {
                 pp_speed: $pp_speed,
                 effective_miss_count: $effective_miss_count,
                 speed_deviation: $speed_deviation,
+                aim_estimated_slider_breaks: $aim_estimated_slider_breaks,
+                speed_estimated_slider_breaks: $speed_estimated_slider_breaks,
                 ..Default::default()
             },
         )
@@ -112,6 +116,8 @@ fn basic_osu() {
                 pp_speed: 65.97387258620209,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
             };
             HD => {
                 pp: 300.7191681876457,
@@ -121,6 +127,8 @@ fn basic_osu() {
                 pp_speed: 73.2599477644965,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
             };
             EZ HD => {
                 pp: 188.14221322855977,
@@ -130,6 +138,8 @@ fn basic_osu() {
                 pp_speed: 63.54240497383165,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(23.1539101317497),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
             };
             HR => {
                 pp: 405.97709798299877,
@@ -139,6 +149,8 @@ fn basic_osu() {
                 pp_speed: 81.87225769411754,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(8.857953596258472),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
             };
             DT => {
                 pp: 742.2688692411966,
@@ -148,6 +160,8 @@ fn basic_osu() {
                 pp_speed: 225.42353095885375,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(7.873979522967204),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
             };
             FL => {
                 pp: 403.4073983223094,
@@ -157,6 +171,8 @@ fn basic_osu() {
                 pp_speed: 65.97387258620209,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
             };
             HD FL => {
                 pp: 470.7914346012617,
@@ -166,6 +182,8 @@ fn basic_osu() {
                 pp_speed: 73.2599477644965,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
             };
             RX DT => {
                 pp: 577.2861031683238,
@@ -175,6 +193,8 @@ fn basic_osu() {
                 pp_speed: 225.42353095885375,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(7.873979522967204),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
             };
             AP FL => {
                 pp: 138.16070283515998,
@@ -184,6 +204,8 @@ fn basic_osu() {
                 pp_speed: 6.2175437944275185,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(12.13549995250626),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
             };
             AP EZ FL => {
                 pp: 32.241727451222914,
@@ -193,6 +215,8 @@ fn basic_osu() {
                 pp_speed: 5.0964686481270975,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(23.764692778482623),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
             };
         }
     };
@@ -338,6 +362,8 @@ impl AssertEq for OsuPerformanceAttributes {
             pp_speed,
             effective_miss_count,
             speed_deviation,
+            aim_estimated_slider_breaks,
+            speed_estimated_slider_breaks,
         } = self;
 
         assert_eq_float(*pp, expected.pp);
@@ -347,6 +373,8 @@ impl AssertEq for OsuPerformanceAttributes {
         assert_eq_float(*pp_speed, expected.pp_speed);
         assert_eq_float(*effective_miss_count, expected.effective_miss_count);
         assert_eq_option(*speed_deviation, expected.speed_deviation);
+        assert_eq_float(*aim_estimated_slider_breaks, expected.aim_estimated_slider_breaks);
+        assert_eq_float(*speed_estimated_slider_breaks, expected.speed_estimated_slider_breaks);
     }
 }
 
