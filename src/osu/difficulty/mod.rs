@@ -281,10 +281,6 @@ impl DifficultyValues {
             aim_rating = aim_rating.powf(0.8);
         }
 
-        if mods.rx() {
-            aim_rating *= 0.9;
-        }
-
         if mods.mg() {
             let magnetised_strength = mods.attraction_strength().unwrap_or(0.0);
             aim_rating *= 1.0 - magnetised_strength;
@@ -384,9 +380,7 @@ impl DifficultyValues {
             flashlight_rating = flashlight_rating.powf(0.8);
         }
 
-        if mods.rx() {
-            flashlight_rating *= 0.7;
-        } else if mods.ap() {
+        if mods.ap() {
             flashlight_rating *= 0.4;
         }
 
