@@ -165,19 +165,19 @@ impl DifficultyValues {
         let aim_no_sliders_difficult_strain_count = aim_no_sliders.count_top_weighted_strains(aim_no_sliders_difficulty_value);
 
         let aim_top_weighted_slider_factor = 
-            aim_no_sliders_top_weighted_slider_count as f64
+            aim_no_sliders_top_weighted_slider_count
             / f64::max(
                 1.0,
-                aim_no_sliders_difficult_strain_count as f64 - aim_no_sliders_top_weighted_slider_count as f64,
+                aim_no_sliders_difficult_strain_count - aim_no_sliders_top_weighted_slider_count,
             );
         
         let speed_top_weighted_slider_factor = speed.count_top_weighted_sliders();
 
         let speed_top_weighted_slider_factor = 
-            speed_top_weighted_slider_factor as f64
+            speed_top_weighted_slider_factor
             / f64::max(
                 1.0,
-                speed_difficult_strain_count as f64 - speed_top_weighted_slider_factor as f64,
+                speed_difficult_strain_count - speed_top_weighted_slider_factor,
             );
 
         let flashlight_difficulty_value = flashlight.cloned_difficulty_value();
