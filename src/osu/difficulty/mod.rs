@@ -325,7 +325,9 @@ impl DifficultyValues {
     ) -> f64 {
         let mut speed_rating = f64::sqrt(speed_difficulty_value) * DIFFICULTY_MULTIPLIER;
 
-        if mods.ap() {
+        if mods.rx() {
+            speed_rating = 0.6
+        } else if mods.ap() {
             speed_rating *= 0.5;
         }
 

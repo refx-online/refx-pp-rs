@@ -4,6 +4,14 @@ pub use self::{mods::*, paths::*};
 /// Paths to .osu files
 mod paths {
     pub const OSU: &str = "./resources/2785319.osu";
+
+    // TODO: Create category cases
+    #[allow(dead_code)]
+    pub const OSU_PRECISION: &str = "./resources/5192442.osu";
+
+    #[allow(dead_code)]
+    pub const OSU_RX: &str = "./resources/5229879.osu";
+
     pub const TAIKO: &str = "./resources/1028484.osu";
     pub const CATCH: &str = "./resources/2118524.osu";
     pub const MANIA: &str = "./resources/1638954.osu";
