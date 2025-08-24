@@ -78,11 +78,11 @@ impl OsuPerformanceCalculator<'_> {
 
         let speed_deviation = self.calculate_speed_deviation();
 
-        let aim_value = self.compute_aim_value();
-        let mut speed_value = self.compute_speed_value(speed_deviation);
-        let (speed_mul, acc_dep) = self.calculate_rx_streams_nerf();
+        let mut aim_value = self.compute_aim_value();
+        let speed_value = self.compute_speed_value(speed_deviation);
+        let (aim_mul, acc_dep) = self.calculate_rx_streams_nerf();
 
-        speed_value *= speed_mul;
+        aim_value *= aim_mul;
 
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
@@ -454,35 +454,35 @@ impl OsuPerformanceCalculator<'_> {
     }
 
     // * Applies a nerf to scores with Relax when stream difficulty exceeds aim difficulty.
-    // * higher ratio => heavier nerf on both speed and accuracy performance values.
+    // * lower ratio => heavier nerf on both speed and accuracy performance values.
     fn calculate_rx_streams_nerf(&self) -> (f64, f64) {
         if !self.mods.rx() {
             return (1.0, 1.0)
         }
 
-        let streams_nerf = ((self.attrs.speed / self.attrs.aim) * 100.0).round() / 100.0;
+        let streams_nerf = ((self.attrs.aim / self.attrs.speed) * 100.0).round() / 100.0;
         
-        let mut speed_multiplier = 1.0;
+        let mut aim_multiplier = 1.0;
         let mut acc_depression = 1.0;
         
-        if streams_nerf > 1.05 {
+        if streams_nerf < 1.05 {
             let acc_factor = (1.0 - self.acc).abs();
             
             acc_depression = (0.82 + acc_factor * 0.08).min(0.45);
-            speed_multiplier = acc_depression;
+            aim_multiplier = acc_depression;
             
-            if streams_nerf > 1.15 {
-                speed_multiplier *= 0.92;
+            if streams_nerf < 0.97 {
+                aim_multiplier *= 0.92;
                 acc_depression *= 0.95;
             }
             
             if self.acc < 0.95 {
                 let acc_penalty = 1.0 - (0.95 - self.acc) * 0.3;
-                speed_multiplier *= acc_penalty;
+                aim_multiplier *= acc_penalty;
             }
         }
         
-        (speed_multiplier, acc_depression)
+        (aim_multiplier, acc_depression)
     }
 
     // * Miss penalty assumes that a player will miss on the hardest parts of a map,

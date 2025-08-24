@@ -228,33 +228,33 @@ fn basic_osu_rx() {
     test_cases! {
         Osu: OSU_RX {
             RX DT => {
-                pp: 3726.2411559059915,
+                pp: 3818.7022727827434,
                 pp_acc: 328.79732860865414,
                 pp_aim: 3001.0723727195955,
                 pp_flashlight: 0.0,
-                pp_speed: 1.1561329152940016,
+                pp_speed: 591.469656001033,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(4.982527280600511),
                 aim_estimated_slider_breaks: 0.0,
                 speed_estimated_slider_breaks: 0.0,
             };
             RX HD DT => {
-                pp: 3888.2252025039147,
+                pp: 3983.374166903347,
                 pp_acc: 355.1011148973465,
                 pp_aim: 3121.891929360441,
                 pp_flashlight: 0.0,
-                pp_speed: 1.2064945762329256,
+                pp_speed: 615.3914862704472,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(4.982527280600511),
                 aim_estimated_slider_breaks: 0.0,
                 speed_estimated_slider_breaks: 0.0,
             };
             RX DT HR => {
-                pp: 4502.148939956366,
+                pp: 4593.463077902913,
                 pp_acc: 328.79732860865414,
                 pp_aim: 3680.426248231621,
                 pp_flashlight: 0.0,
-                pp_speed: 1.1561329152940016,
+                pp_speed: 595.8862283966607,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(4.983049299279781),
                 aim_estimated_slider_breaks: 0.0,
@@ -292,11 +292,11 @@ fn basic_osu_precision() {
                 speed_estimated_slider_breaks: 0.0,
             };
             RX HR => {
-                pp: 2667.2851781241925,
+                pp: 2700.8759827492345,
                 pp_acc: 119.72772727278569,
                 pp_aim: 2237.9905160901353,
                 pp_flashlight: 0.0,
-                pp_speed: 0.71827042793731,
+                pp_speed: 168.66386777265313,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(10.433212319308803),
                 aim_estimated_slider_breaks: 0.0,
