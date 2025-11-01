@@ -29,6 +29,8 @@ pub(super) struct OsuPerformanceCalculator<'mods> {
     effective_miss_count: f64,
     aim_estimated_slider_breaks: f64,
     speed_estimated_slider_breaks: f64,
+    combo_based_estimated_miss_count: f64,
+    score_based_estimated_miss_count: f64,
     using_classic_slider_acc: bool,
 }
 
@@ -41,6 +43,8 @@ impl<'a> OsuPerformanceCalculator<'a> {
         effective_miss_count: f64,
         aim_estimated_slider_breaks: f64,
         speed_estimated_slider_breaks: f64,
+        combo_based_estimated_miss_count: f64,
+        score_based_estimated_miss_count: f64,
         using_classic_slider_acc: bool,
     ) -> Self {
         Self {
@@ -51,6 +55,8 @@ impl<'a> OsuPerformanceCalculator<'a> {
             effective_miss_count,
             aim_estimated_slider_breaks,
             speed_estimated_slider_breaks,
+            combo_based_estimated_miss_count,
+            score_based_estimated_miss_count,
             using_classic_slider_acc,
         }
     }
@@ -104,6 +110,8 @@ impl OsuPerformanceCalculator<'_> {
             effective_miss_count: self.effective_miss_count,
             aim_estimated_slider_breaks: self.aim_estimated_slider_breaks,
             speed_estimated_slider_breaks: self.speed_estimated_slider_breaks,
+            combo_based_estimated_miss_count: self.combo_based_estimated_miss_count,
+            score_based_estimated_miss_count: self.score_based_estimated_miss_count,
             speed_deviation,
         }
     }
@@ -455,6 +463,7 @@ impl OsuPerformanceCalculator<'_> {
 
     // * Applies a nerf to scores with Relax when stream difficulty exceeds aim difficulty.
     // * lower ratio => heavier nerf on both speed and accuracy performance values.
+    // NOTE: logic copied from akatsuki's, but more harsher.
     fn calculate_rx_streams_nerf(&self) -> (f64, f64) {
         if !self.mods.rx() {
             return (1.0, 1.0)

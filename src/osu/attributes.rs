@@ -52,6 +52,12 @@ pub struct OsuDifficultyAttributes {
     pub aim_top_weighted_slider_factor: f64,
     /// The speed top weighted slider factor.
     pub speed_top_weighted_slider_factor: f64,
+    /// The average amount of score per object that is caused by
+    pub nested_score_per_object: f64,
+    /// The base multiplier for legacy score calculation.
+    pub legacy_score_base_multiplier: f64,
+    /// The maximum achievable legacy combo score.
+    pub maximum_legacy_combo_score: f64,
 }
 
 impl OsuDifficultyAttributes {
@@ -95,6 +101,10 @@ pub struct OsuPerformanceAttributes {
     pub effective_miss_count: f64,
     /// Approximated unstable-rate
     pub speed_deviation: Option<f64>,
+    /// Combo based estimated miss count
+    pub combo_based_estimated_miss_count: f64,
+    /// Score based estimated miss count
+    pub score_based_estimated_miss_count: f64,
     /// The aim estimated slider breaks.
     pub aim_estimated_slider_breaks: f64,
     /// The speed estimated slider breaks.

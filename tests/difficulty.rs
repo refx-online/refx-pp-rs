@@ -54,6 +54,9 @@ macro_rules! test_cases {
         max_combo: $max_combo:literal,
         aim_top_weighted_slider_factor: $aim_top_weighted_slider_factor:literal,
         speed_top_weighted_slider_factor: $speed_top_weighted_slider_factor:literal,
+        legacy_score_base_multiplier: $legacy_score_base_multiplier:literal,
+        maximum_legacy_combo_score: $maximum_legacy_combo_score:literal,
+        nested_score_per_object: $nested_score_per_object:literal,
     }) => {
         OsuDifficultyAttributes {
             aim: $aim,
@@ -77,6 +80,9 @@ macro_rules! test_cases {
             max_combo: $max_combo,
             aim_top_weighted_slider_factor: $aim_top_weighted_slider_factor,
             speed_top_weighted_slider_factor: $speed_top_weighted_slider_factor,
+            legacy_score_base_multiplier: $legacy_score_base_multiplier,
+            maximum_legacy_combo_score: $maximum_legacy_combo_score,
+            nested_score_per_object: $nested_score_per_object,
         }
     };
     ( @Taiko {
@@ -165,6 +171,9 @@ fn basic_osu() {
                 max_combo: 909,
                 aim_top_weighted_slider_factor: 322.299999995856,
                 speed_top_weighted_slider_factor: 322.2999999990032,
+                legacy_score_base_multiplier: 5.0,
+                maximum_legacy_combo_score: 15729840.0,
+                nested_score_per_object: 34.991680532445926,
             };
             HD => {
                 aim: 2.9877761803451137,
@@ -188,6 +197,9 @@ fn basic_osu() {
                 max_combo: 909,
                 aim_top_weighted_slider_factor: 322.299999995856,
                 speed_top_weighted_slider_factor: 322.2999999990032,
+                legacy_score_base_multiplier: 5.0,
+                maximum_legacy_combo_score: 15729840.0,
+                nested_score_per_object: 34.991680532445926,
             };
             HR => {
                 aim: 3.2907549180874374,
@@ -211,6 +223,9 @@ fn basic_osu() {
                 max_combo: 909,
                 aim_top_weighted_slider_factor: 322.2999999981082,
                 speed_top_weighted_slider_factor: 322.29999999999706,
+                legacy_score_base_multiplier: 5.0,
+                maximum_legacy_combo_score: 15729840.0,
+                nested_score_per_object: 34.991680532445926,
             };
             DT => {
                 aim: 4.165102408986595,
@@ -234,6 +249,9 @@ fn basic_osu() {
                 max_combo: 909,
                 aim_top_weighted_slider_factor: 322.2999999999929,
                 speed_top_weighted_slider_factor: 322.3000000000003,
+                legacy_score_base_multiplier: 5.0,
+                maximum_legacy_combo_score: 15729840.0,
+                nested_score_per_object: 34.991680532445926,
             };
             FL => {
                 aim: 2.8873635841346794,
@@ -257,6 +275,9 @@ fn basic_osu() {
                 max_combo: 909,
                 aim_top_weighted_slider_factor: 322.299999995856,
                 speed_top_weighted_slider_factor: 322.2999999990032,
+                legacy_score_base_multiplier: 5.0,
+                maximum_legacy_combo_score: 15729840.0,
+                nested_score_per_object: 34.991680532445926,
             };
             HD FL => {
                 aim: 2.9877761803451137,
@@ -280,6 +301,9 @@ fn basic_osu() {
                 max_combo: 909,
                 aim_top_weighted_slider_factor: 322.299999995856,
                 speed_top_weighted_slider_factor: 322.2999999990032,
+                legacy_score_base_multiplier: 5.0,
+                maximum_legacy_combo_score: 15729840.0,
+                nested_score_per_object: 34.991680532445926,
             };
         }
     };
@@ -532,6 +556,9 @@ impl AssertEq for OsuDifficultyAttributes {
             max_combo,
             aim_top_weighted_slider_factor,
             speed_top_weighted_slider_factor,
+            nested_score_per_object,
+            legacy_score_base_multiplier,
+            maximum_legacy_combo_score,
         } = self;
 
         assert_eq_float(*aim, expected.aim);
@@ -569,6 +596,18 @@ impl AssertEq for OsuDifficultyAttributes {
         assert_eq_float(
             *speed_top_weighted_slider_factor,
             expected.speed_top_weighted_slider_factor,
+        );
+        assert_eq_float(
+            *nested_score_per_object,
+            expected.nested_score_per_object,
+        );
+        assert_eq_float(
+            *legacy_score_base_multiplier,
+            expected.legacy_score_base_multiplier,
+        );
+        assert_eq_float(
+            *maximum_legacy_combo_score,
+            expected.maximum_legacy_combo_score,
         );
     }
 }

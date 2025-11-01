@@ -476,6 +476,7 @@ impl<'map> TryFrom<OsuPerformance<'map>> for CatchPerformance<'map> {
             n100,
             n50,
             misses,
+            legacy_total_score: _,
             hitresult_priority: _,
         } = osu;
 

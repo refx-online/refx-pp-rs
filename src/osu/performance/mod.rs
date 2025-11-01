@@ -10,13 +10,14 @@ use crate::{
     mania::ManiaPerformance,
     model::{mode::ConvertError, mods::GameMods},
     taiko::TaikoPerformance,
-    util::{map_or_attrs::MapOrAttrs, difficulty::logistic},
+    util::{map_or_attrs::MapOrAttrs, difficulty::{logistic, smoothstep}},
     Beatmap,
 };
 
 use super::{
     attributes::{OsuDifficultyAttributes, OsuPerformanceAttributes},
     score_state::{OsuScoreOrigin, OsuScoreState},
+    legacy::calculator::OsuLegacyScoreMissCalculator,
     Osu,
 };
 
@@ -38,6 +39,7 @@ pub struct OsuPerformance<'map> {
     pub(crate) n100: Option<u32>,
     pub(crate) n50: Option<u32>,
     pub(crate) misses: Option<u32>,
+    pub(crate) legacy_total_score: Option<i64>,
     pub(crate) hitresult_priority: HitResultPriority,
 }
 
@@ -225,6 +227,13 @@ impl<'map> OsuPerformance<'map> {
     /// Specify the amount of misses of a play.
     pub const fn misses(mut self, n_misses: u32) -> Self {
         self.misses = Some(n_misses);
+
+        self
+    }
+
+    /// Specify the total score of a play for legacy score calculation.
+    pub const fn legacy_total_score(mut self, total_score: i64) -> Self {
+        self.legacy_total_score = Some(total_score);
 
         self
     }
@@ -730,15 +739,61 @@ impl<'map> OsuPerformance<'map> {
 
         let missed_combo_percent = 1.0 - (max_combo as f64 / attributes.max_combo as f64);
 
-        let estimated_sliderbreaks =
+        let mut estimated_sliderbreaks =
             (n100 as f64).min(effective_miss_count * top_weighted_slider_factor);
 
         // * Scores with more oks are more likely to have sliderbreaks
         let ok_adjustment = ((n100 as f64 - estimated_sliderbreaks) + 0.5) / n100 as f64;
 
+        // * There is a low probability of extra slider breaks on effective miss counts close to 1, 
+        // * as score based calculations are good at indicating if only a single break occurred
+        estimated_sliderbreaks *= smoothstep(effective_miss_count, 1.0, 2.0);
+
         estimated_sliderbreaks * ok_adjustment
             * logistic(missed_combo_percent, 0.33, 15.0, None)
     }
+
+    fn calculate_combo_based_estimated_miss_count(
+        &self,
+        attrs: &OsuDifficultyAttributes,
+        state: &OsuScoreState,
+        using_classic_slider_acc: bool,
+    ) -> f64 {
+        if attrs.n_sliders <= 0 {
+            return self.misses.unwrap_or(0) as f64;
+        }
+
+        let mut miss_count = self.misses.unwrap_or(0) as f64;
+        let score_max_combo = self.combo.unwrap_or(0) as f64;
+
+        if using_classic_slider_acc {
+            // * Consider that full combo is maximum combo minus dropped slider tails since they don't contribute to combo but also don't break it
+            // * In classic scores we can't know the amount of dropped sliders so we estimate to 10% of all sliders on the map
+            let full_combo_threshold =
+                attrs.max_combo as f64 - 0.1 * attrs.n_sliders as f64;
+
+            if score_max_combo < full_combo_threshold {
+                miss_count = full_combo_threshold / score_max_combo.max(1.0);
+            }
+
+            // * In classic scores there can't be more misses than a sum of all non-perfect judgements
+            miss_count = miss_count.min(total_imperfect_hits(state));
+        } else {
+            let full_combo_threshold = attrs.max_combo as f64 - n_slider_ends_dropped(attrs, state) as f64;
+
+            if score_max_combo < full_combo_threshold {
+                miss_count = full_combo_threshold / score_max_combo.max(1.0);
+            }
+
+            // * Combine regular misses with tick misses since tick misses break combo as well
+            miss_count = miss_count.min(
+                f64::from(n_large_tick_miss(attrs, state)) + f64::from(state.misses),
+            );
+        }
+
+        miss_count
+    }
+
 
     /// Calculate all performance related values, including pp and stars.
     pub fn calculate(mut self) -> Result<OsuPerformanceAttributes, ConvertError> {
@@ -752,40 +807,6 @@ impl<'map> OsuPerformance<'map> {
         let mods = self.difficulty.get_mods();
         let lazer = self.difficulty.get_lazer();
         let using_classic_slider_acc = mods.no_slider_head_acc(lazer);
-
-        let mut effective_miss_count = f64::from(state.misses);
-
-        if attrs.n_sliders > 0 {
-            if using_classic_slider_acc {
-                // * Consider that full combo is maximum combo minus dropped slider tails since they don't contribute to combo but also don't break it
-                // * In classic scores we can't know the amount of dropped sliders so we estimate to 10% of all sliders on the map
-                let full_combo_threshold =
-                    f64::from(attrs.max_combo) - 0.1 * f64::from(attrs.n_sliders);
-
-                if f64::from(state.max_combo) < full_combo_threshold {
-                    effective_miss_count =
-                        full_combo_threshold / f64::from(state.max_combo).max(1.0);
-                }
-
-                // * In classic scores there can't be more misses than a sum of all non-perfect judgements
-                effective_miss_count = effective_miss_count.min(total_imperfect_hits(&state));
-            } else {
-                let full_combo_threshold =
-                    f64::from(attrs.max_combo - n_slider_ends_dropped(&attrs, &state));
-
-                if f64::from(state.max_combo) < full_combo_threshold {
-                    effective_miss_count =
-                        full_combo_threshold / f64::from(state.max_combo).max(1.0);
-                }
-
-                // * Combine regular misses with tick misses since tick misses break combo as well
-                effective_miss_count = effective_miss_count
-                    .min(f64::from(n_large_tick_miss(&attrs, &state) + state.misses));
-            }
-        }
-
-        effective_miss_count = effective_miss_count.max(f64::from(state.misses));
-        effective_miss_count = effective_miss_count.min(f64::from(state.total_hits()));
 
         let origin = match (lazer, using_classic_slider_acc) {
             (false, _) => OsuScoreOrigin::Stable,
@@ -801,6 +822,30 @@ impl<'map> OsuPerformance<'map> {
 
         let acc = state.accuracy(origin);
 
+        let mut effective_miss_count;
+
+        let combo_based_estimated_miss_count =
+            self.calculate_combo_based_estimated_miss_count(&attrs, &state, using_classic_slider_acc);
+
+        let mut score_based_estimated_miss_count = 0.0;
+
+        if using_classic_slider_acc && self.legacy_total_score.is_some() {
+            let legacy_score_miss_calculator = OsuLegacyScoreMissCalculator::new(
+                &state,
+                &attrs,
+                mods,
+                self.legacy_total_score,
+                acc,
+            );
+            score_based_estimated_miss_count = legacy_score_miss_calculator.calculate();
+            effective_miss_count = combo_based_estimated_miss_count;
+        } else {
+            effective_miss_count = combo_based_estimated_miss_count;
+        }
+
+        effective_miss_count = effective_miss_count.max(f64::from(state.misses));
+        effective_miss_count = effective_miss_count.min(f64::from(state.total_hits()));
+
         let aim_estimated_slider_breaks =
             self.calculate_estimated_sliderbreaks(attrs.aim_top_weighted_slider_factor, effective_miss_count, using_classic_slider_acc, state.max_combo, &attrs);
 
@@ -815,6 +860,8 @@ impl<'map> OsuPerformance<'map> {
             effective_miss_count,
             aim_estimated_slider_breaks,
             speed_estimated_slider_breaks,
+            combo_based_estimated_miss_count,
+            score_based_estimated_miss_count,
             using_classic_slider_acc,
         );
 
@@ -834,6 +881,7 @@ impl<'map> OsuPerformance<'map> {
             n100: None,
             n50: None,
             misses: None,
+            legacy_total_score: None,
             hitresult_priority: HitResultPriority::DEFAULT,
         }
     }

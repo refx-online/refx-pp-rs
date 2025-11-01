@@ -459,6 +459,8 @@ impl AssertEq for OsuPerformanceAttributes {
             speed_deviation,
             aim_estimated_slider_breaks,
             speed_estimated_slider_breaks,
+            combo_based_estimated_miss_count: _,
+            score_based_estimated_miss_count: _,
         } = self;
 
         assert_eq_float(*pp, expected.pp);

@@ -23,6 +23,7 @@ mod object;
 mod performance;
 mod score_state;
 mod strains;
+mod legacy;
 
 const PLAYFIELD_BASE_SIZE: Pos = Pos::new(512.0, 384.0);
 

@@ -17,6 +17,10 @@ use crate::{
         convert::convert_objects,
         difficulty::{object::OsuDifficultyObject, scaling_factor::ScalingFactor},
         object::OsuObject,
+        legacy::{
+            utils::{calculate_difficulty_peppy_stars, calculate_nested_score_per_object},
+            simulator::OsuLegacyScoreSimulator,
+        }
     },
     Beatmap,
 };
@@ -26,8 +30,8 @@ use self::skills::OsuSkills;
 use super::attributes::OsuDifficultyAttributes;
 
 mod calculator;
-pub mod gradual;
 mod object;
+pub mod gradual;
 pub mod scaling_factor;
 pub mod skills;
 
@@ -47,7 +51,7 @@ pub fn difficulty(
     let DifficultyValues { skills, mut attrs } = DifficultyValues::calculate(difficulty, &map);
 
     let mods = difficulty.get_mods();
-    DifficultyValues::eval(&mut attrs, mods, &skills);
+    DifficultyValues::eval(&map, &mut attrs, mods, &skills);
 
     Ok(attrs)
 }
@@ -139,7 +143,7 @@ impl DifficultyValues {
     }
 
     /// Process the difficulty values and store the results in `attrs`.
-    pub fn eval(attrs: &mut OsuDifficultyAttributes, mods: &GameMods, skills: &OsuSkills) {
+    pub fn eval(map: &Beatmap, attrs: &mut OsuDifficultyAttributes, mods: &GameMods, skills: &OsuSkills) {
         let OsuSkills {
             aim,
             aim_no_sliders,
@@ -196,6 +200,15 @@ impl DifficultyValues {
             1.0
         };
 
+        let slider_nested_score_per_object = calculate_nested_score_per_object(
+            map,
+            mods
+        );
+        let legacy_score_base_multiplier = calculate_difficulty_peppy_stars(map) as f64;
+
+        let mut simulator = OsuLegacyScoreSimulator::new();
+        let legacy_score_attributes = simulator.simulate(map, mods);
+
         let base_aim_performance = Aim::difficulty_to_performance(aim_rating);
         let base_speed_performance = Speed::difficulty_to_performance(speed_rating);
         let base_flashlight_performance = Flashlight::difficulty_to_performance(flashlight_rating);
@@ -223,6 +236,9 @@ impl DifficultyValues {
         attrs.speed_difficult_strain_count = speed_difficult_strain_count;
         attrs.aim_top_weighted_slider_factor = aim_top_weighted_slider_factor;
         attrs.speed_top_weighted_slider_factor = speed_top_weighted_slider_factor;
+        attrs.nested_score_per_object = slider_nested_score_per_object;
+        attrs.legacy_score_base_multiplier = legacy_score_base_multiplier;
+        attrs.maximum_legacy_combo_score = legacy_score_attributes.combo_score as f64;
         attrs.stars = star_rating;
         attrs.speed_note_count = speed.relevant_note_count();
     }
