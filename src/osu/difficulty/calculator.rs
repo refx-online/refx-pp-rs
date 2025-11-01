@@ -75,7 +75,12 @@ impl OsuRatingCalculator<'_> {
 
         if self.mods.hd() {
             let visibility_factor = self.calculate_aim_visibility_factor(self.approach_rate);
-            rating_multiplier += self.calculate_visibility_bonus(ar_factor, visibility_factor);
+            rating_multiplier += Self::calculate_visibility_bonus(
+                self.mods.clone(),
+                ar_factor, 
+                Some(visibility_factor),
+                Some(self.slider_factor),
+            );
         }
 
         // * It is important to consider accuracy difficulty when scaling with accuracy.
@@ -118,7 +123,12 @@ impl OsuRatingCalculator<'_> {
 
         if self.mods.hd() {
             let visibility_factor = self.calculate_speed_visibility_factor(self.approach_rate);
-            rating_multiplier += self.calculate_visibility_bonus(ar_factor, visibility_factor);
+            rating_multiplier += Self::calculate_visibility_bonus(
+                self.mods.clone(),
+                ar_factor, 
+                Some(visibility_factor),
+                Some(self.slider_factor),
+            );
         }
 
         rating_multiplier *= 0.95 + f64::max(0.0, self.overall_difficulty).powf(2.0) / 750.0;
@@ -184,13 +194,17 @@ impl OsuRatingCalculator<'_> {
     
     /// Calculates a visibility bonus that is applicable to Hidden and Traceable.
     pub fn calculate_visibility_bonus(
-        &self, 
+        mods: GameMods,
         approach_rate: f64, 
-        visibility_factor: f64, 
+        visibility_factor: Option<f64>, 
+        slider_factor: Option<f64>,
     ) -> f64 {
+        let visibility_factor = visibility_factor.unwrap_or(1.0);
+        let slider_factor = slider_factor.unwrap_or(1.0);
+
         // * NOTE: TC's effect is only noticeable in performance calculations until lazer mods are accounted for server-side.
-        let is_always_partially_visible = self.mods.hd() && self.mods.only_fade_approach_circles().is_some()
-            || self.mods.tc();
+        let is_always_partially_visible = mods.hd() && mods.only_fade_approach_circles().is_some()
+            || mods.tc();
 
         // * Start from normal curve, rewarding lower AR up to AR7
         // * TC forcefully requires a lower reading bonus for now as it's post-applied in PP which makes it multiplicative with the regular AR bonuses
@@ -201,7 +215,7 @@ impl OsuRatingCalculator<'_> {
         reading_bonus *= visibility_factor;
 
         // * We want to reward slideraim on low AR less
-        let slider_visibility_factor = self.slider_factor.powf(3.0);
+        let slider_visibility_factor = slider_factor.powf(3.0);
 
         // * For AR up to 0 - reduce reward for very low ARs when object is visible
         if approach_rate < 7.0 {

@@ -22,8 +22,8 @@ use self::skills::OsuSkills;
 
 use super::attributes::OsuDifficultyAttributes;
 
-mod calculator;
 mod object;
+pub mod calculator;
 pub mod gradual;
 pub mod scaling_factor;
 pub mod skills;

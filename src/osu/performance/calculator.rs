@@ -2,8 +2,11 @@ use std::f64::consts::PI;
 
 use crate::{
     osu::{
-        difficulty::skills::{
-            aim::Aim, flashlight::Flashlight, speed::Speed, strain::OsuStrainSkill,
+        difficulty::{
+            calculator::OsuRatingCalculator,
+            skills::{
+                aim::Aim, flashlight::Flashlight, speed::Speed, strain::OsuStrainSkill,
+            }
         },
         OsuDifficultyAttributes, OsuPerformanceAttributes, OsuScoreState,
     },
@@ -191,7 +194,12 @@ impl OsuPerformanceCalculator<'_> {
                     * (1.0 - 0.003 * self.attrs.hp * self.attrs.hp);
         } else if self.mods.tc() {
             // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
-            aim_value *= 1.0 + 0.04 * (12.0 - self.attrs.ar);
+            aim_value *= 1.0 + OsuRatingCalculator::calculate_visibility_bonus(
+                self.mods.clone(),
+                self.attrs.ar,
+                None,
+                None,
+            );
         }
 
         aim_value *= self.acc;
@@ -227,9 +235,12 @@ impl OsuPerformanceCalculator<'_> {
             // * ideal, so the minimum buff is given.
             speed_value *= 1.12;
         } else if self.mods.tc() {
-            // * We want to give more reward for lower AR when it comes to aim and HD.
-            // * This nerfs high AR and buffs lower AR.
-            speed_value *= 1.0 + 0.04 * (12.0 - self.attrs.ar);
+            speed_value *= 1.0 + OsuRatingCalculator::calculate_visibility_bonus(
+                self.mods.clone(),
+                self.attrs.ar,
+                None,
+                None,
+            );
         }
 
         let speed_high_deviation_mult = self.calculate_speed_high_deviation_nerf(speed_deviation);
@@ -304,7 +315,8 @@ impl OsuPerformanceCalculator<'_> {
         if self.mods.bl() {
             acc_value *= 1.14;
         } else if self.mods.hd() || self.mods.tc() {
-            acc_value *= 1.08;
+            // * Decrease bonus for AR > 10
+            acc_value *= 1.0 + 0.08 * reverse_lerp(self.attrs.ar, 11.5, 10.0);
         }
 
         if self.mods.fl() {

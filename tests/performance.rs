@@ -239,8 +239,8 @@ fn basic_osu_rx() {
                 speed_estimated_slider_breaks: 0.0,
             };
             RX HD DT => {
-                pp: 4905.249787174736,
-                pp_acc: 355.1011148973465,
+                pp: 4889.709095870589,
+                pp_acc: 337.5652573715516,
                 pp_aim: 3950.8622533392077,
                 pp_flashlight: 0.0,
                 pp_speed: 779.5929349165175,
