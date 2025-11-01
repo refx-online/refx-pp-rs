@@ -323,6 +323,17 @@ impl<'map> Performance<'map> {
             Self::Mania(m) => Self::Mania(m.lazer(lazer)),
         }
     }
+    
+    /// Specify the total score of a play for legacy score calculation.
+    /// 
+    /// Only relevant for osu!standard, stable.
+    pub fn legacy_total_score(self, total_score: i64) -> Self {
+        if let Self::Osu(osu) = self {
+            Self::Osu(osu.legacy_total_score(total_score))
+        } else {
+            self
+        }
+    }
 
     /// Specify the amount of "large tick" hits.
     ///
