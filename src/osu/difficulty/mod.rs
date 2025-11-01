@@ -10,7 +10,6 @@ use crate::{
     any::difficulty::{skills::StrainSkill, Difficulty},
     model::{
         beatmap::BeatmapAttributes, 
-        beatmap::HitWindows, 
         mode::ConvertError, 
         mods::GameMods
     },
@@ -48,12 +47,7 @@ pub fn difficulty(
     let DifficultyValues { skills, mut attrs } = DifficultyValues::calculate(difficulty, &map);
 
     let mods = difficulty.get_mods();
-    let hit_windows = map
-        .attributes()
-        .difficulty(difficulty)
-        .hit_windows();
-
-    DifficultyValues::eval(&mut attrs, mods, &skills, &hit_windows);
+    DifficultyValues::eval(&mut attrs, mods, &skills);
 
     Ok(attrs)
 }
@@ -145,7 +139,7 @@ impl DifficultyValues {
     }
 
     /// Process the difficulty values and store the results in `attrs`.
-    pub fn eval(attrs: &mut OsuDifficultyAttributes, mods: &GameMods, skills: &OsuSkills, hit_windows: &HitWindows) {
+    pub fn eval(attrs: &mut OsuDifficultyAttributes, mods: &GameMods, skills: &OsuSkills) {
         let OsuSkills {
             aim,
             aim_no_sliders,
@@ -184,21 +178,11 @@ impl DifficultyValues {
         let total_hits = attrs.n_circles + attrs.n_sliders + attrs.n_spinners;
         let spinner_count = attrs.n_spinners;
 
-        let preempt = hit_windows.ar;
-
-        let approach_rate = if preempt > 1200.0 {
-            (1800.0 - preempt) / 120.0
-        } else {
-            (1200.0 - preempt) / 150.0 + 5.0
-        };
-        
-        let overall_difficulty = (80.0 - hit_windows.od_great) / 6.0;
-
         let calculator = OsuRatingCalculator::new(
             mods,
             total_hits,
-            approach_rate,
-            overall_difficulty,
+            attrs.ar,
+            attrs.od(),
         );
 
         let aim_rating = calculator.compute_aim_rating(aim_difficulty_value);
