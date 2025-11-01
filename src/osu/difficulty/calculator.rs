@@ -1,4 +1,10 @@
-use crate::model::mods::GameMods;
+use crate::{
+    model::mods::GameMods, 
+    util::{
+        difficulty::reverse_lerp,
+        float_ext::FloatExt,
+    },
+};
 
 const DIFFICULTY_MULTIPLIER: f64 = 0.0675;
 
@@ -7,6 +13,8 @@ pub struct OsuRatingCalculator<'mods> {
     total_hits: u32,
     approach_rate: f64,
     overall_difficulty: f64,
+    mechanical_difficulty_rating: f64,
+    slider_factor: f64,
 }
 
 impl<'mods> OsuRatingCalculator<'mods> {
@@ -15,12 +23,16 @@ impl<'mods> OsuRatingCalculator<'mods> {
         total_hits: u32,
         approach_rate: f64,
         overall_difficulty: f64,
+        mechanical_difficulty_rating: f64,
+        slider_factor: f64,
     ) -> Self {
         Self {
             mods,
             total_hits,
             approach_rate,
             overall_difficulty,
+            mechanical_difficulty_rating,
+            slider_factor,
         }
     }
 }
@@ -59,11 +71,11 @@ impl OsuRatingCalculator<'_> {
             0.0
         };
 
-        rating_multiplier *= 1.0 + ar_factor * approach_rate_length_bonus;
+        rating_multiplier *= 1.0 + ar_factor * approach_rate_length_bonus; // * Buff for longer maps with high AR.
 
         if self.mods.hd() {
-            // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
-            rating_multiplier *= 1.0 + 0.04 * (12.0 - self.approach_rate);
+            let visibility_factor = self.calculate_aim_visibility_factor(self.approach_rate);
+            rating_multiplier += self.calculate_visibility_bonus(ar_factor, visibility_factor);
         }
 
         // * It is important to consider accuracy difficulty when scaling with accuracy.
@@ -105,8 +117,8 @@ impl OsuRatingCalculator<'_> {
         rating_multiplier *= 1.0 + ar_factor * approach_rate_length_bonus;
 
         if self.mods.hd() {
-            // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
-            rating_multiplier *= 1.0 + 0.04 * (12.0 - self.approach_rate);
+            let visibility_factor = self.calculate_speed_visibility_factor(self.approach_rate);
+            rating_multiplier += self.calculate_visibility_bonus(ar_factor, visibility_factor);
         }
 
         rating_multiplier *= 0.95 + f64::max(0.0, self.overall_difficulty).powf(2.0) / 750.0;
@@ -149,4 +161,67 @@ impl OsuRatingCalculator<'_> {
 
         flashlight_rating * rating_multiplier.sqrt()
     }
+
+    fn calculate_aim_visibility_factor(&self, approach_rate: f64) -> f64 {
+        const AR_FACTOR_END_POINT: f64 = 11.5;
+
+        let mechanical_difficulty_factor =
+            reverse_lerp(self.mechanical_difficulty_rating, 5.0, 10.0);
+        let ar_factor_starting_point = f64::lerp(9.0, 10.33, mechanical_difficulty_factor);
+
+        reverse_lerp(approach_rate, AR_FACTOR_END_POINT, ar_factor_starting_point)
+    }
+
+    fn calculate_speed_visibility_factor(&self, approach_rate: f64) -> f64 {
+        const AR_FACTOR_END_POINT: f64 = 11.5;
+
+        let mechanical_difficulty_factor =
+            reverse_lerp(self.mechanical_difficulty_rating, 5.0, 10.0);
+        let ar_factor_starting_point = f64::lerp(10.0, 10.33, mechanical_difficulty_factor);
+
+        reverse_lerp(approach_rate, AR_FACTOR_END_POINT, ar_factor_starting_point)
+    }
+    
+    /// Calculates a visibility bonus that is applicable to Hidden and Traceable.
+    pub fn calculate_visibility_bonus(
+        &self, 
+        approach_rate: f64, 
+        visibility_factor: f64, 
+    ) -> f64 {
+        // * NOTE: TC's effect is only noticeable in performance calculations until lazer mods are accounted for server-side.
+        let is_always_partially_visible = self.mods.hd() && self.mods.only_fade_approach_circles().is_some()
+            || self.mods.tc();
+
+        // * Start from normal curve, rewarding lower AR up to AR7
+        // * TC forcefully requires a lower reading bonus for now as it's post-applied in PP which makes it multiplicative with the regular AR bonuses
+        // * This means it has an advantage over HD, so we decrease the multiplier to compensate
+        // * This should be removed once we're able to apply TC bonuses in SR (depends on real-time difficulty calculations being possible)
+        let mut reading_bonus = if is_always_partially_visible { 0.025 } else { 0.04 } * (12.0 - approach_rate.max(7.0));
+
+        reading_bonus *= visibility_factor;
+
+        // * We want to reward slideraim on low AR less
+        let slider_visibility_factor = self.slider_factor.powf(3.0);
+
+        // * For AR up to 0 - reduce reward for very low ARs when object is visible
+        if approach_rate < 7.0 {
+            reading_bonus += if is_always_partially_visible { 0.02 } else { 0.045 }
+                * (7.0 - approach_rate.max(0.0))
+                * slider_visibility_factor;
+        }
+
+        // * Starting from AR0 - cap values so they won't grow to infinity
+        if approach_rate < 0.0 {
+            reading_bonus += if is_always_partially_visible { 0.01 } else { 0.1 }
+                * (1.0 - 1.5f64.powf(approach_rate))
+                * slider_visibility_factor;
+        }
+
+        reading_bonus
+    }
+
+    pub fn calculate_difficulty_rating(difficulty_value: f64) -> f64 {
+        difficulty_value.sqrt() * DIFFICULTY_MULTIPLIER
+    }
+
 }

@@ -265,7 +265,16 @@ impl GameMods {
                 GameMod::MagnetisedOsu(m) => m.attraction_strength,
                 _ => None,
             })
-            .map(|attraction_strength| attraction_strength)
+    }
+
+    pub(crate) fn only_fade_approach_circles(&self) -> Option<bool> {
+        let Self::Lazer(mods) = self else { return None };
+
+        mods.iter()
+            .find_map(|m| match m {
+                GameMod::HiddenOsu(m) => m.only_fade_approach_circles,
+                _ => None,
+            })
     }
 }
 

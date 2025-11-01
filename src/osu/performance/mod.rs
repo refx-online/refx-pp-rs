@@ -21,7 +21,7 @@ use super::{
     Osu,
 };
 
-mod calculator;
+pub mod calculator;
 pub mod gradual;
 
 /// Performance calculator on osu!standard maps.
@@ -759,7 +759,7 @@ impl<'map> OsuPerformance<'map> {
         state: &OsuScoreState,
         using_classic_slider_acc: bool,
     ) -> f64 {
-        if attrs.n_sliders <= 0 {
+        if attrs.n_sliders == 0 {
             return f64::from(self.misses.unwrap_or(0));
         }
 

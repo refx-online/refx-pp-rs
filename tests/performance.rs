@@ -109,7 +109,7 @@ fn basic_osu() {
     test_cases! {
         Osu: OSU {
             NM => {
-                pp: 273.6527007970113,
+                pp: 271.27311209442854,
                 pp_acc: 97.62287463107766,
                 pp_aim: 98.93969440570889,
                 pp_flashlight: 0.0,
@@ -120,29 +120,29 @@ fn basic_osu() {
                 speed_estimated_slider_breaks: 0.0,
             };
             HD => {
-                pp: 300.7191666923408,
+                pp: 364.56497395798357,
                 pp_acc: 105.43270460156388,
-                pp_aim: 109.83596642615746,
+                pp_aim: 147.80814449752506,
                 pp_flashlight: 0.0,
-                pp_speed: 73.2599477644965,
+                pp_speed: 99.57012085136238,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
                 aim_estimated_slider_breaks: 0.0,
                 speed_estimated_slider_breaks: 0.0,
             };
             EZ HD => {
-                pp: 188.14221322855977,
+                pp: 208.53031776113863,
                 pp_acc: 16.6270597231239,
-                pp_aim: 97.48356469978363,
+                pp_aim: 107.51075437922465,
                 pp_flashlight: 0.0,
-                pp_speed: 63.54240497383165,
+                pp_speed: 74.29468671347082,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(23.1539101317497),
                 aim_estimated_slider_breaks: 0.0,
                 speed_estimated_slider_breaks: 0.0,
             };
             HR => {
-                pp: 407.26442140061613,
+                pp: 403.72299164930644,
                 pp_acc: 161.55575439788055,
                 pp_aim: 147.50036358525037,
                 pp_flashlight: 0.0,
@@ -153,7 +153,7 @@ fn basic_osu() {
                 speed_estimated_slider_breaks: 0.0,
             };
             DT => {
-                pp: 742.2688357014686,
+                pp: 735.8143240866732,
                 pp_acc: 184.09450675506795,
                 pp_aim: 302.2306653116079,
                 pp_flashlight: 0.0,
@@ -164,7 +164,7 @@ fn basic_osu() {
                 speed_estimated_slider_breaks: 0.0,
             };
             DT HR => {
-                pp: 1127.3510316539873,
+                pp: 1117.5479792048222,
                 pp_acc: 257.56571695089025,
                 pp_aim: 513.9559236214852,
                 pp_flashlight: 0.0,
@@ -175,7 +175,7 @@ fn basic_osu() {
                 speed_estimated_slider_breaks: 0.0,
             };
             FL => {
-                pp: 403.4073970271055,
+                pp: 399.89950661817414,
                 pp_acc: 99.57533212369923,
                 pp_aim: 98.93969440570889,
                 pp_flashlight: 132.28811994208644,
@@ -186,18 +186,18 @@ fn basic_osu() {
                 speed_estimated_slider_breaks: 0.0,
             };
             HD FL => {
-                pp: 470.79143317150215,
+                pp: 530.4913533836134,
                 pp_acc: 107.54135869359516,
-                pp_aim: 109.83596642615746,
+                pp_aim: 147.80814449752506,
                 pp_flashlight: 171.61406165164138,
-                pp_speed: 73.2599477644965,
+                pp_speed: 99.57012085136238,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
                 aim_estimated_slider_breaks: 0.0,
                 speed_estimated_slider_breaks: 0.0,
             };
             AP FL => {
-                pp: 138.16070283515998,
+                pp: 136.95930541920208,
                 pp_acc: 99.57533212369923,
                 pp_aim: 0.0,
                 pp_flashlight: 21.166099190733835,
@@ -208,7 +208,7 @@ fn basic_osu() {
                 speed_estimated_slider_breaks: 0.0,
             };
             AP EZ FL => {
-                pp: 32.241727451222914,
+                pp: 31.961364603820975,
                 pp_acc: 15.703334182950348,
                 pp_aim: 0.0,
                 pp_flashlight: 9.898414479880506,
@@ -228,7 +228,7 @@ fn basic_osu_rx() {
     test_cases! {
         Osu: OSU_RX {
             RX DT => {
-                pp: 3818.7022727827434,
+                pp: 3785.4961660628933,
                 pp_acc: 328.79732860865414,
                 pp_aim: 3001.0723727195955,
                 pp_flashlight: 0.0,
@@ -239,18 +239,18 @@ fn basic_osu_rx() {
                 speed_estimated_slider_breaks: 0.0,
             };
             RX HD DT => {
-                pp: 3983.374166903347,
+                pp: 4905.249787174736,
                 pp_acc: 355.1011148973465,
-                pp_aim: 3121.891929360441,
+                pp_aim: 3950.8622533392077,
                 pp_flashlight: 0.0,
-                pp_speed: 615.3914862704472,
+                pp_speed: 779.5929349165175,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(4.982527280600511),
                 aim_estimated_slider_breaks: 0.0,
                 speed_estimated_slider_breaks: 0.0,
             };
             RX DT HR => {
-                pp: 4593.463077902913,
+                pp: 4553.519920703758,
                 pp_acc: 328.79732860865414,
                 pp_aim: 3680.426248231621,
                 pp_flashlight: 0.0,
@@ -270,7 +270,7 @@ fn basic_osu_precision() {
     test_cases! {
         Osu: OSU_PRECISION {
             NM => {
-                pp: 1744.005359870075,
+                pp: 1728.8400958712048,
                 pp_acc: 110.08622031074181,
                 pp_aim: 1321.181690151598,
                 pp_flashlight: 0.0,
@@ -281,7 +281,7 @@ fn basic_osu_precision() {
                 speed_estimated_slider_breaks: 0.0,
             };
             DT => {
-                pp: 5916.86992890621,
+                pp: 5865.418886046156,
                 pp_acc: 180.48973670161635,
                 pp_aim: 4594.93464322394,
                 pp_flashlight: 0.0,
@@ -292,7 +292,7 @@ fn basic_osu_precision() {
                 speed_estimated_slider_breaks: 0.0,
             };
             RX HR => {
-                pp: 2700.8759827492345,
+                pp: 2677.390104638371,
                 pp_acc: 119.72772727278569,
                 pp_aim: 2237.9905160901353,
                 pp_flashlight: 0.0,
@@ -303,7 +303,7 @@ fn basic_osu_precision() {
                 speed_estimated_slider_breaks: 0.0,
             };
             HR => {
-                pp: 2802.255380806251,
+                pp: 2777.887942712284,
                 pp_acc: 119.72772727278569,
                 pp_aim: 2237.9905160901353,
                 pp_flashlight: 0.0,

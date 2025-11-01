@@ -7,22 +7,15 @@ use self::calculator::OsuRatingCalculator;
 use skills::{aim::Aim, flashlight::Flashlight, speed::Speed, strain::OsuStrainSkill};
 
 use crate::{
-    any::difficulty::{skills::StrainSkill, Difficulty},
-    model::{
+    Beatmap, any::difficulty::{Difficulty, skills::StrainSkill}, model::{
         beatmap::BeatmapAttributes, 
         mode::ConvertError, 
         mods::GameMods
-    },
-    osu::{
-        convert::convert_objects,
-        difficulty::{object::OsuDifficultyObject, scaling_factor::ScalingFactor},
-        object::OsuObject,
-        legacy::{
-            utils::{calculate_difficulty_peppy_stars, calculate_nested_score_per_object},
-            simulator::OsuLegacyScoreSimulator,
-        }
-    },
-    Beatmap,
+    }, osu::{
+        convert::convert_objects, difficulty::{object::OsuDifficultyObject, scaling_factor::ScalingFactor, skills::strain::difficulty_to_performance}, legacy::{
+            simulator::OsuLegacyScoreSimulator, utils::{calculate_difficulty_peppy_stars, calculate_nested_score_per_object}
+        }, object::OsuObject, performance::calculator::PERFORMANCE_BASE_MULTIPLIER
+    }
 };
 
 use self::skills::OsuSkills;
@@ -35,8 +28,6 @@ pub mod gradual;
 pub mod scaling_factor;
 pub mod skills;
 
-// * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
-const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.15;
 const STAR_RATING_MULTIPLIER: f64 = 0.0265;
 
 const HD_FADE_IN_DURATION_MULTIPLIER: f64 = 0.4;
@@ -54,16 +45,6 @@ pub fn difficulty(
     DifficultyValues::eval(&map, &mut attrs, mods, &skills);
 
     Ok(attrs)
-}
-
-pub fn calculate_difficulty_multiplier(mods: &GameMods, total_hits: u32, spinner_count: u32) -> f64 {
-    let mut multiplier = PERFORMANCE_BASE_MULTIPLIER;
-
-    if mods.so() && total_hits > 0 {
-        multiplier *= 1.0 - ((f64::from(spinner_count) / f64::from(total_hits)).powf(0.85));
-    }
-
-    multiplier
 }
 
 pub struct OsuDifficultySetup {
@@ -180,25 +161,32 @@ impl DifficultyValues {
         let flashlight_difficulty_value = flashlight.cloned_difficulty_value();
 
         let total_hits = attrs.n_circles + attrs.n_sliders + attrs.n_spinners;
-        let spinner_count = attrs.n_spinners;
+        
+        let mechanical_difficulty_rating = 
+            Self::calculate_mechanical_difficulty_rating(
+                aim_difficulty_value,
+                speed_difficulty_value,
+            );
+
+        let slider_factor = if aim_difficulty_value > 0.0 {
+            OsuRatingCalculator::calculate_difficulty_rating(aim_no_sliders_difficulty_value) / 
+            OsuRatingCalculator::calculate_difficulty_rating(aim_difficulty_value)
+        } else {
+            1.0
+        };
 
         let calculator = OsuRatingCalculator::new(
             mods,
             total_hits,
             attrs.ar,
             attrs.od(),
+            mechanical_difficulty_rating,
+            slider_factor,
         );
 
         let aim_rating = calculator.compute_aim_rating(aim_difficulty_value);
-        let aim_rating_no_sliders = calculator.compute_aim_rating(aim_no_sliders_difficulty_value);
         let speed_rating = calculator.compute_speed_rating(speed_difficulty_value);
         let flashlight_rating = calculator.compute_flashlight_rating(flashlight_difficulty_value);
-
-        let slider_factor = if aim_rating > 0.0 {
-            aim_rating_no_sliders / aim_rating
-        } else {
-            1.0
-        };
 
         let slider_nested_score_per_object = calculate_nested_score_per_object(
             map,
@@ -218,14 +206,7 @@ impl DifficultyValues {
             + (base_flashlight_performance).powf(1.1))
             .powf(1.0 / 1.1);
 
-        let multiplier = calculate_difficulty_multiplier(mods, total_hits, spinner_count);
-
-        let star_rating = if base_performance > 0.00001 {
-            multiplier.cbrt() * STAR_RATING_MULTIPLIER 
-                * ((100_000.0 / 2.0_f64.powf(1.0 / 1.1) * base_performance).cbrt() + 4.0)
-        } else {
-            0.0
-        };
+        let star_rating = Self::calculate_star_rating(base_performance);
 
         attrs.aim = aim_rating;
         attrs.aim_difficult_slider_count = difficult_sliders;
@@ -241,6 +222,29 @@ impl DifficultyValues {
         attrs.maximum_legacy_combo_score = f64::from(legacy_score_attributes.combo_score);
         attrs.stars = star_rating;
         attrs.speed_note_count = speed.relevant_note_count();
+    }
+
+    fn calculate_mechanical_difficulty_rating(aim_difficulty_value: f64, speed_difficulty_value: f64) -> f64 {
+        let aim_value = difficulty_to_performance(
+            OsuRatingCalculator::calculate_difficulty_rating(aim_difficulty_value),
+        );
+        let speed_value = difficulty_to_performance(
+            OsuRatingCalculator::calculate_difficulty_rating(speed_difficulty_value),
+        );
+
+        let total_value = (aim_value.powf(1.1) + speed_value.powf(1.1)).powf(1.0 / 1.1);
+        Self::calculate_star_rating(total_value)
+    }
+
+    fn calculate_star_rating(base_performance: f64) -> f64 {
+        if base_performance <= 0.00001 {
+            return 0.0;
+        }
+
+        let multiplier = PERFORMANCE_BASE_MULTIPLIER;
+
+        multiplier.cbrt() * STAR_RATING_MULTIPLIER
+            * ((100_000.0 / 2.0_f64.powf(1.0 / 1.1) * base_performance).cbrt() + 4.0)
     }
 
     pub fn create_difficulty_objects<'a>(

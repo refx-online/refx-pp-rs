@@ -5,7 +5,6 @@ use crate::{
         difficulty::skills::{
             aim::Aim, flashlight::Flashlight, speed::Speed, strain::OsuStrainSkill,
         },
-        difficulty::calculate_difficulty_multiplier,
         OsuDifficultyAttributes, OsuPerformanceAttributes, OsuScoreState,
     },
     util::{
@@ -18,6 +17,8 @@ use crate::{
 
 use super::{n_large_tick_miss, n_slider_ends_dropped, total_imperfect_hits};
 
+// * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
+pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.14;
 // * Minimum penalty applied per miss, ensures score never drops below this.
 const MISS_PENALTY_FLOOR: f64 = 0.018;
 
@@ -75,11 +76,14 @@ impl OsuPerformanceCalculator<'_> {
 
         let total_hits = f64::from(total_hits);
 
-        let mut multiplier = 
-            calculate_difficulty_multiplier(self.mods, total_hits as u32, self.attrs.n_spinners);
+        let mut multiplier = PERFORMANCE_BASE_MULTIPLIER;
 
         if self.mods.nf() {
-            multiplier *= (1.0 - 0.02 * self.effective_miss_count).max(0.9);
+            multiplier *= (1.0 - 0.02 * self.effective_miss_count).max(0.90);
+        }
+
+        if self.mods.so() && total_hits > 0.0 {
+            multiplier *= 1.0 - ((f64::from(self.attrs.n_spinners) / total_hits).powf(0.85));
         }
 
         let speed_deviation = self.calculate_speed_deviation();
