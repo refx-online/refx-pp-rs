@@ -60,7 +60,7 @@ pub fn calculate_difficulty_multiplier(mods: &GameMods, total_hits: u32, spinner
     let mut multiplier = PERFORMANCE_BASE_MULTIPLIER;
 
     if mods.so() && total_hits > 0 {
-        multiplier *= 1.0 - ((spinner_count as f64 / total_hits as f64).powf(0.85));
+        multiplier *= 1.0 - ((f64::from(spinner_count) / f64::from(total_hits)).powf(0.85));
     }
 
     multiplier
@@ -204,7 +204,7 @@ impl DifficultyValues {
             map,
             mods
         );
-        let legacy_score_base_multiplier = calculate_difficulty_peppy_stars(map) as f64;
+        let legacy_score_base_multiplier = f64::from(calculate_difficulty_peppy_stars(map));
 
         let mut simulator = OsuLegacyScoreSimulator::new();
         let legacy_score_attributes = simulator.simulate(map, mods);
@@ -238,7 +238,7 @@ impl DifficultyValues {
         attrs.speed_top_weighted_slider_factor = speed_top_weighted_slider_factor;
         attrs.nested_score_per_object = slider_nested_score_per_object;
         attrs.legacy_score_base_multiplier = legacy_score_base_multiplier;
-        attrs.maximum_legacy_combo_score = legacy_score_attributes.combo_score as f64;
+        attrs.maximum_legacy_combo_score = f64::from(legacy_score_attributes.combo_score);
         attrs.stars = star_rating;
         attrs.speed_note_count = speed.relevant_note_count();
     }

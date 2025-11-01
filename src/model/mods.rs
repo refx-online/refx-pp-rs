@@ -265,7 +265,7 @@ impl GameMods {
                 GameMod::MagnetisedOsu(m) => m.attraction_strength,
                 _ => None,
             })
-            .map(|attraction_strength| attraction_strength as f64)
+            .map(|attraction_strength| attraction_strength)
     }
 }
 

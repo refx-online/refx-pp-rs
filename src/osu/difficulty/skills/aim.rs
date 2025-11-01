@@ -242,7 +242,7 @@ impl AimEvaluator {
                     let last_base_object = &osu_last_obj.base;
                     let last2_base_object = &osu_last2_obj.base;
 
-                    let distance = (last2_base_object.stacked_pos() - last_base_object.stacked_pos()).length() as f64;
+                    let distance = f64::from((last2_base_object.stacked_pos() - last_base_object.stacked_pos()).length());
 
                     if distance < 1.0 {
                         wide_angle_bonus *= 1.0 - 0.35 * (1.0 - distance);

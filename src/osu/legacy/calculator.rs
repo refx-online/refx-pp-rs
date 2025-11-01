@@ -12,7 +12,7 @@ pub struct OsuLegacyScoreMissCalculator<'a> {
 }
 
 impl<'a> OsuLegacyScoreMissCalculator<'a> {
-    pub fn new(
+    pub const fn new(
         state: &'a OsuScoreState,
         attrs: &'a OsuDifficultyAttributes,
         mods: &'a GameMods,
@@ -43,7 +43,7 @@ impl<'a> OsuLegacyScoreMissCalculator<'a> {
         let maximum_miss_count = self.calculate_maximum_combo_based_miss_count();
 
         let score_obtained_during_max_combo = self.calculate_score_at_combo(
-            self.state.max_combo as f64,
+            f64::from(self.state.max_combo),
             relevant_combo_per_object,
             score_v1_multiplier,
         );
@@ -54,7 +54,7 @@ impl<'a> OsuLegacyScoreMissCalculator<'a> {
             return maximum_miss_count;
         }
 
-        let remaining_combo = self.attrs.max_combo as f64 - self.state.max_combo as f64;
+        let remaining_combo = f64::from(self.attrs.max_combo) - f64::from(self.state.max_combo);
         let expected_remaining_score = self.calculate_score_at_combo(
             remaining_combo,
             relevant_combo_per_object,
@@ -77,8 +77,8 @@ impl<'a> OsuLegacyScoreMissCalculator<'a> {
         relevant_combo_per_object: f64,
         score_v1_multiplier: f64,
     ) -> f64 {
-        let total_hits = self.state.total_hits() as f64;
-        let count_miss = self.state.misses as f64;
+        let total_hits = f64::from(self.state.total_hits());
+        let count_miss = f64::from(self.state.misses);
 
         let estimated_objects = combo / relevant_combo_per_object - 1.0;
 
@@ -94,7 +94,7 @@ impl<'a> OsuLegacyScoreMissCalculator<'a> {
         // * We then apply the accuracy and ScoreV1 multipliers to the resulting score.
         let combo_score = combo_score * self.accuracy * 300.0 / 25.0 * score_v1_multiplier;
 
-        let objects_hit = (total_hits - count_miss) * combo / self.attrs.max_combo as f64;
+        let objects_hit = (total_hits - count_miss) * combo / f64::from(self.attrs.max_combo);
 
         // * Score also has a non-combo portion we need to create the final score value.
         let non_combo_score = (300.0 + self.attrs.nested_score_per_object) 
@@ -115,25 +115,25 @@ impl<'a> OsuLegacyScoreMissCalculator<'a> {
 
         // * Reverse the arithmetic progression to work out the amount of combo per object based on the score.
         let result = (self.attrs.max_combo - 2) * self.attrs.max_combo;
-        let result = result as f64 / f64::max(
-            self.attrs.max_combo as f64 + 2.0 * (combo_score - 1.0),
-            1.0,
-        );
+        
 
-        result
+        f64::from(result) / f64::max(
+            f64::from(self.attrs.max_combo) + 2.0 * (combo_score - 1.0),
+            1.0,
+        )
     }
 
     /// This function is a harsher version of current combo-based miss count, 
     /// used to provide reasonable value for cases where score-based miss count can't do this.
     fn calculate_maximum_combo_based_miss_count(&self) -> f64 {
-        let count_miss = self.state.misses as f64;
+        let count_miss = f64::from(self.state.misses);
 
         if self.attrs.n_sliders == 0 {
             return count_miss;
         }
 
-        let count_ok = self.state.n100 as f64;
-        let count_meh = self.state.n50 as f64;
+        let count_ok = f64::from(self.state.n100);
+        let count_meh = f64::from(self.state.n50);
 
         let total_imperfect_hits = count_ok + count_meh + count_miss;
 
@@ -141,11 +141,11 @@ impl<'a> OsuLegacyScoreMissCalculator<'a> {
 
         // * Consider that full combo is maximum combo minus dropped slider tails since they don't contribute to combo but also don't break it
         // In classic scores we can't know the amount of dropped sliders so we estimate to 10% of all sliders on the map
-        let full_combo_threshold = self.attrs.max_combo as f64 - 0.1 * self.attrs.n_sliders as f64;
+        let full_combo_threshold = f64::from(self.attrs.max_combo) - 0.1 * f64::from(self.attrs.n_sliders);
 
-        if (self.state.max_combo as f64) < full_combo_threshold {
+        if f64::from(self.state.max_combo) < full_combo_threshold {
             miss_count = f64::powf(
-                full_combo_threshold / f64::max(1.0, self.state.max_combo as f64),
+                full_combo_threshold / f64::max(1.0, f64::from(self.state.max_combo)),
                 2.5,
             );
         }
@@ -160,12 +160,12 @@ impl<'a> OsuLegacyScoreMissCalculator<'a> {
         let max_possible_slider_breaks = (self.attrs.n_sliders as i32)
             .min((self.attrs.max_combo as i32 - self.state.max_combo as i32) / 2);
 
-        let score_miss_count = self.state.misses as f64;
+        let score_miss_count = f64::from(self.state.misses);
 
         let slider_breaks = miss_count - score_miss_count;
 
-        if slider_breaks > max_possible_slider_breaks as f64 {
-            miss_count = score_miss_count + max_possible_slider_breaks as f64;
+        if slider_breaks > f64::from(max_possible_slider_breaks) {
+            miss_count = score_miss_count + f64::from(max_possible_slider_breaks);
         }
 
         // * In classic scores there can't be more misses than a sum of all non-perfect judgements

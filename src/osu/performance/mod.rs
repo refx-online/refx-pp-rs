@@ -737,13 +737,13 @@ impl<'map> OsuPerformance<'map> {
             return 0.0;
         }
 
-        let missed_combo_percent = 1.0 - (max_combo as f64 / attributes.max_combo as f64);
+        let missed_combo_percent = 1.0 - (f64::from(max_combo) / f64::from(attributes.max_combo));
 
         let mut estimated_sliderbreaks =
-            (n100 as f64).min(effective_miss_count * top_weighted_slider_factor);
+            f64::from(n100).min(effective_miss_count * top_weighted_slider_factor);
 
         // * Scores with more oks are more likely to have sliderbreaks
-        let ok_adjustment = ((n100 as f64 - estimated_sliderbreaks) + 0.5) / n100 as f64;
+        let ok_adjustment = ((f64::from(n100) - estimated_sliderbreaks) + 0.5) / f64::from(n100);
 
         // * There is a low probability of extra slider breaks on effective miss counts close to 1, 
         // * as score based calculations are good at indicating if only a single break occurred
@@ -760,17 +760,17 @@ impl<'map> OsuPerformance<'map> {
         using_classic_slider_acc: bool,
     ) -> f64 {
         if attrs.n_sliders <= 0 {
-            return self.misses.unwrap_or(0) as f64;
+            return f64::from(self.misses.unwrap_or(0));
         }
 
-        let mut miss_count = self.misses.unwrap_or(0) as f64;
-        let score_max_combo = self.combo.unwrap_or(0) as f64;
+        let mut miss_count = f64::from(self.misses.unwrap_or(0));
+        let score_max_combo = f64::from(self.combo.unwrap_or(0));
 
         if using_classic_slider_acc {
             // * Consider that full combo is maximum combo minus dropped slider tails since they don't contribute to combo but also don't break it
             // * In classic scores we can't know the amount of dropped sliders so we estimate to 10% of all sliders on the map
             let full_combo_threshold =
-                attrs.max_combo as f64 - 0.1 * attrs.n_sliders as f64;
+                f64::from(attrs.max_combo) - 0.1 * f64::from(attrs.n_sliders);
 
             if score_max_combo < full_combo_threshold {
                 miss_count = full_combo_threshold / score_max_combo.max(1.0);
@@ -779,7 +779,7 @@ impl<'map> OsuPerformance<'map> {
             // * In classic scores there can't be more misses than a sum of all non-perfect judgements
             miss_count = miss_count.min(total_imperfect_hits(state));
         } else {
-            let full_combo_threshold = attrs.max_combo as f64 - n_slider_ends_dropped(attrs, state) as f64;
+            let full_combo_threshold = f64::from(attrs.max_combo) - f64::from(n_slider_ends_dropped(attrs, state));
 
             if score_max_combo < full_combo_threshold {
                 miss_count = full_combo_threshold / score_max_combo.max(1.0);

@@ -38,7 +38,7 @@ pub struct OsuLegacyScoreSimulator {
 }
 
 impl OsuLegacyScoreSimulator {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             legacy_bonus_score: 0,
             standardised_bonus_score: 0,
@@ -52,7 +52,7 @@ impl OsuLegacyScoreSimulator {
         self.standardised_bonus_score = 0;
         self.combo = 0;
 
-        self.score_multiplier = calculate_difficulty_peppy_stars(beatmap) as f64;
+        self.score_multiplier = f64::from(calculate_difficulty_peppy_stars(beatmap));
 
         let map_attrs = beatmap.attributes().mods(mods.clone()).build();
         let scaling_factor = ScalingFactor::new(map_attrs.cs);
@@ -77,7 +77,7 @@ impl OsuLegacyScoreSimulator {
         attributes.bonus_score_ratio = if self.legacy_bonus_score == 0 {
             0.0
         } else {
-            self.standardised_bonus_score as f64 / self.legacy_bonus_score as f64
+            f64::from(self.standardised_bonus_score) / f64::from(self.legacy_bonus_score)
         };
         attributes.bonus_score = self.legacy_bonus_score;
         attributes.max_combo = self.combo;
@@ -170,7 +170,7 @@ impl OsuLegacyScoreSimulator {
 
     fn add_combo_score(&self, score_increase: i32, attributes: &mut LegacyScoreAttributes) {
         // * Integer division is intentional to match stable's behavior
-        attributes.combo_score += (((self.combo - 1).max(0) * (score_increase / 25)) as f64 * self.score_multiplier as f64) as i32;
+        attributes.combo_score += (f64::from((self.combo - 1).max(0) * (score_increase / 25)) * self.score_multiplier) as i32;
     }
 }
 

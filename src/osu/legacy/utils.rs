@@ -67,8 +67,8 @@ pub fn calculate_nested_score_per_object(beatmap: &Beatmap, mods: &GameMods) -> 
         }
     }
 
-    let slider_score = amount_of_big_ticks as f64 * BIG_TICK_SCORE 
-        + amount_of_small_ticks as f64 * SMALL_TICK_SCORE;
+    let slider_score = f64::from(amount_of_big_ticks) * BIG_TICK_SCORE 
+        + f64::from(amount_of_small_ticks) * SMALL_TICK_SCORE;
 
     (slider_score + spinner_score) / object_count as f64
 }
@@ -91,14 +91,14 @@ fn calculate_spinner_score(duration_ms: f64) -> f64 {
     let full_spins = total_half_spins_possible / 2;
 
     // * Normal spin score
-    score += SPIN_SCORE * full_spins as i64;
+    score += SPIN_SCORE * i64::from(full_spins);
 
     let mut bonus_spins = (total_half_spins_possible - half_spins_required_before_bonus) / 2;
 
     // * Reduce amount of bonus spins because we want to represent the more average case, rather than the best one.
     bonus_spins = (bonus_spins - full_spins / 2).max(0);
 
-    score += BONUS_SPIN_SCORE * bonus_spins as i64;
+    score += BONUS_SPIN_SCORE * i64::from(bonus_spins);
 
     score as f64
 }
@@ -155,14 +155,14 @@ fn calculate_difficulty_peppy_stars_from_params(
     // slight differences on some edge case beatmaps compared to stable.
     
     let object_to_drain_ratio = if drain_length != 0 {
-        ((object_count as f64 / drain_length as f64) * 8.0).clamp(0.0, 16.0)
+        ((object_count as f64 / f64::from(drain_length)) * 8.0).clamp(0.0, 16.0)
     } else {
         16.0
     };
 
-    let drain_rate = hp as f64;
-    let overall_difficulty = od as f64;
-    let circle_size = cs as f64;
+    let drain_rate = f64::from(hp);
+    let overall_difficulty = f64::from(od);
+    let circle_size = f64::from(cs);
 
     let result = (
         drain_rate + overall_difficulty + circle_size + object_to_drain_ratio

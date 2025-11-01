@@ -44,9 +44,9 @@ impl OsuRatingCalculator<'_> {
 
         let mut rating_multiplier = 1.0;
 
-        let approach_rate_length_bonus = 0.95 + 0.4 * f64::min(1.0, self.total_hits as f64 / 2000.0)
+        let approach_rate_length_bonus = 0.95 + 0.4 * f64::min(1.0, f64::from(self.total_hits) / 2000.0)
             + if self.total_hits > 2000 {
-                f64::log10(self.total_hits as f64 / 2000.0) * 0.5
+                f64::log10(f64::from(self.total_hits) / 2000.0) * 0.5
             } else {
                 0.0
             };
@@ -87,9 +87,9 @@ impl OsuRatingCalculator<'_> {
 
         let mut rating_multiplier = 1.0;
 
-        let approach_rate_length_bonus = 0.95 + 0.4 * f64::min(1.0, self.total_hits as f64 / 2000.0)
+        let approach_rate_length_bonus = 0.95 + 0.4 * f64::min(1.0, f64::from(self.total_hits) / 2000.0)
             + if self.total_hits > 2000 {
-                f64::log10(self.total_hits as f64 / 2000.0) * 0.5
+                f64::log10(f64::from(self.total_hits) / 2000.0) * 0.5
             } else {
                 0.0
             };
@@ -137,9 +137,9 @@ impl OsuRatingCalculator<'_> {
         let mut rating_multiplier = 1.0;
 
         // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
-        rating_multiplier *= 0.7 + 0.1 * f64::min(1.0, self.total_hits as f64 / 200.0)
+        rating_multiplier *= 0.7 + 0.1 * f64::min(1.0, f64::from(self.total_hits) / 200.0)
             + if self.total_hits > 200 {
-                0.2 * f64::min(1.0, (self.total_hits - 200) as f64 / 200.0)
+                0.2 * f64::min(1.0, f64::from(self.total_hits - 200) / 200.0)
             } else {
                 0.0
             };
