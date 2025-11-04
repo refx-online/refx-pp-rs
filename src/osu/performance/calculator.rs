@@ -179,10 +179,10 @@ impl OsuPerformanceCalculator<'_> {
         aim_value *= len_bonus;
 
         if self.effective_miss_count > 0.0 {
-            aim_value *= Self::calculate_miss_penalty(
-                self.effective_miss_count + self.aim_estimated_slider_breaks,
-                self.attrs.aim_difficult_strain_count,
-            );
+            let relevant_miss_count = (self.effective_miss_count + self.aim_estimated_slider_breaks)
+                .min(total_imperfect_hits(&self.state) + n_large_tick_miss(&self.attrs, &self.state) as f64);
+
+            aim_value *= Self::calculate_miss_penalty(relevant_miss_count, self.attrs.aim_difficult_strain_count);
         }
 
         // * TC bonuses are excluded when blinds is present as the increased visual difficulty is unimportant when notes cannot be seen.
@@ -223,10 +223,10 @@ impl OsuPerformanceCalculator<'_> {
         speed_value *= len_bonus;
 
         if self.effective_miss_count > 0.0 {
-            speed_value *= Self::calculate_miss_penalty(
-                self.effective_miss_count + self.speed_estimated_slider_breaks,
-                self.attrs.speed_difficult_strain_count,
-            );
+            let relevant_miss_count = (self.effective_miss_count + self.speed_estimated_slider_breaks)
+                .min(total_imperfect_hits(&self.state) + n_large_tick_miss(&self.attrs, &self.state) as f64);
+
+            speed_value *= Self::calculate_miss_penalty(relevant_miss_count, self.attrs.speed_difficult_strain_count);
         }
 
         // * TC bonuses are excluded when blinds is present as the increased visual difficulty is unimportant when notes cannot be seen.
