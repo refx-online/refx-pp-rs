@@ -1,3 +1,7 @@
+use rust_decimal::Decimal;
+use rust_decimal::prelude::*;
+use rust_decimal_macros::dec;
+
 use crate::{
     Beatmap,
     model::mods::GameMods,
@@ -142,31 +146,27 @@ fn calculate_difficulty_peppy_stars_from_params(
 ) -> i32 {
     /*
      * WARNING: DO NOT TOUCH IF YOU DO NOT KNOW WHAT YOU ARE DOING
-     *
-     * It so happens that in stable, due to .NET Framework internals, float math would be performed
-     * using x87 registers and opcodes.
-     * .NET (Core) however uses SSE instructions on 32- and 64-bit words.
-     * x87 registers are _80 bits_ wide. Which is notably wider than _both_ float and double.
-     * Therefore, on a significant number of beatmaps, the rounding would not produce correct values.
+     * See: https://github.com/ppy/osu/blob/0f54608ceee7ae1a284dfcb89909d4b55b3dacd1/osu.Game/Rulesets/Objects/Legacy/LegacyRulesetExtensions.cs#L66-L75
      */
-
-    // In Rust, we did not have direct access to 80-bit precision like .NET's `decimal` type.
-    // This implementation uses f64 which should be close enough for most cases, but may have
-    // slight differences on some edge case beatmaps compared to stable.
     
     let object_to_drain_ratio = if drain_length != 0 {
-        ((object_count as f64 / f64::from(drain_length)) * 8.0).clamp(0.0, 16.0)
+        let ratio = Decimal::from_usize(object_count).unwrap()
+            / Decimal::from_i32(drain_length).unwrap()
+            * dec!(8);
+        ratio.clamp(dec!(0), dec!(16))
     } else {
-        16.0
+        dec!(16)
     };
-
-    let drain_rate = f64::from(hp);
-    let overall_difficulty = f64::from(od);
-    let circle_size = f64::from(cs);
-
-    let result = (
-        drain_rate + overall_difficulty + circle_size + object_to_drain_ratio
-    ) / 38.0 * 5.0;
-
-    result.round() as i32
+    
+    // Mimic (decimal)(double)x casting for precision
+    // See: https://github.com/ppy/osu/blob/0f54608ceee7ae1a284dfcb89909d4b55b3dacd1/osu.Game/Rulesets/Objects/Legacy/LegacyRulesetExtensions.cs#L89-L91
+    let drain_rate = Decimal::from_f64(hp as f64).unwrap();
+    let overall_difficulty = Decimal::from_f64(od as f64).unwrap();
+    let circle_size = Decimal::from_f64(cs as f64).unwrap();
+    
+    let result = (drain_rate + overall_difficulty + circle_size + object_to_drain_ratio)
+        / dec!(38)
+        * dec!(5);
+    
+    result.round().to_i32().unwrap()
 }
