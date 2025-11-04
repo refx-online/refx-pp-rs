@@ -16,6 +16,8 @@ sync = []
 tracing = ["rosu-map/tracing"]
 
 [dependencies]
+rust_decimal = "1.39"
+rust_decimal_macros = "1.39"
 rosu-map = { version = "0.2.1" }
 rosu-mods = { version = "0.3.0" }
 
