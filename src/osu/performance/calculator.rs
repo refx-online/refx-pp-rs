@@ -193,7 +193,6 @@ impl OsuPerformanceCalculator<'_> {
                     * self.acc.powf(16.0))
                     * (1.0 - 0.003 * self.attrs.hp * self.attrs.hp);
         } else if self.mods.tc() {
-            // * We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
             aim_value *= 1.0 + OsuRatingCalculator::calculate_visibility_bonus(
                 self.mods.clone(),
                 self.attrs.ar,
