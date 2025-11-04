@@ -838,7 +838,7 @@ impl<'map> OsuPerformance<'map> {
                 acc,
             );
             score_based_estimated_miss_count = legacy_score_miss_calculator.calculate();
-            effective_miss_count = combo_based_estimated_miss_count;
+            effective_miss_count = score_based_estimated_miss_count;
         } else {
             effective_miss_count = combo_based_estimated_miss_count;
         }
