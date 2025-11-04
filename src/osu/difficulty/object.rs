@@ -15,7 +15,7 @@ pub struct OsuDifficultyObject<'a> {
     pub start_time: f64,
     pub delta_time: f64,
 
-    pub strain_time: f64,
+    pub adjusted_delta_time: f64,
     pub lazy_jump_dist: f64,
     pub min_jump_dist: f64,
     pub min_jump_time: f64,
@@ -45,14 +45,14 @@ impl<'a> OsuDifficultyObject<'a> {
         let delta_time = (hit_object.start_time - last_object.start_time) / clock_rate;
         let start_time = hit_object.start_time / clock_rate;
 
-        let strain_time = delta_time.max(Self::MIN_DELTA_TIME);
+        let adjusted_delta_time = delta_time.max(Self::MIN_DELTA_TIME);
 
         let mut this = Self {
             idx,
             base: hit_object,
             start_time,
             delta_time,
-            strain_time,
+            adjusted_delta_time,
             lazy_jump_dist: 0.0,
             min_jump_dist: 0.0,
             min_jump_time: 0.0,
@@ -136,14 +136,14 @@ impl<'a> OsuDifficultyObject<'a> {
         self.lazy_jump_dist = f64::from(
             (self.base.stacked_pos() * scaling_factor - last_cursor_pos * scaling_factor).length(),
         );
-        self.min_jump_time = self.strain_time;
+        self.min_jump_time = self.adjusted_delta_time;
         self.min_jump_dist = self.lazy_jump_dist;
 
         if let OsuObjectKind::Slider(ref last_slider) = last_object.kind {
             let last_travel_time = (last_object.lazy_travel_time() / clock_rate)
                 .max(OsuDifficultyObject::MIN_DELTA_TIME);
             self.min_jump_time =
-                (self.strain_time - last_travel_time).max(OsuDifficultyObject::MIN_DELTA_TIME);
+                (self.adjusted_delta_time - last_travel_time).max(OsuDifficultyObject::MIN_DELTA_TIME);
 
             let tail_pos = last_slider.tail().map_or(last_object.pos, |tail| tail.pos);
             let stacked_tail_pos = tail_pos + last_object.stack_offset;

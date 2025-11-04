@@ -50,6 +50,13 @@ pub const fn smootherstep(x: f64, start: f64, end: f64) -> f64 {
     x * x * x * (x * (6.0 * x - 15.0) + 10.0)
 }
 
+pub fn smoothstep_bell_curve(x: f64, mean: f64, width: f64) -> f64 {
+    let x = x - mean;
+    let x = if x > 0.0 { width - x } else { width + x };
+
+    smootherstep(x, 0.0, width)
+}
+
 pub const fn reverse_lerp(x: f64, start: f64, end: f64) -> f64 {
     f64::clamp((x - start) / (end - start), 0.0, 1.0)
 }

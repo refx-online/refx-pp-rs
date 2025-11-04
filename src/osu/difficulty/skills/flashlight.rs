@@ -125,7 +125,7 @@ impl FlashlightEvaluator {
                 break;
             };
 
-            cumulative_strain_time += last_obj.strain_time;
+            cumulative_strain_time += last_obj.adjusted_delta_time;
 
             let curr_hit_obj = curr_obj.base;
 
