@@ -198,7 +198,7 @@ impl OsuPerformanceCalculator<'_> {
                 self.mods.clone(),
                 self.attrs.ar,
                 None,
-                None,
+                Some(self.attrs.slider_factor),
             );
         }
 
