@@ -78,7 +78,7 @@ impl OsuRatingCalculator<'_> {
             let visibility_factor = self.calculate_aim_visibility_factor(self.approach_rate);
             rating_multiplier += Self::calculate_visibility_bonus(
                 self.mods.clone(),
-                ar_factor, 
+                self.approach_rate, 
                 Some(visibility_factor),
                 Some(self.slider_factor),
             );
@@ -126,7 +126,7 @@ impl OsuRatingCalculator<'_> {
             let visibility_factor = self.calculate_speed_visibility_factor(self.approach_rate);
             rating_multiplier += Self::calculate_visibility_bonus(
                 self.mods.clone(),
-                ar_factor, 
+                self.approach_rate, 
                 Some(visibility_factor),
                 Some(self.slider_factor),
             );
