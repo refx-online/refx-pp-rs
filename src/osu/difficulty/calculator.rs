@@ -7,6 +7,7 @@ use crate::{
 };
 
 const DIFFICULTY_MULTIPLIER: f64 = 0.0675;
+const AR_FACTOR_END_POINT: f64 = 11.5;
 
 pub struct OsuRatingCalculator<'mods> {
     mods: &'mods GameMods,
@@ -173,8 +174,6 @@ impl OsuRatingCalculator<'_> {
     }
 
     fn calculate_aim_visibility_factor(&self, approach_rate: f64) -> f64 {
-        const AR_FACTOR_END_POINT: f64 = 11.5;
-
         let mechanical_difficulty_factor =
             reverse_lerp(self.mechanical_difficulty_rating, 5.0, 10.0);
         let ar_factor_starting_point = f64::lerp(9.0, 10.33, mechanical_difficulty_factor);
@@ -183,8 +182,6 @@ impl OsuRatingCalculator<'_> {
     }
 
     fn calculate_speed_visibility_factor(&self, approach_rate: f64) -> f64 {
-        const AR_FACTOR_END_POINT: f64 = 11.5;
-
         let mechanical_difficulty_factor =
             reverse_lerp(self.mechanical_difficulty_rating, 5.0, 10.0);
         let ar_factor_starting_point = f64::lerp(10.0, 10.33, mechanical_difficulty_factor);
