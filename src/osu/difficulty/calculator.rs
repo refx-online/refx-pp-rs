@@ -72,7 +72,7 @@ impl OsuRatingCalculator<'_> {
             0.0
         };
 
-        rating_multiplier *= 1.0 + ar_factor * approach_rate_length_bonus; // * Buff for longer maps with high AR.
+        rating_multiplier += ar_factor * approach_rate_length_bonus; // * Buff for longer maps with high AR.
 
         if self.mods.hd() {
             let visibility_factor = self.calculate_aim_visibility_factor(self.approach_rate);
@@ -120,7 +120,7 @@ impl OsuRatingCalculator<'_> {
             0.0
         };
 
-        rating_multiplier *= 1.0 + ar_factor * approach_rate_length_bonus;
+        rating_multiplier += ar_factor * approach_rate_length_bonus;
 
         if self.mods.hd() {
             let visibility_factor = self.calculate_speed_visibility_factor(self.approach_rate);
