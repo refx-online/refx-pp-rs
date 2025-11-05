@@ -157,6 +157,11 @@ impl OsuRatingCalculator<'_> {
             flashlight_rating *= 1.0 - magnetised_strength;
         }
 
+        if self.mods.df() {
+            let deflate_initial_scale = self.mods.start_scale().unwrap_or(0.0);
+            flashlight_rating *= reverse_lerp(deflate_initial_scale, 11.0, 1.0).clamp(0.1, 1.0);
+        }
+
         let mut rating_multiplier = 1.0;
 
         // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.

@@ -276,6 +276,17 @@ impl GameMods {
                 _ => None,
             })
     }
+
+    pub(crate) fn start_scale(&self) -> Option<f64> {
+        let Self::Lazer(mods) = self else { return None };
+
+        mods.iter()
+            .find_map(|m| match m {
+                GameMod::DeflateOsu(m) => m.start_scale,
+                _ => None,
+            })
+    }
+
 }
 
 macro_rules! impl_map_attr {
@@ -364,6 +375,7 @@ impl_has_mod! {
     ho: - HoldOff ["HoldOff"],
     tc: - Traceable ["Traceable"],
     mg: - Magnetised ["Magnetised"],
+    df: - Deflate ["Deflate"],
 }
 
 impl Default for GameMods {
