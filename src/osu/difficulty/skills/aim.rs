@@ -78,7 +78,7 @@ impl Aim {
             return 0.0;
         }
 
-        count_top_weighted_sliders(&self.slider_strains, self.current_strain)
+        count_top_weighted_sliders(&self.slider_strains, self.cloned_difficulty_value())
     }
 
     // From `OsuStrainSkill`; native rather than trait function so that it has

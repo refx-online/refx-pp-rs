@@ -239,5 +239,4 @@ impl OsuRatingCalculator<'_> {
     pub fn calculate_difficulty_rating(difficulty_value: f64) -> f64 {
         difficulty_value.sqrt() * DIFFICULTY_MULTIPLIER
     }
-
 }
