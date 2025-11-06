@@ -51,7 +51,7 @@ impl OsuRatingCalculator<'_> {
         }
 
         if self.mods.mg() {
-            let magnetised_strength = self.mods.attraction_strength().unwrap_or(0.0);
+            let magnetised_strength = self.mods.attraction_strength().unwrap_or(0.5);
             aim_rating *= 1.0 - magnetised_strength;
         }
 
@@ -77,7 +77,7 @@ impl OsuRatingCalculator<'_> {
         if self.mods.hd() {
             let visibility_factor = self.calculate_aim_visibility_factor(self.approach_rate);
             rating_multiplier += Self::calculate_visibility_bonus(
-                self.mods.clone(),
+                self.mods,
                 self.approach_rate, 
                 Some(visibility_factor),
                 Some(self.slider_factor),
@@ -99,7 +99,7 @@ impl OsuRatingCalculator<'_> {
 
         if self.mods.mg() {
             // * Reduce speed rating because of the speed distance scaling, with maximum reduction being 0.7x
-            let magnetised_strength = self.mods.attraction_strength().unwrap_or(0.0);
+            let magnetised_strength = self.mods.attraction_strength().unwrap_or(0.5);
             speed_rating *= 1.0 - magnetised_strength * 0.3;
         }
 
@@ -125,7 +125,7 @@ impl OsuRatingCalculator<'_> {
         if self.mods.hd() {
             let visibility_factor = self.calculate_speed_visibility_factor(self.approach_rate);
             rating_multiplier += Self::calculate_visibility_bonus(
-                self.mods.clone(),
+                self.mods,
                 self.approach_rate, 
                 Some(visibility_factor),
                 Some(self.slider_factor),
@@ -153,12 +153,12 @@ impl OsuRatingCalculator<'_> {
         }
 
         if self.mods.mg() {
-            let magnetised_strength = self.mods.attraction_strength().unwrap_or(0.0);
+            let magnetised_strength = self.mods.attraction_strength().unwrap_or(0.5);
             flashlight_rating *= 1.0 - magnetised_strength;
         }
 
         if self.mods.df() {
-            let deflate_initial_scale = self.mods.start_scale().unwrap_or(0.0);
+            let deflate_initial_scale = self.mods.start_scale().unwrap_or(2.0);
             flashlight_rating *= reverse_lerp(deflate_initial_scale, 11.0, 1.0).clamp(0.1, 1.0);
         }
 
@@ -196,7 +196,7 @@ impl OsuRatingCalculator<'_> {
     
     /// Calculates a visibility bonus that is applicable to Hidden and Traceable.
     pub fn calculate_visibility_bonus(
-        mods: GameMods,
+        mods: &GameMods,
         approach_rate: f64, 
         visibility_factor: Option<f64>, 
         slider_factor: Option<f64>,

@@ -39,6 +39,7 @@ pub(super) struct OsuPerformanceCalculator<'mods> {
 }
 
 impl<'a> OsuPerformanceCalculator<'a> {
+    #[allow(clippy::too_many_arguments)]
     pub const fn new(
         attrs: OsuDifficultyAttributes,
         mods: &'a GameMods,
@@ -180,7 +181,7 @@ impl OsuPerformanceCalculator<'_> {
 
         if self.effective_miss_count > 0.0 {
             let relevant_miss_count = (self.effective_miss_count + self.aim_estimated_slider_breaks)
-                .min(total_imperfect_hits(&self.state) + n_large_tick_miss(&self.attrs, &self.state) as f64);
+                .min(total_imperfect_hits(&self.state) + f64::from(n_large_tick_miss(&self.attrs, &self.state)));
 
             aim_value *= Self::calculate_miss_penalty(relevant_miss_count, self.attrs.aim_difficult_strain_count);
         }
@@ -194,7 +195,7 @@ impl OsuPerformanceCalculator<'_> {
                     * (1.0 - 0.003 * self.attrs.hp * self.attrs.hp);
         } else if self.mods.tc() {
             aim_value *= 1.0 + OsuRatingCalculator::calculate_visibility_bonus(
-                self.mods.clone(),
+                self.mods,
                 self.attrs.ar,
                 None,
                 Some(self.attrs.slider_factor),
@@ -223,7 +224,7 @@ impl OsuPerformanceCalculator<'_> {
 
         if self.effective_miss_count > 0.0 {
             let relevant_miss_count = (self.effective_miss_count + self.speed_estimated_slider_breaks)
-                .min(total_imperfect_hits(&self.state) + n_large_tick_miss(&self.attrs, &self.state) as f64);
+                .min(total_imperfect_hits(&self.state) + f64::from(n_large_tick_miss(&self.attrs, &self.state)));
 
             speed_value *= Self::calculate_miss_penalty(relevant_miss_count, self.attrs.speed_difficult_strain_count);
         }
@@ -235,7 +236,7 @@ impl OsuPerformanceCalculator<'_> {
             speed_value *= 1.12;
         } else if self.mods.tc() {
             speed_value *= 1.0 + OsuRatingCalculator::calculate_visibility_bonus(
-                self.mods.clone(),
+                self.mods,
                 self.attrs.ar,
                 None,
                 None,

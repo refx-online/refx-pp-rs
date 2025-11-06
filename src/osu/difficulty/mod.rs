@@ -13,7 +13,7 @@ use crate::{
         mods::GameMods
     }, osu::{
         convert::convert_objects, difficulty::{object::OsuDifficultyObject, scaling_factor::ScalingFactor, skills::strain::difficulty_to_performance}, legacy::{
-            simulator::OsuLegacyScoreSimulator, utils::{calculate_difficulty_peppy_stars, calculate_nested_score_per_object}
+            OsuLegacyScoreSimulator, utils::{calculate_difficulty_peppy_stars, calculate_nested_score_per_object}
         }, object::OsuObject, performance::calculator::PERFORMANCE_BASE_MULTIPLIER
     }
 };
@@ -133,15 +133,18 @@ impl DifficultyValues {
         } = skills;
 
         let aim_difficulty_value = aim.cloned_difficulty_value();
-        let aim_difficult_strain_count = aim.count_top_weighted_strains(aim_difficulty_value);
-        let difficult_sliders = aim.get_difficult_sliders();
-        
-        let speed_difficulty_value = speed.cloned_difficulty_value();
-        let speed_difficult_strain_count = speed.count_top_weighted_strains(speed_difficulty_value);
-
         let aim_no_sliders_difficulty_value = aim_no_sliders.cloned_difficulty_value();
-        let aim_no_sliders_top_weighted_slider_count = aim_no_sliders.count_top_weighted_sliders();
+        let speed_difficulty_value = speed.cloned_difficulty_value();
+        let flashlight_difficulty_value = flashlight.cloned_difficulty_value();
+
+        let difficult_sliders = aim.get_difficult_sliders();
+
+        let aim_difficult_strain_count = aim.count_top_weighted_strains(aim_difficulty_value);
+        let speed_difficult_strain_count = speed.count_top_weighted_strains(speed_difficulty_value);
         let aim_no_sliders_difficult_strain_count = aim_no_sliders.count_top_weighted_strains(aim_no_sliders_difficulty_value);
+
+        let aim_no_sliders_top_weighted_slider_count = aim_no_sliders.count_top_weighted_sliders();
+        let speed_top_weighted_slider_count = speed.count_top_weighted_sliders();
 
         let aim_top_weighted_slider_factor = 
             aim_no_sliders_top_weighted_slider_count
@@ -149,8 +152,7 @@ impl DifficultyValues {
                 1.0,
                 aim_no_sliders_difficult_strain_count - aim_no_sliders_top_weighted_slider_count,
             );
-        
-        let speed_top_weighted_slider_count = speed.count_top_weighted_sliders();
+
         let speed_top_weighted_slider_factor = 
             speed_top_weighted_slider_count
             / f64::max(
@@ -158,10 +160,7 @@ impl DifficultyValues {
                 speed_difficult_strain_count - speed_top_weighted_slider_count,
             );
 
-        let flashlight_difficulty_value = flashlight.cloned_difficulty_value();
-
-        let total_hits = attrs.n_circles + attrs.n_sliders + attrs.n_spinners;
-        
+        let total_hits = map.hit_objects.len() as u32;
         let mechanical_difficulty_rating = 
             Self::calculate_mechanical_difficulty_rating(
                 aim_difficulty_value,

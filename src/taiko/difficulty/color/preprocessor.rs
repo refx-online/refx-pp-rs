@@ -179,9 +179,8 @@ impl ColorDifficultyPreprocessor {
             hit_patterns.push(RefCount::clone(curr_hit_pattern));
         }
 
-        hit_patterns
-            .iter_mut()
-            .for_each(|pattern| pattern.get_mut().find_repetition_interval());
+        for pattern in hit_patterns
+            .iter_mut() { pattern.get_mut().find_repetition_interval(); }
 
         hit_patterns
     }

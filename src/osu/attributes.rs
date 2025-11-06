@@ -111,6 +111,21 @@ pub struct OsuPerformanceAttributes {
     pub speed_estimated_slider_breaks: f64,
 }
 
+/// Attributes calculated by the legacy score simulator.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct OsuLegacyScoreAttributes {
+    /// Score from circles, sliders, and spinners (300 points each).
+    pub accuracy_score: i32,
+    /// Score from combo multiplier.
+    pub combo_score: i32,
+    /// Bonus score from spinner ticks and slider ticks.
+    pub bonus_score: i32,
+    /// Ratio of standardised bonus score to legacy bonus score.
+    pub bonus_score_ratio: f64,
+    /// Maximum combo achievable.
+    pub max_combo: i32,
+}
+
 impl OsuPerformanceAttributes {
     /// Return the star value.
     pub const fn stars(&self) -> f64 {

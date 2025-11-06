@@ -17,8 +17,8 @@ const SMALL_TICK_SCORE: f64 = 10.0;
 const SPIN_SCORE: i64 = 100;
 const BONUS_SPIN_SCORE: i64 = 1000;
 
-const MAXIMUM_ROTATIONS_PER_SECOND: f64 = 477.0 / 60.0;
-const MINIMUM_ROTATIONS_PER_SECOND: f64 = 3.0;
+pub const MAXIMUM_ROTATIONS_PER_SECOND: f64 = 477.0 / 60.0;
+pub const MINIMUM_ROTATIONS_PER_SECOND: f64 = 3.0;
 
 pub fn calculate_nested_score_per_object(beatmap: &Beatmap, mods: &GameMods) -> f64 {
     let object_count = beatmap.hit_objects.len();
@@ -77,7 +77,6 @@ pub fn calculate_nested_score_per_object(beatmap: &Beatmap, mods: &GameMods) -> 
     (slider_score + spinner_score) / object_count as f64
 }
 
-/// Logic borrowed from OsuLegacyScoreSimulator.simulateHit for basic score calculations.
 fn calculate_spinner_score(duration_ms: f64) -> f64 {
     let seconds_duration = duration_ms / 1000.0;
 
@@ -160,9 +159,9 @@ fn calculate_difficulty_peppy_stars_from_params(
     
     // Mimic (decimal)(double)x casting for precision
     // See: https://github.com/ppy/osu/blob/0f54608ceee7ae1a284dfcb89909d4b55b3dacd1/osu.Game/Rulesets/Objects/Legacy/LegacyRulesetExtensions.cs#L89-L91
-    let drain_rate = Decimal::from_f64(hp as f64).unwrap();
-    let overall_difficulty = Decimal::from_f64(od as f64).unwrap();
-    let circle_size = Decimal::from_f64(cs as f64).unwrap();
+    let drain_rate = Decimal::from_f64(f64::from(hp)).unwrap();
+    let overall_difficulty = Decimal::from_f64(f64::from(od)).unwrap();
+    let circle_size = Decimal::from_f64(f64::from(cs)).unwrap();
     
     let result = (drain_rate + overall_difficulty + circle_size + object_to_drain_ratio)
         / dec!(38)
