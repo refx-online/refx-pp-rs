@@ -114,15 +114,12 @@ pub fn calculate_difficulty_peppy_stars(beatmap: &Beatmap) -> i32 {
     }
 
     let drain_length = if object_count > 0 {
-        let first_obj_time = beatmap.hit_objects.first().unwrap().start_time;
-        let last_obj_time = beatmap.hit_objects.last().unwrap().start_time;
+        let last_obj_time = beatmap.hit_objects.last().map_or(0.0, |h| h.start_time);
+        let first_obj_time = beatmap.hit_objects.first().map_or(0.0, |h| h.start_time);
         
-        let break_length: i32 = beatmap.breaks
-            .iter()
-            .map(|b| (b.end_time.round() as i32) - (b.start_time.round() as i32))
-            .sum();
+        let break_length = beatmap.total_break_time();
         
-        ((last_obj_time.round() as i32) - (first_obj_time.round() as i32) - break_length) / 1000
+        ((last_obj_time - first_obj_time - break_length) / 1000.0) as i32
     } else {
         0
     };
