@@ -145,6 +145,27 @@ fn calculate_difficulty_peppy_stars_from_params(
      * See: https://github.com/ppy/osu/blob/0f54608ceee7ae1a284dfcb89909d4b55b3dacd1/osu.Game/Rulesets/Objects/Legacy/LegacyRulesetExtensions.cs#L66-L75
      */
     
+    // TODO: Use https://docs.rs/rug/latest/rug/, for exact precision?
+    //       but it's unecessarily heavy for this.
+    // NOTE: Where MANTISSA = 64
+    // See: https://en.wikipedia.org/wiki/Extended_precision#x86_extended_precision_format
+    // let object_to_drain_ratio = if drain_length != 0 {
+    //     let ratio = Float::with_val(MANTISSA, object_count)
+    //         / Float::with_val(MANTISSA, drain_length)
+    //         * Float::with_val(MANTISSA, 8);
+    //
+    //     if ratio < 0 {
+    //         Float::with_val(MANTISSA, 0)
+    //     } else if ratio > 16 {
+    //         Float::with_val(MANTISSA, 16)
+    //     } else {
+    //         ratio
+    //     }
+    // } else {
+    //     Float::with_val(MANTISSA, 16)
+    // };
+
+    // Using rust_decimal is good (close) enough.
     let object_to_drain_ratio = if drain_length != 0 {
         let ratio = Decimal::from_usize(object_count).unwrap()
             / Decimal::from_i32(drain_length).unwrap()
@@ -165,4 +186,21 @@ fn calculate_difficulty_peppy_stars_from_params(
         * dec!(5);
     
     result.round().to_i32().unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Beatmap;
+
+    use super::*;
+
+    #[test]
+    fn peppy_stars() {
+        let map = Beatmap::from_path("./resources/2625853.osu").unwrap();
+
+        let peppy_stars = calculate_difficulty_peppy_stars(&map);
+        let expected = 3;
+
+        assert_eq!(peppy_stars, expected);
+    }
 }
