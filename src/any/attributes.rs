@@ -81,6 +81,16 @@ impl PerformanceAttributes {
         }
     }
 
+    /// The string representation of the attributes.
+    pub fn attributes_str(&self) -> String {
+        match self {
+            Self::Osu(attrs) => format!("{attrs:?}"),
+            Self::Taiko(attrs) => format!("{attrs:?}"),
+            Self::Catch(attrs) => format!("{attrs:?}"),
+            Self::Mania(attrs) => format!("{attrs:?}"),
+        }
+    }
+
     /// Difficulty attributes that were used for the performance calculation.
     pub fn difficulty_attributes(&self) -> DifficultyAttributes {
         match self {
