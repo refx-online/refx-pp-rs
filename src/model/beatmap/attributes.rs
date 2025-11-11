@@ -242,7 +242,7 @@ impl BeatmapAttributesBuilder {
         let ar_clock_rate = if self.ar.with_mods() { 1.0 } else { clock_rate };
         let od_clock_rate = if self.od.with_mods() { 1.0 } else { clock_rate };
 
-        let mod_mult = |val: f32| {
+        let mod_mult = |val: f64| {
             if mods.hr() {
                 (val * 1.4).min(10.0)
             } else if mods.ez() {
@@ -253,37 +253,37 @@ impl BeatmapAttributesBuilder {
         };
 
         let raw_ar = if self.ar.with_mods() {
-            self.ar.value(mods, GameMods::ar)
+            f64::from(self.ar.value(mods, GameMods::ar))
         } else {
-            mod_mult(self.ar.value(mods, GameMods::ar))
+            f64::from(mod_mult(f64::from(self.ar.value(mods, GameMods::ar))))
         };
 
-        let preempt = difficulty_range(f64::from(raw_ar), AR_WINDOWS) / ar_clock_rate;
+        let preempt = difficulty_range(raw_ar, AR_WINDOWS) / ar_clock_rate;
 
         // OD
         let (great, ok, meh) = match self.mode {
             GameMode::Osu | GameMode::Catch => {
                 let raw_od = if self.od.with_mods() {
-                    self.od.value(mods, GameMods::od)
+                    f64::from(self.od.value(mods, GameMods::od))
                 } else {
-                    mod_mult(self.od.value(mods, GameMods::od))
+                    mod_mult(f64::from(self.od.value(mods, GameMods::od)))
                 };
 
-                let great = difficulty_range(f64::from(raw_od), OSU_GREAT) / od_clock_rate;
-                let ok = difficulty_range(f64::from(raw_od), OSU_OK) / od_clock_rate;
-                let meh = difficulty_range(f64::from(raw_od), OSU_MEH) / od_clock_rate;
+                let great = difficulty_range(raw_od, OSU_GREAT) / od_clock_rate;
+                let ok = difficulty_range(raw_od, OSU_OK) / od_clock_rate;
+                let meh = difficulty_range(raw_od, OSU_MEH) / od_clock_rate;
 
                 (great, Some(ok), Some(meh))
             }
             GameMode::Taiko => {
                 let raw_od = if self.od.with_mods() {
-                    self.od.value(mods, GameMods::od)
+                    f64::from(self.od.value(mods, GameMods::od))
                 } else {
-                    mod_mult(self.od.value(mods, GameMods::od))
+                    mod_mult(f64::from(self.od.value(mods, GameMods::od)))
                 };
 
-                let great = difficulty_range(f64::from(raw_od), TAIKO_GREAT) / od_clock_rate;
-                let ok = difficulty_range(f64::from(raw_od), TAIKO_OK) / od_clock_rate;
+                let great = difficulty_range(raw_od, TAIKO_GREAT) / od_clock_rate;
+                let ok = difficulty_range(raw_od, TAIKO_OK) / od_clock_rate;
 
                 (great, Some(ok), None)
             }
@@ -378,7 +378,7 @@ impl BeatmapAttributesBuilder {
     }
 
     pub(crate) const fn osu_great_hit_window_to_od(hit_window: f64) -> f64 {
-        (OSU_GREAT.min - hit_window) / 6.0
+        (79.5 - hit_window) / 6.0
     }
 }
 
