@@ -485,7 +485,7 @@ impl OsuPerformanceCalculator<'_> {
             let acc_factor = (1.0 - self.acc).abs();
             
             acc_depression = (0.82 + acc_factor * 0.08).min(0.45);
-            aim_multiplier = acc_depression;
+            aim_multiplier *= acc_depression;
             
             if streams_nerf < 0.97 {
                 aim_multiplier *= 0.92;
