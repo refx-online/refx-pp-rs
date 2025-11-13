@@ -18,6 +18,9 @@ mod paths {
     #[allow(dead_code)]
     pub const NE_PLEACH: &str = "./resources/4682957.osu";
 
+    #[allow(dead_code)]
+    pub const DICK: &str = "./resources/5174690.osu";
+
     pub const TAIKO: &str = "./resources/1028484.osu";
     pub const CATCH: &str = "./resources/2118524.osu";
     pub const MANIA: &str = "./resources/1638954.osu";

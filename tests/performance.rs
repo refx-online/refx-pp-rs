@@ -380,6 +380,26 @@ fn ne_pleach() {
 }
 
 #[test]
+fn dick() {
+    #[cfg(target_os = "windows")]
+    test_cases! {
+        Osu: DICK {
+            RX DT => {
+                pp: 778.5550418563397,
+                pp_acc: 203.11371996655805,
+                pp_aim: 460.3469892326364,
+                pp_flashlight: 0.0,
+                pp_speed: 916.0951611460462,
+                effective_miss_count: 0.0,
+                speed_deviation: Some(6.361094470269358),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
+            };
+        }
+    }
+}
+
+#[test]
 fn basic_taiko() {
     test_cases! {
         Taiko: TAIKO {

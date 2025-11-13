@@ -496,14 +496,14 @@ impl OsuPerformanceCalculator<'_> {
             0.0
         };
 
-        // NOTE: this constant are arbitrary and chosen based on testing (sidetracked day) to get a good feel.
-        #[allow(clippy::items_after_statements, clippy::unreadable_literal)]
-        const HEAVY_DENSITY_THRESHOLD: f64 = 0.5192487354685861;
+        // NOTE: density threshold scales inversely with streams_nerf.
+        let density_threshold = 
+            0.50 - ((1.05 - streams_nerf).max(0.0) / 1.05) * 0.45;
 
         let mut aim_multiplier = 1.0;
         let mut acc_depression = 1.0;
         
-        if streams_nerf < 1.05 && speed_density > HEAVY_DENSITY_THRESHOLD {
+        if streams_nerf < 1.05 && speed_density > density_threshold {
             let acc_factor = (1.0 - self.acc).abs();
             
             // TODO: Use speed_density to scale the nerf more accurately for different maps.
