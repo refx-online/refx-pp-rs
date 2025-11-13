@@ -497,6 +497,7 @@ impl OsuPerformanceCalculator<'_> {
         };
 
         // NOTE: this constant are arbitrary and chosen based on testing (sidetracked day) to get a good feel.
+        #[allow(clippy::items_after_statements, clippy::unreadable_literal)]
         const HEAVY_DENSITY_THRESHOLD: f64 = 0.5192487354685861;
 
         let mut aim_multiplier = 1.0;

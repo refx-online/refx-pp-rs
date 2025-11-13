@@ -255,7 +255,7 @@ impl BeatmapAttributesBuilder {
         let raw_ar = if self.ar.with_mods() {
             f64::from(self.ar.value(mods, GameMods::ar))
         } else {
-            f64::from(mod_mult(f64::from(self.ar.value(mods, GameMods::ar))))
+            mod_mult(f64::from(self.ar.value(mods, GameMods::ar)))
         };
 
         let preempt = difficulty_range(raw_ar, AR_WINDOWS) / ar_clock_rate;
