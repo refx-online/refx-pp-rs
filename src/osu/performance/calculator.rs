@@ -377,7 +377,6 @@ impl OsuPerformanceCalculator<'_> {
             relevant_count_great,
             relevant_count_ok,
             relevant_count_meh,
-            relevant_count_miss,
         )
     }
 
@@ -386,61 +385,55 @@ impl OsuPerformanceCalculator<'_> {
         relevant_count_great: f64,
         relevant_count_ok: f64,
         relevant_count_meh: f64,
-        relevant_count_miss: f64,
     ) -> Option<f64> {
         if relevant_count_great + relevant_count_ok + relevant_count_meh <= 0.0 {
             return None;
         }
 
-        let object_count =
-            relevant_count_great + relevant_count_ok + relevant_count_meh + relevant_count_miss;
-
-        // * The probability that a player hits a circle is unknown, but we can estimate it to be
-        // * the number of greats on circles divided by the number of circles, and then add one
-        // * to the number of circles as a bias correction.
-
-        let n = f64::max(1.0, object_count - relevant_count_miss - relevant_count_meh);
+        // * The sample proportion of successful hits.
+        let n = f64::max(1.0, relevant_count_great + relevant_count_ok);
+        let p = relevant_count_great / n;
 
         #[allow(clippy::items_after_statements, clippy::unreadable_literal)]
         const Z: f64 = 2.32634787404; // * 99% critical value for the normal distribution (one-tailed).
 
-        // * Proportion of greats hit on circles, ignoring misses and 50s.
-        let p = relevant_count_great / n;
-
-        // * We can be 99% confident that p is at least this value.
-        let p_lower_bound = (n * p + Z * Z / 2.0) / (n + Z * Z)
-            - Z / (n + Z * Z) * f64::sqrt(n * p * (1.0 - p) + Z * Z / 4.0);
+        // * We can be 99% confident that the population proportion is at least this value.
+        let p_lower_bound = f64::min(
+            p,
+            (n * p + Z * Z / 2.0) / (n + Z * Z)
+                - Z / (n + Z * Z) * f64::sqrt(n * p * (1.0 - p) + Z * Z / 4.0),
+        );
 
         let great_hit_window: f64 = self.attrs.great_hit_window;
         let ok_hit_window: f64 = self.attrs.ok_hit_window;
         let meh_hit_window: f64 = self.attrs.meh_hit_window;
 
-        // * Compute the deviation assuming greats and oks are normally distributed, and mehs are uniformly distributed.
-        // * Begin with greats and oks first. Ignoring mehs, we can be 99% confident that the deviation is not higher than:
-        let mut deviation = great_hit_window / (f64::sqrt(2.0) * erf_inv(p_lower_bound));
+        let mut deviation;
 
-        let random_value = f64::sqrt(2.0 / PI)
-            * ok_hit_window
-            * f64::exp(-0.5 * f64::powf(ok_hit_window / deviation, 2.0))
-            / (deviation * erf(ok_hit_window / (f64::sqrt(2.0) * deviation)));
+        // * Tested max precision for the deviation calculation.
+        if p_lower_bound > 0.01 {
+            // * Compute deviation assuming greats and oks are normally distributed.
+            deviation = great_hit_window / (f64::sqrt(2.0) * erf_inv(p_lower_bound));
 
-        deviation *= f64::sqrt(1.0 - random_value);
+            // * Subtract the deviation provided by tails that land outside the ok hit window from the deviation computed above.
+            // * This is equivalent to calculating the deviation of a normal distribution truncated at +-okHitWindow.
+            let ok_hit_window_tail_amount = f64::sqrt(2.0 / PI)
+                * ok_hit_window
+                * f64::exp(-0.5 * f64::powf(ok_hit_window / deviation, 2.0))
+                / (deviation * erf(ok_hit_window / (f64::sqrt(2.0) * deviation)));
 
-        // * Value deviation approach as greatCount approaches 0
-        let limit_value = ok_hit_window / f64::sqrt(3.0);
-
-        // * If precision is not enough to compute true deviation - use limit value
-        if p_lower_bound == 0.0 || random_value >= 1.0 || deviation > limit_value {
-            deviation = limit_value;
+            deviation *= f64::sqrt(1.0 - ok_hit_window_tail_amount);
+        } else {
+            // * A tested limit value for the case of a score only containing oks.
+            deviation = ok_hit_window / f64::sqrt(3.0);
         }
 
-        // * Then compute the variance for mehs.
+        // * Compute and add the variance for mehs, assuming that they are uniformly distributed.
         let meh_variance = (meh_hit_window * meh_hit_window
             + ok_hit_window * meh_hit_window
             + ok_hit_window * ok_hit_window)
             / 3.0;
 
-        // * Find the total deviation.
         let deviation = f64::sqrt(
             ((relevant_count_great + relevant_count_ok) * f64::powf(deviation, 2.0)
                 + relevant_count_meh * meh_variance)

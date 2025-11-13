@@ -45,6 +45,7 @@ impl<'a> OsuDifficultyObject<'a> {
         let delta_time = (hit_object.start_time - last_object.start_time) / clock_rate;
         let start_time = hit_object.start_time / clock_rate;
 
+        // * Capped to 25ms to prevent difficulty calculation breaking from simultaneous objects.
         let adjusted_delta_time = delta_time.max(Self::MIN_DELTA_TIME);
 
         let mut this = Self {
