@@ -318,6 +318,68 @@ fn basic_osu_precision() {
 }
 
 #[test]
+fn sidetracked_day() {
+    #[cfg(target_os = "windows")]
+    test_cases! {
+        Osu: SIDETRACKED_DAY {
+            RX DT => {
+                pp: 778.5550418563397,
+                pp_acc: 203.11371996655805,
+                pp_aim: 460.3469892326364,
+                pp_flashlight: 0.0,
+                pp_speed: 916.0951611460462,
+                effective_miss_count: 0.0,
+                speed_deviation: Some(6.361094470269358),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
+            };
+            RX HD DT => {
+                pp: 800.0722801818542,
+                pp_acc: 210.69663355609595,
+                pp_aim: 471.99026000698325,
+                pp_flashlight: 0.0,
+                pp_speed: 939.2264764070319,
+                effective_miss_count: 0.0,
+                speed_deviation: Some(6.361094470269358),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
+            };
+            RX DT HR => {
+                pp: 1042.1344148018632,
+                pp_acc: 233.61942332760358,
+                pp_aim: 661.54880888371,
+                pp_flashlight: 0.0,
+                pp_speed: 1173.9394442013802,
+                effective_miss_count: 0.0,
+                speed_deviation: Some(5.601995328148896),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
+            };
+        }
+    }
+}
+
+#[test]
+fn ne_pleach() {
+    #[cfg(target_os = "windows")]
+    test_cases! {
+        Osu: NE_PLEACH {
+            RX DT => {
+                pp: 778.5550418563397,
+                pp_acc: 203.11371996655805,
+                pp_aim: 460.3469892326364,
+                pp_flashlight: 0.0,
+                pp_speed: 916.0951611460462,
+                effective_miss_count: 0.0,
+                speed_deviation: Some(6.361094470269358),
+                aim_estimated_slider_breaks: 0.0,
+                speed_estimated_slider_breaks: 0.0,
+            };
+        }
+    }
+}
+
+#[test]
 fn basic_taiko() {
     test_cases! {
         Taiko: TAIKO {

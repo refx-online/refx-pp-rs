@@ -12,6 +12,12 @@ mod paths {
     #[allow(dead_code)]
     pub const OSU_RX: &str = "./resources/5229879.osu";
 
+    #[allow(dead_code)]
+    pub const SIDETRACKED_DAY: &str = "./resources/5211120.osu";
+
+    #[allow(dead_code)]
+    pub const NE_PLEACH: &str = "./resources/4682957.osu";
+
     pub const TAIKO: &str = "./resources/1028484.osu";
     pub const CATCH: &str = "./resources/2118524.osu";
     pub const MANIA: &str = "./resources/1638954.osu";
