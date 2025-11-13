@@ -478,9 +478,10 @@ impl OsuPerformanceCalculator<'_> {
         adjusted_speed_value / speed_value
     }
 
-    // Applies a nerf to scores with Relax when stream difficulty exceeds aim difficulty.
-    // lower ratio => heavier nerf on both speed and accuracy performance values.
-    // NOTE: logic copied from akatsuki's, but more harsher.
+    /// Applies a nerf to scores with Relax when stream difficulty exceeds aim difficulty.
+    /// lower ratio => heavier nerf on both speed and accuracy performance values.
+    /// NOTE: logic copied from akatsuki's, but more harsher.
+    /// NOTE: I won't intefere with speed deviation, since it's too harsh.
     fn calculate_rx_streams_nerf(&self) -> Option<RelaxStreamsNerf> {
         if !self.mods.rx() {
             return None;
@@ -506,9 +507,16 @@ impl OsuPerformanceCalculator<'_> {
         if streams_nerf < 1.05 && speed_density > density_threshold {
             let acc_factor = (1.0 - self.acc).abs();
             
-            // TODO: Use speed_density to scale the nerf more accurately for different maps.
-            // For now, we just apply a flat nerf for heavy density maps.
-            acc_depression = (0.84 + acc_factor * 0.04).max(0.55);
+            let density_factor = 
+                (speed_density - density_threshold) 
+                / (1.0 - density_threshold);
+
+            let density_factor = density_factor.clamp(0.0, 1.0);
+
+            acc_depression = f64::lerp(
+                0.82, (0.84 + acc_factor * 0.04).max(0.55), density_factor
+            );
+
             aim_multiplier *= acc_depression;
             
             // Penalize low accuracy even more :skull:
@@ -522,6 +530,19 @@ impl OsuPerformanceCalculator<'_> {
             aim_multiplier, 
             accuracy_depression: acc_depression
         })
+    }
+
+    /// Actually unecessary to have this as a separate function 
+    /// but for consistency with other parts of the codebase.
+    fn calculate_adjusted_speed_exponent(&self, accuracy_depression: f64) -> f64 {
+        if self.mods.rx() {
+            // Relax completely removes tapping skill from the equation,
+            // so speed-based PP should scale weaker than normal plays.
+            // The 0.83 base is (stolen from akatsuki's) arbitrary but gives a good scaling.
+            return 0.83 * accuracy_depression;
+        }
+
+        1.1
     }
 
     // * Miss penalty assumes that a player will miss on the hardest parts of a map,
@@ -538,19 +559,6 @@ impl OsuPerformanceCalculator<'_> {
             (f64::from(self.state.max_combo).powf(0.8) / f64::from(self.attrs.max_combo).powf(0.8))
                 .min(1.0)
         }
-    }
-
-    /// Actually unecessary to have this as a separate function 
-    /// but for consistency with other parts of the codebase.
-    fn calculate_adjusted_speed_exponent(&self, accuracy_depression: f64) -> f64 {
-        if self.mods.rx() {
-            // Relax completely removes tapping skill from the equation,
-            // so speed-based PP should scale weaker than normal plays.
-            // The 0.83 base is (stolen from akatsuki's) arbitrary but gives a good scaling.
-            return 0.83 * accuracy_depression;
-        }
-
-        1.1
     }
 
     const fn total_hits(&self) -> f64 {
