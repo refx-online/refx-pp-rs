@@ -22,6 +22,8 @@ use super::{n_large_tick_miss, n_slider_ends_dropped, total_imperfect_hits};
 
 // * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
 pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.14;
+// * Minimum penalty applied per miss, ensures score never drops below this.
+const MISS_PENALTY_FLOOR: f64 = 0.018;
 
 struct RelaxStreamsNerf{
     aim_multiplier: f64,
@@ -191,7 +193,7 @@ impl OsuPerformanceCalculator<'_> {
             let relevant_miss_count = (self.effective_miss_count + self.aim_estimated_slider_breaks)
                 .min(total_imperfect_hits(&self.state) + f64::from(n_large_tick_miss(&self.attrs, &self.state)));
 
-            aim_value *= Self::calculate_miss_penalty(relevant_miss_count, self.attrs.aim_difficult_strain_count);
+            aim_value *= self.calculate_miss_penalty(relevant_miss_count, self.attrs.aim_difficult_strain_count);
         }
 
         // * TC bonuses are excluded when blinds is present as the increased visual difficulty is unimportant when notes cannot be seen.
@@ -234,7 +236,7 @@ impl OsuPerformanceCalculator<'_> {
             let relevant_miss_count = (self.effective_miss_count + self.speed_estimated_slider_breaks)
                 .min(total_imperfect_hits(&self.state) + f64::from(n_large_tick_miss(&self.attrs, &self.state)));
 
-            speed_value *= Self::calculate_miss_penalty(relevant_miss_count, self.attrs.speed_difficult_strain_count);
+            speed_value *= self.calculate_miss_penalty(relevant_miss_count, self.attrs.speed_difficult_strain_count);
         }
 
         // * TC bonuses are excluded when blinds is present as the increased visual difficulty is unimportant when notes cannot be seen.
@@ -548,8 +550,13 @@ impl OsuPerformanceCalculator<'_> {
     // * Miss penalty assumes that a player will miss on the hardest parts of a map,
     // * so we use the amount of relatively difficult sections to adjust miss penalty
     // * to make it more punishing on maps with lower amount of hard sections.
-    fn calculate_miss_penalty(miss_count: f64, diff_strain_count: f64) -> f64 {
-        0.96 / (miss_count / (4.0 * diff_strain_count.ln().powf(0.94)) + 1.0)
+    fn calculate_miss_penalty(&self, miss_count: f64, diff_strain_count: f64) -> f64 {
+        if self.mods.rx() {
+            MISS_PENALTY_FLOOR + (0.96 - MISS_PENALTY_FLOOR) 
+                / ((miss_count / (3.0 * diff_strain_count.ln().powf(0.94))).powf(1.9) + 1.0)
+        } else {
+            0.96 / (miss_count / (4.0 * diff_strain_count.ln().powf(0.94)) + 1.0)
+        }
     }
 
     fn get_combo_scaling_factor(&self) -> f64 {
