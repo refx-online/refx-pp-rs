@@ -12,6 +12,7 @@ use super::{
 
 pub mod aim;
 pub mod flashlight;
+pub mod relax;
 pub mod speed;
 pub mod strain;
 

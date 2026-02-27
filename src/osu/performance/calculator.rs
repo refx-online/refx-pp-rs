@@ -5,8 +5,8 @@ use crate::{
         difficulty::{
             calculator::OsuRatingCalculator,
             skills::{
-                aim::Aim, flashlight::Flashlight, speed::Speed, strain::OsuStrainSkill,
-            }
+                aim::Aim, flashlight::Flashlight, relax::Relax, speed::Speed, strain::OsuStrainSkill,
+            },
         },
         OsuDifficultyAttributes, OsuPerformanceAttributes, OsuScoreState,
     },
@@ -22,11 +22,6 @@ use super::{n_large_tick_miss, n_slider_ends_dropped, total_imperfect_hits};
 
 // * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
 pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.14;
-
-struct RelaxStreamsNerf{
-    aim_multiplier: f64,
-    accuracy_depression: f64,
-}
 
 pub(super) struct OsuPerformanceCalculator<'mods> {
     attrs: OsuDifficultyAttributes,
@@ -99,15 +94,22 @@ impl OsuPerformanceCalculator<'_> {
         let mut accuracy_depression_value = 1.0;
         let speed_value = self.compute_speed_value(speed_deviation);
 
-        if let Some(rx_streams_nerf) = self.calculate_rx_streams_nerf() {
+        if let Some(rx_streams_nerf) = Relax::calculate_streams_nerf(
+            self.mods,
+            self.attrs.aim,
+            self.attrs.speed,
+            self.attrs.speed_note_count,
+            total_hits,
+            self.acc,
+        ) {
             aim_value *= rx_streams_nerf.aim_multiplier;
             accuracy_depression_value = rx_streams_nerf.accuracy_depression;
         }
 
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
-        let adjusted_speed_exponent_value = 
-            self.calculate_adjusted_speed_exponent(accuracy_depression_value);
+        let adjusted_speed_exponent_value =
+            Relax::calculate_adjusted_speed_exponent(self.mods, accuracy_depression_value);
 
         let pp = (aim_value.powf(1.1)
             + speed_value.powf(adjusted_speed_exponent_value)
@@ -476,73 +478,6 @@ impl OsuPerformanceCalculator<'_> {
         adjusted_speed_value = f64::lerp(adjusted_speed_value, speed_value, lerp);
 
         adjusted_speed_value / speed_value
-    }
-
-    /// Applies a nerf to scores with Relax when stream difficulty exceeds aim difficulty.
-    /// lower ratio => heavier nerf on both speed and accuracy performance values.
-    /// NOTE: logic copied from akatsuki's, but more harsher.
-    /// NOTE: I won't intefere with speed deviation, since it's too harsh.
-    fn calculate_rx_streams_nerf(&self) -> Option<RelaxStreamsNerf> {
-        if !self.mods.rx() {
-            return None;
-        }
-
-        let total_hits = self.total_hits();
-
-        let streams_nerf = self.attrs.aim / self.attrs.speed;
-
-        let speed_density = if total_hits > 0.0 {
-            self.attrs.speed_note_count / total_hits
-        } else {
-            0.0
-        };
-
-        // NOTE: density threshold scales inversely with streams_nerf.
-        let density_threshold = 
-            0.50 - ((1.05 - streams_nerf).max(0.0) / 1.05) * 0.45;
-
-        let mut aim_multiplier = 1.0;
-        let mut acc_depression = 1.0;
-        
-        if streams_nerf < 1.05 && speed_density > density_threshold {
-            let acc_factor = (1.0 - self.acc).abs();
-            
-            let density_factor = 
-                (speed_density - density_threshold) 
-                / (1.0 - density_threshold);
-
-            let density_factor = density_factor.clamp(0.0, 1.0);
-
-            acc_depression = f64::lerp(
-                0.82, (0.84 + acc_factor * 0.04).max(0.55), density_factor
-            );
-
-            aim_multiplier *= acc_depression;
-            
-            // Penalize low accuracy even more :skull:
-            if self.acc < 0.95 {
-                let acc_penalty = 1.0 - (0.95 - self.acc) * 0.3;
-                aim_multiplier *= acc_penalty;
-            }
-        }
-
-        Some(RelaxStreamsNerf {
-            aim_multiplier, 
-            accuracy_depression: acc_depression
-        })
-    }
-
-    /// Actually unecessary to have this as a separate function 
-    /// but for consistency with other parts of the codebase.
-    fn calculate_adjusted_speed_exponent(&self, accuracy_depression: f64) -> f64 {
-        if self.mods.rx() {
-            // Relax completely removes tapping skill from the equation,
-            // so speed-based PP should scale weaker than normal plays.
-            // The 0.83 base is (stolen from akatsuki's) arbitrary but gives a good scaling.
-            return 0.83 * accuracy_depression;
-        }
-
-        1.1
     }
 
     // * Miss penalty assumes that a player will miss on the hardest parts of a map,
