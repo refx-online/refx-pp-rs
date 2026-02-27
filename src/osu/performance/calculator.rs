@@ -538,8 +538,8 @@ impl OsuPerformanceCalculator<'_> {
         if self.mods.rx() {
             // Relax completely removes tapping skill from the equation,
             // so speed-based PP should scale weaker than normal plays.
-            // The 0.83 base is (stolen from akatsuki's) arbitrary but gives a good scaling.
-            return 0.83 * accuracy_depression;
+            // The 0.88 base is (stolen from akatsuki's) arbitrary but gives a good scaling.
+            return 0.88 * accuracy_depression;
         }
 
         1.1
