@@ -1,10 +1,19 @@
-use crate::{model::mods::GameMods, util::float_ext::FloatExt};
+use crate::{model::mods::GameMods, osu::OsuDifficultyAttributes, util::float_ext::FloatExt};
 
 pub struct Relax;
 
-pub struct RelaxStreamsNerf {
+pub struct RelaxNerf {
     pub aim_multiplier: f64,
-    pub accuracy_depression: f64,
+    pub speed_exponent: f64,
+}
+
+impl Default for RelaxNerf {
+    fn default() -> Self {
+        Self {
+            aim_multiplier: 1.0,
+            speed_exponent: 1.1,
+        }
+    }
 }
 
 impl Relax {
@@ -12,22 +21,20 @@ impl Relax {
     /// lower ratio => heavier nerf on both speed and accuracy performance values.
     /// NOTE: logic copied from akatsuki's, but more harsher.
     /// NOTE: I won't intefere with speed deviation, since it's too harsh.
-    pub fn calculate_streams_nerf(
+    pub fn calculate(
         mods: &GameMods,
-        aim: f64,
-        speed: f64,
-        speed_note_count: f64,
+        attrs: &OsuDifficultyAttributes,
         total_hits: f64,
         acc: f64,
-    ) -> Option<RelaxStreamsNerf> {
+    ) -> RelaxNerf {
         if !mods.rx() {
-            return None;
+            return RelaxNerf::default();
         }
 
-        let streams_nerf = aim / speed;
+        let streams_nerf = attrs.aim / attrs.speed;
 
         let speed_density = if total_hits > 0.0 {
-            speed_note_count / total_hits
+            attrs.speed_note_count / total_hits
         } else {
             0.0
         };
@@ -61,22 +68,14 @@ impl Relax {
             }
         }
 
-        Some(RelaxStreamsNerf {
+        // Relax completely removes tapping skill from the equation,
+        // so speed-based PP should scale weaker than normal plays.
+        // The 0.83 base is (stolen from akatsuki's) arbitrary but gives a good scaling.
+        let speed_exponent = 0.83 * acc_depression;
+
+        RelaxNerf {
             aim_multiplier,
-            accuracy_depression: acc_depression
-        })
-    }
-
-    /// Actually unecessary to have this as a separate function
-    /// but for consistency with other parts of the codebase.
-    pub fn calculate_adjusted_speed_exponent(mods: &GameMods, accuracy_depression: f64) -> f64 {
-        if mods.rx() {
-            // Relax completely removes tapping skill from the equation,
-            // so speed-based PP should scale weaker than normal plays.
-            // The 0.83 base is (stolen from akatsuki's) arbitrary but gives a good scaling.
-            return 0.83 * accuracy_depression;
+            speed_exponent,
         }
-
-        1.1
     }
 }

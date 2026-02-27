@@ -91,28 +91,22 @@ impl OsuPerformanceCalculator<'_> {
         let speed_deviation = self.calculate_speed_deviation();
 
         let mut aim_value = self.compute_aim_value();
-        let mut accuracy_depression_value = 1.0;
         let speed_value = self.compute_speed_value(speed_deviation);
 
-        if let Some(rx_streams_nerf) = Relax::calculate_streams_nerf(
+        let rx_nerf = Relax::calculate(
             self.mods,
-            self.attrs.aim,
-            self.attrs.speed,
-            self.attrs.speed_note_count,
+            &self.attrs,
             total_hits,
             self.acc,
-        ) {
-            aim_value *= rx_streams_nerf.aim_multiplier;
-            accuracy_depression_value = rx_streams_nerf.accuracy_depression;
-        }
+        );
+
+        aim_value *= rx_nerf.aim_multiplier;
 
         let acc_value = self.compute_accuracy_value();
         let flashlight_value = self.compute_flashlight_value();
-        let adjusted_speed_exponent_value =
-            Relax::calculate_adjusted_speed_exponent(self.mods, accuracy_depression_value);
 
         let pp = (aim_value.powf(1.1)
-            + speed_value.powf(adjusted_speed_exponent_value)
+            + speed_value.powf(rx_nerf.speed_exponent)
             + acc_value.powf(1.1)
             + flashlight_value.powf(1.1))
         .powf(1.0 / 1.1)
