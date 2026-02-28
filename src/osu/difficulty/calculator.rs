@@ -65,9 +65,11 @@ impl OsuRatingCalculator<'_> {
             };
 
         let ar_factor = if self.approach_rate > 10.33 {
-            0.3 * (self.approach_rate - 10.33)
+            let factor = if self.mods.rx() { 0.2 } else { 0.3 };
+            factor * (self.approach_rate - 10.33)
         } else if self.approach_rate < 8.0 {
-            0.05 * (8.0 - self.approach_rate)
+            let factor = if self.mods.rx() { 0.04 } else { 0.05 };
+            factor * (8.0 - self.approach_rate)
         } else {
             0.0
         };
@@ -115,7 +117,8 @@ impl OsuRatingCalculator<'_> {
         let ar_factor = if self.mods.ap() {
             0.0
         } else if self.approach_rate > 10.33 {
-            0.3 * (self.approach_rate - 10.33)
+            let factor = if self.mods.rx() { 0.2 } else { 0.3 };
+            factor * (self.approach_rate - 10.33)
         } else {
             0.0
         };
