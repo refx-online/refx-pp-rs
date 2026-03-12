@@ -111,16 +111,23 @@ impl OsuPerformanceCalculator<'_> {
         let adjusted_speed_exponent_value = 
             self.calculate_adjusted_speed_exponent(accuracy_depression_value);
 
-        let exp = PERFORMANCE_NORM_EXPONENT;
+        let pp = if self.mods.rx() {
+            let exp = PERFORMANCE_NORM_EXPONENT;
 
-        let pp = (
-            aim_value.powf(exp)
-            + speed_value.powf(adjusted_speed_exponent_value)
-            + acc_value.powf(exp)
-            + cognition_value.powf(exp)
-        )
-        .powf(1.0 / exp)
-            * multiplier;
+            (
+                aim_value.powf(exp)
+                + speed_value.powf(adjusted_speed_exponent_value)
+                + acc_value.powf(exp)
+                + cognition_value.powf(exp)
+            )
+            .powf(1.0 / exp)
+                * multiplier
+        } else {
+            norm(
+                PERFORMANCE_NORM_EXPONENT,
+                [aim_value, speed_value, acc_value, cognition_value],
+            ) * multiplier
+        };
 
         OsuPerformanceAttributes {
             difficulty: self.attrs,

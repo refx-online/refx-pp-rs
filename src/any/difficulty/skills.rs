@@ -59,13 +59,13 @@ pub trait StrainDecaySkill: StrainSkill {
     fn strain_decay(ms: f64) -> f64;
 }
 
-pub fn count_top_weighted_strains(object_strains: &[f64], difficulty_value: f64) -> f64 {
+pub fn count_top_weighted_strains(object_strains: &[f64], difficulty_value: f64, decay_weight: f64) -> f64 {
     if unlikely(object_strains.is_empty()) {
         return 0.0;
     }
 
     // * What would the top strain be if all strain values were identical
-    let consistent_top_strain = difficulty_value / 10.0;
+    let consistent_top_strain = difficulty_value * (1.0 - decay_weight);
 
     if unlikely(FloatExt::eq(consistent_top_strain, 0.0)) {
         return object_strains.len() as f64;

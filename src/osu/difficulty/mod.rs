@@ -167,7 +167,7 @@ impl DifficultyValues {
         let reading_difficult_note_count = reading.count_top_weighted_difficulties(reading_difficulty_value);
 
         let aim_no_sliders_difficult_strain_count = aim_no_sliders.count_top_weighted_strains(aim_no_sliders_difficulty_value);
-        let aim_no_sliders_top_weighted_slider_count = aim_no_sliders.count_top_weighted_sliders();
+        let aim_no_sliders_top_weighted_slider_count = aim_no_sliders.count_top_weighted_sliders(aim_no_sliders_difficulty_value);
 
         let speed_top_weighted_slider_count = speed.count_top_weighted_sliders(speed_difficulty_value);
 

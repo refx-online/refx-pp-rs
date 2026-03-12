@@ -509,6 +509,7 @@ macro_rules! define_skill {
                 crate::any::difficulty::skills::count_top_weighted_strains(
                     &self.strain_skill_object_strains,
                     difficulty_value,
+                    Self::DECAY_WEIGHT,
                 )
             }
 

@@ -105,7 +105,7 @@ impl Aim {
     fn calculate_snap_flow_probability(ratio: f64) -> f64 {
         const K: f64 = 7.27; // why
 
-        if ratio == 0.0 {
+        if FloatExt::eq(ratio, 0.0) {
             return 0.0;
         }
 
@@ -134,12 +134,12 @@ impl Aim {
             .sum()
     }
 
-    pub fn count_top_weighted_sliders(&self) -> f64 {
+    pub fn count_top_weighted_sliders(&self, difficulty_value: f64) -> f64 {
         if self.slider_strains.is_empty() {
             return 0.0;
         }
 
-        count_top_weighted_sliders(&self.slider_strains, self.cloned_difficulty_value(), Self::DECAY_WEIGHT)
+        count_top_weighted_sliders(&self.slider_strains, difficulty_value, Self::DECAY_WEIGHT)
     }
 
     // From `OsuStrainSkill`; native rather than trait function so that it has

@@ -43,7 +43,7 @@ impl ReadingEvaluator {
             return 0.0;
         }
 
-        let velocity = 1.0_f64.max(curr.lazy_jump_dist / curr.delta_time); // * Only allow velocity to buff
+        let velocity = 1.0_f64.max(curr.lazy_jump_dist / curr.adjusted_delta_time); // * Only allow velocity to buff
 
         let current_visible_object_density = self.retrieve_current_visible_object_density(curr, objects);
         let past_object_difficulty_influence = self.get_past_object_difficulty_influence(curr, objects);
@@ -151,7 +151,7 @@ impl ReadingEvaluator {
                 && previous_obj.start_time > curr.start_time - self.time_preempt 
             {
                 // * Perfect stacks are harder the less time between notes
-                hidden_difficulty += Self::HIDDEN_MULTIPLIER * 2500.0 / curr.delta_time.powf(1.5);
+                hidden_difficulty += Self::HIDDEN_MULTIPLIER * 2500.0 / curr.adjusted_delta_time.powf(1.5);
             }
         }
 
@@ -177,7 +177,7 @@ impl ReadingEvaluator {
                 break;
             }
 
-            let mut loop_difficulty = curr.opacity_at(loop_obj.start_time, false, self.time_preempt, self.time_fade_in);
+            let mut loop_difficulty = curr.opacity_at(loop_obj.base.start_time, false, self.time_preempt, self.time_fade_in);
 
             // * When aiming an object small distances mean previous objects may be cheesed, so it doesn't matter whether they were arranged confusingly.
             loop_difficulty *= smootherstep(loop_obj.lazy_jump_dist, 15.0, Self::DISTANCE_INFLUENCE_THRESHOLD);
@@ -206,7 +206,7 @@ impl ReadingEvaluator {
             }
 
             let time_nerf_factor = Self::get_time_nerf_factor(time_diff);
-            visible_object_count += hit_object.opacity_at(curr.start_time, false, self.time_preempt, self.time_fade_in) * time_nerf_factor;
+            visible_object_count += hit_object.opacity_at(curr.base.start_time, false, self.time_preempt, self.time_fade_in) * time_nerf_factor;
 
             i += 1;
         }
@@ -229,7 +229,7 @@ impl ReadingEvaluator {
 
             // * Account less for objects that are close to the time limit.
             let long_interval_factor = 1.0 - reverse_lerp(
-                loop_obj.delta_time,
+                loop_obj.adjusted_delta_time,
                 Self::MAXIMUM_ANGLE_RELEVANCY_TIME,
                 Self::MINIMUM_ANGLE_RELEVANCY_TIME,
             );

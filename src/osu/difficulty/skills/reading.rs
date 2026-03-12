@@ -58,6 +58,7 @@ impl Reading {
         }
 
         let mut difficulties = self.object_difficulties.clone();
+        difficulties.retain(|&d| d > 0.0);
 
         self.apply_difficulty_transformation(&mut difficulties);
 
@@ -75,6 +76,10 @@ impl Reading {
     fn apply_difficulty_transformation(&self, difficulties: &mut [f64]) {
         let reduced_note_count = self.calculate_reduced_note_count();
         let limit = difficulties.len().min(reduced_note_count);
+
+        if reduced_note_count == 0 {
+            return;
+        }
 
         for (i, diff) in difficulties.iter_mut().take(limit).enumerate() {
             let clamped = (i as f64 / reduced_note_count as f64).clamp(0.0, 1.0);

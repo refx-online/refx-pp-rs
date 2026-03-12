@@ -767,10 +767,18 @@ impl<'map> OsuPerformance<'map> {
         let score_max_combo = f64::from(self.combo.unwrap_or(0));
 
         if using_classic_slider_acc {
+            // * If sliders in the map are hard - it's likely for player to drop sliderends
+            // * If map has easy sliders - it's more likely for player to sliderbreak
+            let likely_missed_sliderend_portion =
+                0.04 + 0.06 * attrs.aim_top_weighted_slider_factor.min(1.0).powi(2);
+
             // * Consider that full combo is maximum combo minus dropped slider tails since they don't contribute to combo but also don't break it
-            // * In classic scores we can't know the amount of dropped sliders so we estimate to 10% of all sliders on the map
-            let full_combo_threshold =
-                f64::from(attrs.max_combo) - 0.1 * f64::from(attrs.n_sliders);
+            // * In classic scores we can't know the amount of dropped sliders so we estimate it
+            let full_combo_threshold = f64::from(attrs.max_combo)
+                - f64::min(
+                    4.0 + likely_missed_sliderend_portion * f64::from(attrs.n_sliders),
+                    f64::from(attrs.n_sliders),
+                );
 
             if score_max_combo < full_combo_threshold {
                 miss_count = full_combo_threshold / score_max_combo.max(1.0);
@@ -778,6 +786,17 @@ impl<'map> OsuPerformance<'map> {
 
             // * In classic scores there can't be more misses than a sum of all non-perfect judgements
             miss_count = miss_count.min(total_imperfect_hits(state));
+
+            // * Every slider has *at least* 2 combo attributed in classic mechanics.
+            // * If they broke on a slider with a tick, then this still works since they would have lost at least 2 combo (the tick and the end)
+            // * Using this as a max means a score that loses 1 combo on a map can't possibly have been a slider break.
+            // * It must have been a slider end.
+            let max_possible_slider_breaks = f64::from(attrs.n_sliders)
+                .min(f64::from(attrs.max_combo.saturating_sub(self.combo.unwrap_or(0))) / 2.0);
+
+            let slider_breaks = miss_count - f64::from(self.misses.unwrap_or(0));
+
+            miss_count = f64::from(self.misses.unwrap_or(0)) + slider_breaks.min(max_possible_slider_breaks);
         } else {
             let full_combo_threshold = f64::from(attrs.max_combo) - f64::from(n_slider_ends_dropped(attrs, state));
 

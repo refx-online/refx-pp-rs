@@ -17,8 +17,6 @@ use self::utils::{calculate_difficulty_peppy_stars, MAXIMUM_ROTATIONS_PER_SECOND
 pub mod utils;
 pub mod calculator;
 
-/// Simulates a perfect play through a beatmap to calculate legacy score components.
-/// This is used for converting legacy scores (Score V1) to the standardised scoring system.
 pub struct OsuLegacyScoreSimulator {
     legacy_bonus_score: i32,
     standardised_bonus_score: i32,

@@ -7,7 +7,6 @@ use crate::{
         object::OsuDifficultyObject,
         skills::strain::harmonic_difficulty_value,
     },
-    util::difficulty::count_top_weighted_sliders,
 };
 
 use super::strain::OsuHarmonicSkill;
@@ -22,7 +21,6 @@ pub struct Speed {
 impl Speed {
     const SKILL_MULTIPLIER: f64 = 1.15;
     const STRAIN_DECAY_BASE: f64 = 0.3;
-    const DECAY_WEIGHT: f64 = 0.9; 
 
     pub fn new(hit_window: f64) -> Self {
         Self {
@@ -90,7 +88,23 @@ impl Speed {
             return 0.0;
         }
 
-        count_top_weighted_sliders(&self.slider_strains, difficulty_value, Self::DECAY_WEIGHT)
+        let (_, weight_sum) = self.calculate_current_values();
+
+        if weight_sum == 0.0 {
+            return 0.0;
+        }
+
+        // * What would the top note be if all note values were identical
+        let consistent_top_note = difficulty_value / weight_sum;
+        if consistent_top_note == 0.0 {
+            return 0.0;
+        }
+
+        // * Use a weighted sum of all notes. Constants are arbitrary and give nice values
+        self.slider_strains
+            .iter()
+            .map(|&s| crate::util::difficulty::logistic(s / consistent_top_note, 0.88, 10.0, Some(1.1)))
+            .sum()
     }
 
     pub fn count_top_weighted_difficulties(&self, difficulty_value: f64) -> f64 {
