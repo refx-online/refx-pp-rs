@@ -23,7 +23,7 @@ pub fn convert_objects(
     let mut osu_objects: Box<[_]> = map
         .hit_objects
         .iter()
-        .map(|h| OsuObject::new(h, map, &mut curve_bufs, &mut ticks_buf))
+        .map(|h| OsuObject::new(h, map, reflection, &mut curve_bufs, &mut ticks_buf))
         .inspect(|h| {
             if take == 0 {
                 return;
@@ -67,10 +67,6 @@ pub fn convert_objects(
 
     for h in osu_objects.iter_mut() {
         h.stack_offset = scaling_factor.stack_offset(h.stack_height);
-
-        if let OsuObjectKind::Slider(ref mut slider) = h.kind {
-            slider.lazy_end_pos += h.pos + h.stack_offset;
-        }
     }
 
     osu_objects

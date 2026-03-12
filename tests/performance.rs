@@ -537,6 +537,7 @@ impl AssertEq for OsuPerformanceAttributes {
             pp_aim,
             pp_flashlight,
             pp_speed,
+            pp_reading: _,
             effective_miss_count,
             speed_deviation,
             aim_estimated_slider_breaks,

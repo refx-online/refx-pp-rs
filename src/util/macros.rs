@@ -27,11 +27,7 @@ macro_rules! define_skill {
         }
 
         $_new_vis:vis fn new( $( $arg_name:ident: $arg_type:ty ),* ) -> Self {
-            $( { $( $setup:tt )* } )?
-
-            Self {
-                $( $assign_name:ident: $assign_expr:expr, )*
-            }
+            $( $body:tt )*
         }
     ) => {
         define_skill! {
@@ -40,14 +36,163 @@ macro_rules! define_skill {
             fields { $( $field_name $field_type |, )* }
             struct { $( #[$meta] )* $vis $skill }
             new {
-                setup { $( $( $setup )* )? }
+                setup_body { $( $body )* }
+                setup {}
                 args { $( $arg_name $arg_type, )* }
+            }
+        }
+    };
+
+    // Entry point with `new` function + no_auto_impl flag
+    (
+        $( #[$meta:meta] )*
+        $vis:vis struct $skill:ident: $trait:ident ( no_auto_impl ) => $objects:ty[$object:ty] {
+            $( $field_name:ident: $field_type:ty $( = $field_default:expr )?, )*
+        }
+
+        $_new_vis:vis fn new( $( $arg_name:ident: $arg_type:ty ),* ) -> Self {
+            $( $body:tt )*
+        }
+    ) => {
+        define_skill! {
+            @$trait skip_impl $objects[$object]
+            extend_fields $trait
+            fields { $( $field_name $field_type |, )* }
+            struct { $( #[$meta] )* $vis $skill }
+            new {
+                setup_body { $( $body )* }
+                setup {}
+                args { $( $arg_name $arg_type, )* }
+            }
+        }
+    };
+
+    // Processing `new` function: Found the final `Self` return value
+    (
+        @$trait:ident skip_impl $objects:ty[$object:ty]
+        extend_fields $extend_fields:ident
+        fields { $( $fields:tt )* }
+        struct { $( $struct:tt )* }
+        new {
+            setup_body {
+                Self { $( $assign_name:ident: $assign_expr:expr, )* }
+            }
+            setup { $( $setup:tt )* }
+            args { $( $args:tt )* }
+        }
+    ) => {
+        define_skill! {
+            @$trait skip_impl $objects[$object]
+            extend_fields $trait
+            fields { $( $fields )* }
+            struct { $( $struct )* }
+            new {
+                setup { $( $setup )* }
+                args { $( $args )* }
                 assigns { $( $assign_name $assign_expr, )* }
             }
         }
     };
 
+    (
+        @$trait:ident $objects:ty[$object:ty]
+        extend_fields $extend_fields:ident
+        fields { $( $fields:tt )* }
+        struct { $( $struct:tt )* }
+        new {
+            setup_body {
+                Self { $( $assign_name:ident: $assign_expr:expr, )* } // <-
+            }
+            setup { $( $setup:tt )* }
+            args { $( $args:tt )* }
+        }
+    ) => {
+        define_skill! {
+            @$trait $objects[$object]
+            extend_fields $trait
+            fields { $( $fields )* }
+            struct { $( $struct )* }
+            new {
+                setup { $( $setup )* }
+                args { $( $args )* }
+                assigns { $( $assign_name $assign_expr, )* } // <-
+            }
+        }
+    };
+
+    // Processing `new` function: Pop next statement from body and continue
+    (
+        @$trait:ident skip_impl $objects:ty[$object:ty]
+        extend_fields $extend_fields:ident
+        fields { $( $fields:tt )* }
+        struct { $( $struct:tt )* }
+        new {
+            setup_body {
+                $stmt:stmt;
+                $( $rest:tt )+
+            }
+            setup { $( $setup:tt )* }
+            args { $( $args:tt )* }
+        }
+    ) => {
+        define_skill! {
+            @$trait skip_impl $objects[$object]
+            extend_fields $trait
+            fields { $( $fields )* }
+            struct { $( $struct )* }
+            new {
+                setup_body { $( $rest )* }
+                setup { $( $setup )* $stmt }
+                args { $( $args )* }
+            }
+        }
+    };
+
+    (
+        @$trait:ident $objects:ty[$object:ty]
+        extend_fields $extend_fields:ident
+        fields { $( $fields:tt )* }
+        struct { $( $struct:tt )* }
+        new {
+            setup_body {
+                $stmt:stmt; // <-
+                $( $rest:tt )+
+            }
+            setup { $( $setup:tt )* }
+            args { $( $args:tt )* }
+        }
+    ) => {
+        define_skill! {
+            @$trait $objects[$object]
+            extend_fields $trait
+            fields { $( $fields )* }
+            struct { $( $struct )* }
+            new {
+                setup_body { $( $rest )* }   // <-
+                setup { $( $setup )* $stmt } // <-
+                args { $( $args )* }
+            }
+        }
+    };
+
     // Extend `StrainDecaySkill`'s fields
+    (
+        @$trait:ident skip_impl $objects:ty[$object:ty]
+        extend_fields StrainDecaySkill
+        fields { $( $fields:tt )* }
+        $( $rest:tt )*
+    ) => {
+        define_skill! {
+            @$trait skip_impl $objects[$object]
+            extend_fields StrainSkill
+            fields {
+                $( $fields )*
+                strain_decay_skill_current_strain f64 = 0.0,
+            }
+            $( $rest )*
+        }
+    };
+
     (
         @$trait:ident $objects:ty[$object:ty]
         extend_fields StrainDecaySkill // <-
@@ -66,6 +211,26 @@ macro_rules! define_skill {
     };
 
     // Extend `StrainSkill`'s fields
+    (
+        @$trait:ident skip_impl $objects:ty[$object:ty]
+        extend_fields StrainSkill
+        fields { $( $fields:tt )* }
+        $( $rest:tt )*
+    ) => {
+        define_skill! {
+            @$trait skip_impl $objects[$object]
+            fields {
+                $( $fields )*
+                strain_skill_current_section_peak f64 = 0.0,
+                strain_skill_current_section_end f64 = 0.0,
+                strain_skill_strain_peaks crate::util::strains_vec::StrainsVec
+                    = crate::util::strains_vec::StrainsVec::with_capacity(256),
+                strain_skill_object_strains Vec<f64> = Vec::with_capacity(256),
+            }
+            $( $rest )*
+        }
+    };
+
     (
         @$trait:ident $objects:ty[$object:ty]
         extend_fields StrainSkill // <-
@@ -88,6 +253,31 @@ macro_rules! define_skill {
     };
 
     // Parse field without default
+    (
+        @$trait:ident skip_impl $objects:ty[$object:ty]
+        fields {
+            $field_name:ident $field_type:ty,
+            $( $fields:tt )*
+        }
+        struct { $( $struct:tt )* }
+        new {
+            setup { $( $setup:tt )* }
+            args { $( $args:tt )* }
+            assigns { $( $assigns:tt )* }
+        }
+    ) => {
+        define_skill! {
+            @$trait skip_impl $objects[$object]
+            fields { $( $fields )* }
+            struct { $( $struct )* $field_name $field_type, }
+            new {
+                setup { $( $setup )* }
+                args { $( $args )* $field_name $field_type, }
+                assigns { $( $assigns )* $field_name, }
+            }
+        }
+    };
+
     (
         @$trait:ident $objects:ty[$object:ty]
         fields {
@@ -115,6 +305,31 @@ macro_rules! define_skill {
 
     // Parse field with default
     (
+        @$trait:ident skip_impl $objects:ty[$object:ty]
+        fields {
+            $field_name:ident $field_type:ty = $field_default:expr,
+            $( $fields:tt )*
+        }
+        struct { $( $struct:tt )* }
+        new {
+            setup { $( $setup:tt )* }
+            args { $( $args:tt )* }
+            assigns { $( $assigns:tt )* }
+        }
+    ) => {
+        define_skill! {
+            @$trait skip_impl $objects[$object]
+            fields { $( $fields )* }
+            struct { $( $struct )* $field_name $field_type, }
+            new {
+                setup { $( $setup )* }
+                args { $( $args )* }
+                assigns { $( $assigns )* $field_name $field_default, }
+            }
+        }
+    };
+
+    (
         @$trait:ident $objects:ty[$object:ty]
         fields {
             $field_name:ident $field_type:ty = $field_default:expr, // <-
@@ -141,6 +356,23 @@ macro_rules! define_skill {
 
     // Parse field with but skip for `new` function
     (
+        @$trait:ident skip_impl $objects:ty[$object:ty]
+        fields {
+            $field_name:ident $field_type:ty |,
+            $( $fields:tt )*
+        }
+        struct { $( $struct:tt )* }
+        $( $rest:tt )*
+    ) => {
+        define_skill! {
+            @$trait skip_impl $objects[$object]
+            fields { $( $fields )* }
+            struct { $( $struct )* $field_name $field_type, }
+            $( $rest )*
+        }
+    };
+
+    (
         @$trait:ident $objects:ty[$object:ty]
         fields {
             $field_name:ident $field_type:ty |, // <-
@@ -159,7 +391,7 @@ macro_rules! define_skill {
 
     // Final output
     (
-        @$trait:ident $objects:ty[$object:ty]
+        @$trait:ident skip_impl $objects:ty[$object:ty]
         fields {}
         struct {
             $( #[$meta:meta] )*
@@ -167,7 +399,7 @@ macro_rules! define_skill {
             $( $field_name:ident $field_type:ty, )*
         }
         new {
-            setup { $( $setup:tt )* }
+            setup { $( $setup:stmt )* }
             args { $( $arg_name:ident $arg_type:ty, )* }
             assigns { $( $assign_name:ident $( $assign_expr:expr )?, )* }
         }
@@ -178,7 +410,39 @@ macro_rules! define_skill {
         }
 
         impl $name {
-            #[allow(unused)]
+            $vis fn new(
+                $( $arg_name: $arg_type, )*
+            ) -> Self {
+                $( $setup )*
+
+                Self {
+                    $( $assign_name $( : $assign_expr )?, )*
+                }
+            }
+        }
+        
+    };
+
+    (
+        @$trait:ident $objects:ty[$object:ty]
+        fields {}
+        struct {
+            $( #[$meta:meta] )*
+            $vis:vis $name:ident
+            $( $field_name:ident $field_type:ty, )*
+        }
+        new {
+            setup { $( $setup:stmt )* }
+            args { $( $arg_name:ident $arg_type:ty, )* }
+            assigns { $( $assign_name:ident $( $assign_expr:expr )?, )* }
+        }
+    ) => {
+        $( #[$meta] )*
+        $vis struct $name {
+            $( $field_name: $field_type, )*
+        }
+
+        impl $name {
             $vis fn new(
                 $( $arg_name: $arg_type, )*
             ) -> Self {
@@ -191,7 +455,7 @@ macro_rules! define_skill {
         }
 
         const _: () = {
-            #[allow(unused_imports)]
+            #[expect(unused_imports, reason = "fine for macros")]
             use crate::{
                 any::difficulty::{
                     object::{IDifficultyObject, IDifficultyObjects, HasStartTime},

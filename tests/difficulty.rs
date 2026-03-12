@@ -36,6 +36,8 @@ macro_rules! test_cases {
         aim: $aim:literal,
         aim_difficult_slider_count: $aim_difficult_slider_count:literal,
         speed: $speed:literal,
+        reading: $reading:literal,
+        reading_difficult_note_count: $reading_difficult_note_count:literal,
         flashlight: $flashlight:literal,
         slider_factor: $slider_factor:literal,
         speed_note_count: $speed_note_count:literal,
@@ -62,11 +64,13 @@ macro_rules! test_cases {
             aim: $aim,
             aim_difficult_slider_count: $aim_difficult_slider_count,
             speed: $speed,
+            reading: $reading,
             flashlight: $flashlight,
             slider_factor: $slider_factor,
             speed_note_count: $speed_note_count,
             aim_difficult_strain_count: $aim_difficult_strain_count,
             speed_difficult_strain_count: $speed_difficult_strain_count,
+            reading_difficult_note_count: $reading_difficult_note_count,
             ar: $ar,
             great_hit_window: $great_hit_window,
             ok_hit_window: $ok_hit_window,
@@ -150,14 +154,16 @@ fn basic_osu() {
     test_cases! {
         Osu: OSU {
             NM => {
-                aim: 3.0206904680933446,
-                aim_difficult_slider_count: 180.3408539274882,
-                speed: 2.5241316080680347,
+                aim: 8.663039687724744,
+                aim_difficult_slider_count: 145.53596674533148,
+                speed: 2.484299407912938,
+                reading: 0.8717933044702678,
+                reading_difficult_note_count: 0.0,
                 flashlight: 0.0,
-                slider_factor: 0.9847225381816479,
-                speed_note_count: 202.2431935163061,
-                aim_difficult_strain_count: 108.47602226347688,
-                speed_difficult_strain_count: 78.39830024769967,
+                slider_factor: 0.9773131599480899,
+                speed_note_count: 170.12348293267485,
+                aim_difficult_strain_count: 64.01741690484235,
+                speed_difficult_strain_count: 0.0,
                 ar: 9.300000190734863,
                 great_hit_window: 27.19999885559082,
                 ok_hit_window: 69.5999984741211,
@@ -167,23 +173,25 @@ fn basic_osu() {
                 n_sliders: 293,
                 n_large_ticks: 15,
                 n_spinners: 1,
-                stars: 5.73800754509755,
+                stars: 14.419998703929002,
                 max_combo: 909,
-                aim_top_weighted_slider_factor: 1.3996187628553503,
-                speed_top_weighted_slider_factor: 0.6014562852526981,
+                aim_top_weighted_slider_factor: 3.95794171466673,
+                speed_top_weighted_slider_factor: 5.157149881688368,
                 legacy_score_base_multiplier: 5.0,
                 maximum_legacy_combo_score: 15729840.0,
                 nested_score_per_object: 34.991680532445926,
             };
             HD => {
-                aim: 3.120646884745317,
-                aim_difficult_slider_count: 180.3408539274882,
-                speed: 2.6119122427396086,
+                aim: 8.663039687724744,
+                aim_difficult_slider_count: 145.53596674533148,
+                speed: 2.484299407912938,
+                reading: 2.413676037159255,
+                reading_difficult_note_count: 0.0,
                 flashlight: 0.0,
-                slider_factor: 0.9847225381816479,
-                speed_note_count: 202.2431935163061,
-                aim_difficult_strain_count: 108.47602226347688,
-                speed_difficult_strain_count: 78.39830024769967,
+                slider_factor: 0.9773131599480899,
+                speed_note_count: 170.12348293267485,
+                aim_difficult_strain_count: 64.01741690484235,
+                speed_difficult_strain_count: 0.0,
                 ar: 9.300000190734863,
                 great_hit_window: 27.19999885559082,
                 ok_hit_window: 69.5999984741211,
@@ -193,10 +201,10 @@ fn basic_osu() {
                 n_sliders: 293,
                 n_large_ticks: 15,
                 n_spinners: 1,
-                stars: 5.93127778439672,
+                stars: 14.480393175049196,
                 max_combo: 909,
-                aim_top_weighted_slider_factor: 1.3996187628553503,
-                speed_top_weighted_slider_factor: 0.6014562852526981,
+                aim_top_weighted_slider_factor: 3.95794171466673,
+                speed_top_weighted_slider_factor: 5.157149881688368,
                 legacy_score_base_multiplier: 5.0,
                 maximum_legacy_combo_score: 15729840.0,
                 nested_score_per_object: 34.991680532445926,
@@ -205,6 +213,8 @@ fn basic_osu() {
                 aim: 3.2907549180874374,
                 aim_difficult_slider_count: 166.67289069483522,
                 speed: 2.7018290292657805,
+                reading: 0.0,
+                reading_difficult_note_count: 0.0,
                 flashlight: 0.0,
                 slider_factor: 0.9694044385587306,
                 speed_note_count: 184.01228552561852,
@@ -231,6 +241,8 @@ fn basic_osu() {
                 aim: 4.165102408986595,
                 aim_difficult_slider_count: 175.90690260092725,
                 speed: 3.7823087403862075,
+                reading: 0.0,
+                reading_difficult_note_count: 0.0,
                 flashlight: 0.0,
                 slider_factor: 0.9780329303754277,
                 speed_note_count: 209.75822813365252,
@@ -257,6 +269,8 @@ fn basic_osu() {
                 aim: 2.8873635841346794,
                 aim_difficult_slider_count: 159.93425561471358,
                 speed: 2.5293471374351544,
+                reading: 0.0,
+                reading_difficult_note_count: 0.0,
                 flashlight: 2.3003314538743016,
                 slider_factor: 0.980441941833822,
                 speed_note_count: 203.4377249350029,
@@ -283,6 +297,8 @@ fn basic_osu() {
                 aim: 3.293004673604962,
                 aim_difficult_slider_count: 159.93425561471358,
                 speed: 2.893368746755958,
+                reading: 0.0,
+                reading_difficult_note_count: 0.0,
                 flashlight: 2.620031004790908,
                 slider_factor: 0.980441941833822,
                 speed_note_count: 203.4377249350029,
@@ -524,11 +540,16 @@ fn convert_mania() {
 
 fn run<A>(actual: &A, expected: &A, mods: u32)
 where
-    A: AssertEq,
+    A: AssertEq + std::fmt::Debug,
     for<'a> &'a A: UnwindSafe,
 {
     if panic::catch_unwind(|| actual.assert_eq(expected)).is_err() {
-        panic!("Mods: {mods}");
+        // Print full debug representations to capture current computed values
+        panic!(
+            "Mods: {mods}\nActual: {:#?}\nExpected: {:#?}",
+            actual,
+            expected
+        );
     }
 }
 
@@ -538,11 +559,13 @@ impl AssertEq for OsuDifficultyAttributes {
             aim,
             aim_difficult_slider_count,
             speed,
+            reading,
             flashlight,
             slider_factor,
             speed_note_count,
             aim_difficult_strain_count,
             speed_difficult_strain_count,
+            reading_difficult_note_count,
             ar,
             great_hit_window,
             ok_hit_window,
@@ -567,6 +590,7 @@ impl AssertEq for OsuDifficultyAttributes {
             expected.aim_difficult_slider_count,
         );
         assert_eq_float(*speed, expected.speed);
+        assert_eq_float(*reading, expected.reading);
         assert_eq_float(*flashlight, expected.flashlight);
         assert_eq_float(*slider_factor, expected.slider_factor);
         assert_eq_float(*speed_note_count, expected.speed_note_count);
@@ -577,6 +601,10 @@ impl AssertEq for OsuDifficultyAttributes {
         assert_eq_float(
             *speed_difficult_strain_count,
             expected.speed_difficult_strain_count,
+        );
+        assert_eq_float(
+            *reading_difficult_note_count,
+            expected.reading_difficult_note_count,
         );
         assert_eq_float(*ar, expected.ar);
         assert_eq_float(*great_hit_window, expected.great_hit_window);

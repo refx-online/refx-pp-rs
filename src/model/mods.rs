@@ -267,16 +267,6 @@ impl GameMods {
             })
     }
 
-    pub(crate) fn only_fade_approach_circles(&self) -> Option<bool> {
-        let Self::Lazer(mods) = self else { return None };
-
-        mods.iter()
-            .find_map(|m| match m {
-                GameMod::HiddenOsu(m) => m.only_fade_approach_circles,
-                _ => None,
-            })
-    }
-
     pub(crate) fn start_scale(&self) -> Option<f64> {
         let Self::Lazer(mods) = self else { return None };
 
