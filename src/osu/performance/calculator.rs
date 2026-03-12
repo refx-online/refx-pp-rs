@@ -345,7 +345,7 @@ impl OsuPerformanceCalculator<'_> {
             reading_value *= Self::calculate_miss_penalty(
                 self.effective_miss_count + self.aim_estimated_slider_breaks,
                 self.attrs.reading_difficult_note_count
-            )
+            );
         }
 
         // * Scale the reading value with accuracy _harshly_.
@@ -554,7 +554,7 @@ impl OsuPerformanceCalculator<'_> {
 
         // * Starting from AR0 - cap values so they won't grow to infinity
         if self.attrs.ar < 0.0 {
-            traceable_bonus += 0.01 * (1.0 - self.attrs.ar.powf(1.5)) * slider_visibility_factor
+            traceable_bonus += 0.01 * (1.0 - self.attrs.ar.powf(1.5)) * slider_visibility_factor;
         }
 
         traceable_bonus
@@ -595,8 +595,7 @@ pub fn sum_cognition_difficulty(reading_difficulty_value: f64, flashlight_diffic
         PERFORMANCE_NORM_EXPONENT,
         [
             reading_difficulty_value, 
-            flashlight_difficulty_value 
-            * (flashlight_difficulty_value / reading_difficulty_value).clamp(0.25, 1.0)
+            flashlight_difficulty_value * (flashlight_difficulty_value / reading_difficulty_value).clamp(0.25, 1.0)
         ]
     )
 }

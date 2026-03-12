@@ -50,7 +50,7 @@ impl FlowAimEvaluator {
 
         // * If the last object is a slider, then we extend the travel velocity through the slider into the current object.
         if osu_last_obj.base.is_slider() && with_slider_travel_distance {
-            let slider_distance = f64::from(osu_last_obj.lazy_travel_dist) + osu_curr_obj.lazy_jump_dist;
+            let slider_distance = osu_last_obj.lazy_travel_dist + osu_curr_obj.lazy_jump_dist;
             curr_velocity = curr_velocity.max(slider_distance / osu_curr_obj.adjusted_delta_time);
         }
 
@@ -105,7 +105,7 @@ impl FlowAimEvaluator {
             );
 
             // * Reward for % distance up to 125 / strainTime for overlaps where velocity is still changing.
-            let overlap_velocity_buff = (OsuDifficultyObject::NORMALIZED_DIAMETER as f64 * 1.25
+            let overlap_velocity_buff = (f64::from(OsuDifficultyObject::NORMALIZED_DIAMETER) * 1.25
                 / osu_curr_obj.adjusted_delta_time.min(osu_last_obj.adjusted_delta_time))
             .min((prev_velocity - curr_velocity).abs());
 
@@ -126,7 +126,7 @@ impl FlowAimEvaluator {
         second: &OsuDifficultyObject,
         radius: f64,
     ) -> f64 {
-        let object_radius = f64::from(radius);
+        let object_radius = radius;
 
         let distance = f64::from((first.base.stacked_pos() - second.base.stacked_pos()).length());
 

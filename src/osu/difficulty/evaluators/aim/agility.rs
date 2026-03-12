@@ -31,7 +31,7 @@ impl AgilityEvaluator {
         
         strain *= Self::high_bpm_bonus(curr.adjusted_delta_time);
         
-        strain * smootherstep(distance, 0.0, RADIUS as f64)
+        strain * smootherstep(distance, 0.0, f64::from(RADIUS))
     }
     
     fn high_bpm_bonus(ms: f64) -> f64 {

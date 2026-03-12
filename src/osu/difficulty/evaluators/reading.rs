@@ -21,7 +21,7 @@ impl ReadingEvaluator {
     const HIDDEN_MULTIPLIER: f64 = 0.28;
     const DENSITY_MULTIPLIER: f64 = 2.4;
     const DENSITY_DIFFICULTY_BASE: f64 = 2.5;
-    const PREEMPT_BALANCING_FACTOR: f64 = 140000.0;
+    const PREEMPT_BALANCING_FACTOR: f64 = 140_000.0;
     const PREEMPT_STARTING_POINT: f64 = 500.0; // * AR 9.66 in milliseconds
     const MINIMUM_ANGLE_RELEVANCY_TIME: f64 = 2000.0; // * 2 seconds
     const MAXIMUM_ANGLE_RELEVANCY_TIME: f64 = 200.0;
@@ -237,7 +237,7 @@ impl ReadingEvaluator {
             if let (Some(loop_angle), Some(curr_angle)) = (loop_obj.angle, curr.angle) {
                 let angle_difference = (curr_angle - loop_angle).abs();
 
-                let stack_factor = smootherstep(loop_obj.lazy_jump_dist, 0.0, OsuDifficultyObject::NORMALIZED_RADIUS as f64);
+                let stack_factor = smootherstep(loop_obj.lazy_jump_dist, 0.0, f64::from(OsuDifficultyObject::NORMALIZED_RADIUS));
 
                 let radians_30 = 30.0_f64.to_radians();
                 constant_angle_count += (3.0 * radians_30.min(angle_difference * stack_factor)).cos() * long_interval_factor;
