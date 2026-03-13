@@ -2,14 +2,14 @@ use super::strain::OsuStrainSkill;
 use crate::{
     any::difficulty::{
         object::{HasStartTime, IDifficultyObject},
-        skills::{strain_decay, StrainSkill},
+        skills::{StrainSkill, strain_decay},
     },
     osu::difficulty::{
         evaluators::{AgilityEvaluator, FlowAimEvaluator, SnapAimEvaluator},
         object::OsuDifficultyObject,
     },
     util::{
-        difficulty::{count_top_weighted_sliders, logistic_exp, norm},
+        difficulty::{logistic, logistic_exp, norm},
         float_ext::FloatExt,
         strains_vec::StrainsVec,
     },
@@ -149,7 +149,18 @@ impl Aim {
             return 0.0;
         }
 
-        count_top_weighted_sliders(&self.slider_strains, difficulty_value, Self::DECAY_WEIGHT)
+        // * What would the top strain be if all strain values were identical
+        let consistent_top_strain = difficulty_value * (1.0 - Self::DECAY_WEIGHT);
+        if consistent_top_strain == 0.0 {
+            return 0.0;
+        }
+
+        // * Use a weighted sum of all strains. Constants are arbitrary and give nice
+        //   values
+        self.slider_strains
+            .iter()
+            .map(|&s| logistic(s / consistent_top_strain, 0.88, 10.0, Some(1.1)))
+            .sum()
     }
 
     // From `OsuStrainSkill`; native rather than trait function so that it has

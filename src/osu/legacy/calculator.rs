@@ -147,8 +147,8 @@ impl<'a> OsuLegacyScoreMissCalculator<'a> {
 
         // * Consider that full combo is maximum combo minus dropped slider tails since
         //   they don't contribute to combo but also don't break it
-        // In classic scores we can't know the amount of dropped sliders so we estimate
-        // to 10% of all sliders on the map
+        // * In classic scores we can't know the amount of dropped sliders so we estimate
+        //   to 10% of all sliders on the map
         let full_combo_threshold =
             f64::from(self.attrs.max_combo) - 0.1 * f64::from(self.attrs.n_sliders);
 
