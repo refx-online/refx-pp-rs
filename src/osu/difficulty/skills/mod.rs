@@ -1,5 +1,5 @@
 use crate::{
-    any::difficulty::skills::StrainSkill,
+    any::difficulty::skills::{HarmonicSkill, StrainSkill},
     model::{beatmap::BeatmapAttributes, mods::GameMods},
     osu::object::OsuObject,
 };

@@ -11,27 +11,31 @@ use crate::{
 
 use super::strain::OsuHarmonicSkill;
 
-pub struct Speed {
-    current_strain: f64,
-    hit_window: f64,
-    slider_strains: Vec<f64>,
-    object_difficulties: Vec<f64>,
+define_skill! {
+    pub struct Speed: HarmonicSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
+        current_strain: f64 = 0.0,
+        hit_window: f64,
+        slider_strains: Vec<f64> = Vec::with_capacity(64),
+    }
+
+    pub fn new(hit_window: f64) -> Self {
+        Self {
+            current_strain: 0.0,
+            hit_window: hit_window,
+            slider_strains: Vec::with_capacity(64),
+        }
+    }
 }
 
 impl Speed {
     const SKILL_MULTIPLIER: f64 = 1.15;
     const STRAIN_DECAY_BASE: f64 = 0.3;
 
-    pub fn new(hit_window: f64) -> Self {
-        Self {
-            current_strain: 0.0,
-            hit_window,
-            slider_strains: Vec::with_capacity(64),
-            object_difficulties: Vec::with_capacity(256),
-        }
-    }
-
-    pub fn process(&mut self, curr: &OsuDifficultyObject<'_>, objects: &[OsuDifficultyObject<'_>]) {
+    fn strain_value_at(
+        &mut self,
+        curr: &OsuDifficultyObject<'_>,
+        objects: &[OsuDifficultyObject<'_>],
+    ) -> f64 {
         let decay = strain_decay(curr.adjusted_delta_time, Self::STRAIN_DECAY_BASE);
 
         self.current_strain *= decay;
@@ -48,34 +52,29 @@ impl Speed {
             self.slider_strains.push(total_difficulty);
         }
 
-        self.object_difficulties.push(total_difficulty);
-    }
-
-    pub fn cloned_difficulty_value(&self) -> f64 {
-        let (difficulty, _) = self.calculate_current_values();
-        difficulty
+        total_difficulty
     }
 
     fn calculate_current_values(&self) -> (f64, f64) {
-        if self.object_difficulties.is_empty() {
+        if self.harmonic_skill_object_difficulties.is_empty() {
             return (0.0, 0.0);
         }
 
         harmonic_difficulty_value(
-            self.object_difficulties.clone(),
+            self.harmonic_skill_object_difficulties.clone(),
             Self::HARMONIC_SCALE,
             Self::DECAY_EXPONENT,
         )
     }
 
     pub fn relevant_note_count(&self) -> f64 {
-        self.object_difficulties
+        self.harmonic_skill_object_difficulties
             .iter()
             .copied()
             .max_by(f64::total_cmp)
             .filter(|&n| n > 0.0)
             .map_or(0.0, |max_strain| {
-                self.object_difficulties
+                self.harmonic_skill_object_difficulties
                     .iter()
                     .fold(0.0, |sum, strain| {
                         sum + (1.0 + f64::exp(-(strain / max_strain * 12.0 - 6.0))).recip()
@@ -111,7 +110,7 @@ impl Speed {
         let (_, weight_sum) = self.calculate_current_values();
 
         Self::count_top_weighted_object_difficulties(
-            &self.object_difficulties,
+            &self.harmonic_skill_object_difficulties,
             difficulty_value,
             weight_sum,
         )

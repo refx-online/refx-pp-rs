@@ -3,7 +3,7 @@ use std::{cmp, mem};
 use rosu_map::section::general::GameMode;
 
 use crate::{
-    any::difficulty::skills::StrainSkill,
+    any::difficulty::skills::{HarmonicSkill, StrainSkill},
     model::{mode::ConvertError},
     osu::{
         convert::convert_objects,

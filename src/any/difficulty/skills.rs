@@ -59,6 +59,21 @@ pub trait StrainDecaySkill: StrainSkill {
     fn strain_decay(ms: f64) -> f64;
 }
 
+pub trait HarmonicSkill: Sized {
+    type DifficultyObject<'a>;
+    type DifficultyObjects<'a>: ?Sized;
+
+    fn process<'a>(
+        &mut self,
+        curr: &Self::DifficultyObject<'a>,
+        objects: &Self::DifficultyObjects<'a>,
+    );
+
+    fn cloned_difficulty_value(&self) -> f64;
+
+    fn count_top_weighted_difficulties(&self, difficulty_value: f64) -> f64;
+}
+
 pub fn count_top_weighted_strains(object_strains: &[f64], difficulty_value: f64, decay_weight: f64) -> f64 {
     if unlikely(object_strains.is_empty()) {
         return 0.0;

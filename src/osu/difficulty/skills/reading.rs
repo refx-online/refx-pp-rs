@@ -9,12 +9,22 @@ use crate::{
 
 use super::strain::OsuHarmonicSkill;
 
-pub struct Reading {
-    current_strain: f64,
-    has_hidden_mod: bool,
-    evaluator: ReadingEvaluator,
-    object_start_times: Vec<f64>,
-    object_difficulties: Vec<f64>,
+define_skill! {
+    pub struct Reading: HarmonicSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
+        current_strain: f64 = 0.0,
+        has_hidden_mod: bool,
+        evaluator: ReadingEvaluator,
+        object_start_times: Vec<f64> = Vec::with_capacity(256),
+    }
+
+    pub fn new(has_hidden_mod: bool, time_preempt: f64, time_fade_in: f64) -> Self {
+        Self {
+            current_strain: 0.0,
+            has_hidden_mod: has_hidden_mod,
+            evaluator: ReadingEvaluator::new(time_preempt, time_fade_in),
+            object_start_times: Vec::with_capacity(256),
+        }
+    }
 }
 
 impl Reading {
@@ -24,17 +34,11 @@ impl Reading {
     const REDUCED_DIFFICULTY_BASE_LINE: f64 = 0.0;
     const REDUCED_DIFFICULTY_DURATION: f64 = 60_000.0;
 
-    pub fn new(has_hidden_mod: bool, time_preempt: f64, time_fade_in: f64) -> Self {
-        Self {
-            current_strain: 0.0,
-            has_hidden_mod,
-            evaluator: ReadingEvaluator::new(time_preempt, time_fade_in),
-            object_start_times: Vec::with_capacity(256),
-            object_difficulties: Vec::with_capacity(256),
-        }
-    }
-
-    pub fn process(&mut self, curr: &OsuDifficultyObject<'_>, objects: &[OsuDifficultyObject<'_>]) {
+    fn strain_value_at(
+        &mut self,
+        curr: &OsuDifficultyObject<'_>,
+        objects: &[OsuDifficultyObject<'_>],
+    ) -> f64 {
         self.object_start_times.push(curr.start_time);
 
         self.current_strain *= Self::strain_decay(curr.delta_time);
@@ -44,20 +48,15 @@ impl Reading {
             .evaluate_diff_of(curr, objects, self.has_hidden_mod)
             * Self::SKILL_MULTIPLIER;
 
-        self.object_difficulties.push(self.current_strain);
-    }
-
-    pub fn cloned_difficulty_value(&self) -> f64 {
-        let (difficulty, _) = self.calculate_current_values();
-        difficulty
+        self.current_strain
     }
 
     fn calculate_current_values(&self) -> (f64, f64) {
-        if self.object_difficulties.is_empty() {
+        if self.harmonic_skill_object_difficulties.is_empty() {
             return (0.0, 0.0);
         }
 
-        let mut difficulties = self.object_difficulties.clone();
+        let mut difficulties = self.harmonic_skill_object_difficulties.clone();
         difficulties.retain(|&d| d > 0.0);
 
         self.apply_difficulty_transformation(&mut difficulties);
@@ -100,16 +99,6 @@ impl Reading {
             .iter()
             .take_while(|&&start_time| start_time <= reduced_duration)
             .count()
-    }
-
-    pub fn count_top_weighted_difficulties(&self, difficulty_value: f64) -> f64 {
-        let (_, weight_sum) = self.calculate_current_values();
-
-        Self::count_top_weighted_object_difficulties(
-            &self.object_difficulties,
-            difficulty_value,
-            weight_sum,
-        )
     }
 }
 

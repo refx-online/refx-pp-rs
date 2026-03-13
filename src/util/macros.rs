@@ -210,6 +210,39 @@ macro_rules! define_skill {
         }
     };
 
+    // Extend `HarmonicSkill`'s fields
+    (
+        @$trait:ident skip_impl $objects:ty[$object:ty]
+        extend_fields HarmonicSkill
+        fields { $( $fields:tt )* }
+        $( $rest:tt )*
+    ) => {
+        define_skill! {
+            @$trait skip_impl $objects[$object]
+            fields {
+                $( $fields )*
+                harmonic_skill_object_difficulties Vec<f64> = Vec::with_capacity(256),
+            }
+            $( $rest )*
+        }
+    };
+
+    (
+        @$trait:ident $objects:ty[$object:ty]
+        extend_fields HarmonicSkill // <-
+        fields { $( $fields:tt )* }
+        $( $rest:tt )*
+    ) => {
+        define_skill! {
+            @$trait $objects[$object]
+            fields {
+                $( $fields )*
+                harmonic_skill_object_difficulties Vec<f64> = Vec::with_capacity(256), // <-
+            }
+            $( $rest )*
+        }
+    };
+
     // Extend `StrainSkill`'s fields
     (
         @$trait:ident skip_impl $objects:ty[$object:ty]
@@ -459,13 +492,44 @@ macro_rules! define_skill {
             use crate::{
                 any::difficulty::{
                     object::{IDifficultyObject, IDifficultyObjects, HasStartTime},
-                    skills::{StrainSkill, StrainDecaySkill},
+                    skills::{StrainSkill, StrainDecaySkill, HarmonicSkill},
                 },
                 util::strains_vec::StrainsVec,
             };
 
             define_skill!( @impl $trait $name $objects[$object] );
         };
+    };
+
+    // Implement `HarmonicSkill` trait
+    ( @impl HarmonicSkill $name:ident $objects:ty[$object:ty] ) => {
+        impl HarmonicSkill for $name {
+            type DifficultyObject<'a> = $object;
+            type DifficultyObjects<'a> = $objects;
+
+            fn process<'a>(
+                &mut self,
+                curr: &Self::DifficultyObject<'a>,
+                objects: &Self::DifficultyObjects<'a>,
+            ) {
+                let strain = self.strain_value_at(curr, objects);
+                self.harmonic_skill_object_difficulties.push(strain);
+            }
+
+            fn cloned_difficulty_value(&self) -> f64 {
+                Self::calculate_current_values(self).0
+            }
+
+            fn count_top_weighted_difficulties(&self, difficulty_value: f64) -> f64 {
+                let (_, weight_sum) = Self::calculate_current_values(self);
+
+                Self::count_top_weighted_object_difficulties(
+                    &self.harmonic_skill_object_difficulties,
+                    difficulty_value,
+                    weight_sum,
+                )
+            }
+        }
     };
 
     // Implement `StrainSkill` trait

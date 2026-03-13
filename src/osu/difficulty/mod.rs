@@ -7,7 +7,7 @@ use self::calculator::OsuRatingCalculator;
 use skills::{flashlight::Flashlight, speed::Speed, strain::OsuHarmonicSkill};
 
 use crate::{
-    Beatmap, any::difficulty::{Difficulty, skills::StrainSkill}, model::{
+    Beatmap, any::difficulty::{Difficulty, skills::{HarmonicSkill, StrainSkill}}, model::{
         beatmap::BeatmapAttributes, 
         mode::ConvertError, 
         mods::GameMods
