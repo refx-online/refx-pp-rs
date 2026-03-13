@@ -37,8 +37,6 @@ mod object;
 pub mod scaling_factor;
 pub mod skills;
 
-const STAR_RATING_MULTIPLIER: f64 = 0.0265;
-
 const HD_FADE_IN_DURATION_MULTIPLIER: f64 = 0.4;
 const HD_FADE_OUT_DURATION_MULTIPLIER: f64 = 0.3;
 
@@ -207,7 +205,6 @@ impl DifficultyValues {
             <Speed as OsuHarmonicSkill>::difficulty_to_performance(speed_rating);
         let base_reading_performance = Reading::difficulty_to_performance(reading_rating);
         let base_flashlight_performance = Flashlight::difficulty_to_performance(flashlight_rating);
-
         let base_cognition_performance =
             sum_cognition_difficulty(base_reading_performance, base_flashlight_performance);
 
@@ -238,15 +235,7 @@ impl DifficultyValues {
     }
 
     fn calculate_star_rating(base_performance: f64) -> f64 {
-        if base_performance <= 0.00001 {
-            return 0.0;
-        }
-
-        let multiplier = PERFORMANCE_BASE_MULTIPLIER;
-
-        multiplier.cbrt()
-            * STAR_RATING_MULTIPLIER
-            * ((100_000.0 / 2.0_f64.powf(1.0 / 1.1) * base_performance).cbrt() + 4.0)
+        (base_performance * PERFORMANCE_BASE_MULTIPLIER).cbrt()
     }
 
     pub fn create_difficulty_objects<'a>(
