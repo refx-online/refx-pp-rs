@@ -229,7 +229,7 @@ impl OsuPerformanceCalculator<'_> {
             return 0.0;
         };
 
-        let mut speed_value = <Speed as OsuHarmonicSkill>::difficulty_to_performance(self.attrs.speed);
+        let mut speed_value = Speed::difficulty_to_performance(self.attrs.speed);
 
         if self.effective_miss_count > 0.0 {
             let relevant_miss_count = (self.effective_miss_count + self.speed_estimated_slider_breaks)
@@ -457,7 +457,7 @@ impl OsuPerformanceCalculator<'_> {
     }
 
     fn calculate_speed_high_deviation_nerf(&self, speed_deviation: f64) -> f64 {
-        let speed_value = <Speed as OsuHarmonicSkill>::difficulty_to_performance(self.attrs.speed);
+        let speed_value = Speed::difficulty_to_performance(self.attrs.speed);
 
         // * Decides a point where the PP value achieved compared to the speed deviation is assumed to be tapped improperly. Any PP above this point is considered "excess" speed difficulty.
         // * This is used to cause PP above the cutoff to scale logarithmically towards the original speed value thus nerfing the value.
