@@ -220,7 +220,7 @@ impl<'a> OsuDifficultyObject<'a> {
             // *                  ↑
             // *        most natural jump path
             //
-            // * In this case the most natural jump path is better approximated by a new distance called "tailJumpDistance" 
+            // * In this case the most natural jump path is better approximated by a new distance called "tailJumpDistance"
             //   - the distance between the slider's tail and the next hitobject.
             //
             // * Thus, the player is assumed to jump the minimum of these two distances in all cases.
