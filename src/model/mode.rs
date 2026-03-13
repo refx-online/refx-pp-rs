@@ -5,9 +5,8 @@ use std::{
 
 pub use rosu_map::section::general::GameMode;
 
-use crate::Difficulty;
-
 use super::beatmap::Beatmap;
+use crate::Difficulty;
 
 /// A way to specify a gamemode at compile-time.
 ///

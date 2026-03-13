@@ -1,9 +1,4 @@
-use crate::{
-    model::mods::GameMods, 
-    util::{
-        difficulty::reverse_lerp,
-    },
-};
+use crate::{model::mods::GameMods, util::difficulty::reverse_lerp};
 
 const DIFFICULTY_MULTIPLIER: f64 = 0.0675;
 
@@ -14,11 +9,7 @@ pub struct OsuRatingCalculator<'mods> {
 }
 
 impl<'mods> OsuRatingCalculator<'mods> {
-    pub const fn new(
-        mods: &'mods GameMods,
-        total_hits: u32,
-        overall_difficulty: f64,
-    ) -> Self {
+    pub const fn new(mods: &'mods GameMods, total_hits: u32, overall_difficulty: f64) -> Self {
         Self {
             mods,
             total_hits,
@@ -60,7 +51,8 @@ impl OsuRatingCalculator<'_> {
         }
 
         if self.mods.mg() {
-            // * Reduce speed rating because of the speed distance scaling, with maximum reduction being 0.7x
+            // * Reduce speed rating because of the speed distance scaling, with maximum
+            //   reduction being 0.7x
             let magnetised_strength = self.mods.attraction_strength().unwrap_or(0.5);
             speed_rating *= 1.0 - magnetised_strength * 0.3;
         }
@@ -121,8 +113,10 @@ impl OsuRatingCalculator<'_> {
 
         let mut rating_multiplier = 1.0;
 
-        // * Account for shorter maps having a higher ratio of 0 combo/100 combo flashlight radius.
-        rating_multiplier *= 0.7 + 0.1 * f64::min(1.0, f64::from(self.total_hits) / 200.0)
+        // * Account for shorter maps having a higher ratio of 0 combo/100 combo
+        //   flashlight radius.
+        rating_multiplier *= 0.7
+            + 0.1 * f64::min(1.0, f64::from(self.total_hits) / 200.0)
             + if self.total_hits > 200 {
                 0.2 * f64::min(1.0, f64::from(self.total_hits - 200) / 200.0)
             } else {

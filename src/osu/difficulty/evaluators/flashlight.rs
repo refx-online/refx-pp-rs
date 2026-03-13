@@ -2,10 +2,7 @@ use std::cmp;
 
 use crate::{
     any::difficulty::object::IDifficultyObject,
-    osu::{
-        difficulty::object::OsuDifficultyObject,
-        object::OsuObjectKind,
-    },
+    osu::{difficulty::object::OsuDifficultyObject, object::OsuObjectKind},
 };
 
 pub struct FlashlightEvaluator {
@@ -15,13 +12,11 @@ pub struct FlashlightEvaluator {
 }
 
 impl FlashlightEvaluator {
-    const MAX_OPACITY_BONUS: f64 = 0.4;
     const HIDDEN_BONUS: f64 = 0.2;
-
+    const MAX_OPACITY_BONUS: f64 = 0.4;
+    const MIN_ANGLE_MULTIPLIER: f64 = 0.2;
     const MIN_VELOCITY: f64 = 0.5;
     const SLIDER_MULTIPLIER: f64 = 1.3;
-
-    const MIN_ANGLE_MULTIPLIER: f64 = 0.2;
 
     pub const fn new(scaling_factor: f64, time_preempt: f64, time_fade_in: f64) -> Self {
         Self {
@@ -68,12 +63,14 @@ impl FlashlightEvaluator {
                     (osu_hit_obj.stacked_pos() - curr_hit_obj.stacked_end_pos()).length(),
                 );
 
-                // * We want to nerf objects that can be easily seen within the Flashlight circle radius.
+                // * We want to nerf objects that can be easily seen within the Flashlight
+                //   circle radius.
                 if i == 0 {
                     small_dist_nerf = (jump_dist / 75.0).min(1.0);
                 }
 
-                // * We also want to nerf stacks so that only the first object of the stack is accounted for.
+                // * We also want to nerf stacks so that only the first object of the stack is
+                //   accounted for.
                 let stack_nerf = ((curr_obj.lazy_jump_dist / self.scaling_factor) / 25.0).min(1.0);
 
                 // * Bonus based on how visible the object is.
@@ -115,7 +112,8 @@ impl FlashlightEvaluator {
         let mut slider_bonus = 0.0;
 
         if let OsuObjectKind::Slider(slider) = &osu_curr.base.kind {
-            // * Invert the scaling factor to determine the true travel distance independent of circle size.
+            // * Invert the scaling factor to determine the true travel distance independent
+            //   of circle size.
             let pixel_travel_dist = osu_curr.lazy_travel_dist / self.scaling_factor;
 
             // * Reward sliders based on velocity.

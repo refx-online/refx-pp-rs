@@ -147,6 +147,7 @@ impl OsuPerformanceAttributes {
     pub const fn max_combo(&self) -> u32 {
         self.difficulty.max_combo
     }
+
     /// Return the amount of hitobjects.
     pub const fn n_objects(&self) -> u32 {
         self.difficulty.n_objects()

@@ -1,19 +1,17 @@
+use self::{aim::Aim, flashlight::Flashlight, reading::Reading, speed::Speed};
+use super::{
+    object::OsuDifficultyObject, scaling_factor::ScalingFactor, HD_FADE_IN_DURATION_MULTIPLIER,
+};
 use crate::{
     any::difficulty::skills::{HarmonicSkill, StrainSkill},
     model::{beatmap::BeatmapAttributes, mods::GameMods},
     osu::object::OsuObject,
 };
 
-use self::{aim::Aim, flashlight::Flashlight, speed::Speed, reading::Reading};
-
-use super::{
-    object::OsuDifficultyObject, scaling_factor::ScalingFactor, HD_FADE_IN_DURATION_MULTIPLIER,
-};
-
 pub mod aim;
 pub mod flashlight;
-pub mod speed;
 pub mod reading;
+pub mod speed;
 pub mod strain;
 
 pub struct OsuSkills {

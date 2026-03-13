@@ -1,5 +1,6 @@
 use std::slice::Iter;
 
+use super::{color::color_data::ColorData, rhythm::rhythm_data::RhythmData};
 use crate::{
     any::difficulty::object::{HasStartTime, IDifficultyObject, IDifficultyObjects},
     model::control_point::{EffectPoint, TimingPoint},
@@ -7,8 +8,6 @@ use crate::{
     util::{interval_grouping::HasInterval, sync::RefCount},
     Beatmap,
 };
-
-use super::{color::color_data::ColorData, rhythm::rhythm_data::RhythmData};
 
 #[derive(Debug)]
 pub struct TaikoDifficultyObject {

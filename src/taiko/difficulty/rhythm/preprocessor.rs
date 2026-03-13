@@ -1,11 +1,10 @@
-use crate::{
-    taiko::difficulty::object::{TaikoDifficultyObject, TaikoDifficultyObjects},
-    util::{interval_grouping::group_by_interval, sync::RefCount},
-};
-
 use super::data::{
     same_patterns_grouped_hit_objects::SamePatternsGroupedHitObjects,
     same_rhythm_hit_object_grouping::SameRhythmHitObjectGrouping,
+};
+use crate::{
+    taiko::difficulty::object::{TaikoDifficultyObject, TaikoDifficultyObjects},
+    util::{interval_grouping::group_by_interval, sync::RefCount},
 };
 
 pub struct RhythmDifficultyPreprocessor;

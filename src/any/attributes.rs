@@ -1,11 +1,10 @@
+use super::performance::{into::IntoPerformance, Performance};
 use crate::{
     catch::{CatchDifficultyAttributes, CatchPerformanceAttributes},
     mania::{ManiaDifficultyAttributes, ManiaPerformanceAttributes},
     osu::{OsuDifficultyAttributes, OsuPerformanceAttributes},
     taiko::{TaikoDifficultyAttributes, TaikoPerformanceAttributes},
 };
-
-use super::performance::{into::IntoPerformance, Performance};
 
 /// The result of a difficulty calculation based on the mode.
 #[derive(Clone, Debug, PartialEq)]

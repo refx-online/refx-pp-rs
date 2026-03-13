@@ -7,7 +7,8 @@ use crate::{
 pub struct SpeedEvaluator;
 
 impl SpeedEvaluator {
-    const MIN_SPEED_BONUS: f64 = 200.0; // 200 BPM 1/4th
+    // 200 BPM 1/4th
+    const MIN_SPEED_BONUS: f64 = 200.0;
     const SPEED_BALANCING_FACTOR: f64 = 40.0;
 
     pub fn evaluate_diff_of<'a>(
@@ -30,7 +31,8 @@ impl SpeedEvaluator {
         let doubletapness = 1.0 - osu_curr_obj.get_doubletapness(osu_next_obj, hit_window);
 
         // * Cap deltatime to the OD 300 hitwindow.
-        // * 0.93 is derived from making sure 260bpm OD8 streams aren't nerfed harshly, whilst 0.92 limits the effect of the cap.
+        // * 0.93 is derived from making sure 260bpm OD8 streams aren't nerfed harshly,
+        //   whilst 0.92 limits the effect of the cap.
         strain_time /= ((strain_time / hit_window) / 0.93).clamp(0.92, 1.0);
 
         // * speedBonus will be 0.0 for BPM < 200

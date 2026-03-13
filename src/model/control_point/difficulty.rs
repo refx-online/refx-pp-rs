@@ -10,9 +10,9 @@ pub struct DifficultyPoint {
 }
 
 impl DifficultyPoint {
-    pub const DEFAULT_SLIDER_VELOCITY: f64 = 1.0;
     pub const DEFAULT_BPM_MULTIPLIER: f64 = 1.0;
     pub const DEFAULT_GENERATE_TICKS: bool = true;
+    pub const DEFAULT_SLIDER_VELOCITY: f64 = 1.0;
 
     pub fn new(time: f64, beat_len: f64, speed_multiplier: f64) -> Self {
         Self {

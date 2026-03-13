@@ -1,6 +1,5 @@
 use crate::{
-    any::difficulty::object::IDifficultyObject,
-    osu::difficulty::object::OsuDifficultyObject,
+    any::difficulty::object::IDifficultyObject, osu::difficulty::object::OsuDifficultyObject,
     util::difficulty::smootherstep,
 };
 
@@ -25,15 +24,15 @@ impl AgilityEvaluator {
         const RADIUS: i32 = OsuDifficultyObject::NORMALIZED_RADIUS;
 
         let distance = travel_distance + curr.lazy_jump_dist;
-        
+
         let distance_scaled = distance.min(Self::DISTANCE_CAP) / Self::DISTANCE_CAP;
         let mut strain = distance_scaled * 1000.0 / curr.adjusted_delta_time;
-        
+
         strain *= Self::high_bpm_bonus(curr.adjusted_delta_time);
-        
+
         strain * smootherstep(distance, 0.0, f64::from(RADIUS))
     }
-    
+
     fn high_bpm_bonus(ms: f64) -> f64 {
         1.0 / (1.0 - 0.3_f64.powf((ms / 1000.0).powf(0.9)))
     }

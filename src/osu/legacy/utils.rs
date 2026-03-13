@@ -1,13 +1,9 @@
-use rust_decimal::Decimal;
-use rust_decimal::prelude::*;
+use rust_decimal::{prelude::*, Decimal};
 use rust_decimal_macros::dec;
 
-use crate::osu::object::OsuObject;
 use crate::{
+    osu::object::{NestedSliderObjectKind, OsuObject, OsuObjectKind},
     Beatmap,
-    osu::{
-        object::{OsuObjectKind, NestedSliderObjectKind},
-    },
 };
 
 const BIG_TICK_SCORE: f64 = 30.0;
@@ -18,12 +14,9 @@ const BONUS_SPIN_SCORE: i64 = 1000;
 pub const MAXIMUM_ROTATIONS_PER_SECOND: f64 = 477.0 / 60.0;
 pub const MINIMUM_ROTATIONS_PER_SECOND: f64 = 3.0;
 
-pub fn calculate_nested_score_per_object(
-    beatmap: &Beatmap,
-    osu_objects: &[OsuObject],
-) -> f64 {
+pub fn calculate_nested_score_per_object(beatmap: &Beatmap, osu_objects: &[OsuObject]) -> f64 {
     let object_count = beatmap.hit_objects.len();
-    
+
     if object_count == 0 {
         return 0.0;
     }
@@ -37,13 +30,14 @@ pub fn calculate_nested_score_per_object(
             OsuObjectKind::Slider(slider) => {
                 // * 1 for head, 1 for tail
                 amount_of_big_ticks += 2;
-                
+
                 // * Add slider repeats
                 let repeat_count = slider.repeat_count();
                 amount_of_big_ticks += repeat_count as i32;
-                
+
                 // * Count only the ticks (not repeats or tail)
-                let tick_count = slider.nested_objects
+                let tick_count = slider
+                    .nested_objects
                     .iter()
                     .filter(|nested| matches!(nested.kind, NestedSliderObjectKind::Tick))
                     .count();
@@ -56,7 +50,7 @@ pub fn calculate_nested_score_per_object(
         }
     }
 
-    let slider_score = f64::from(amount_of_big_ticks) * BIG_TICK_SCORE 
+    let slider_score = f64::from(amount_of_big_ticks) * BIG_TICK_SCORE
         + f64::from(amount_of_small_ticks) * SMALL_TICK_SCORE;
 
     (slider_score + spinner_score) / object_count as f64
@@ -67,11 +61,14 @@ fn calculate_spinner_score(duration_ms: f64) -> f64 {
 
     // * The total amount of half spins possible for the entire spinner.
     let total_half_spins_possible = (seconds_duration * MAXIMUM_ROTATIONS_PER_SECOND * 2.0) as i32;
-    
-    // * The amount of half spins that are required to successfully complete the spinner (i.e. get a 300).
-    let half_spins_required_for_completion = (seconds_duration * MINIMUM_ROTATIONS_PER_SECOND) as i32;
-    
-    // * To be able to receive bonus points, the spinner must be rotated another 1.5 times.
+
+    // * The amount of half spins that are required to successfully complete the
+    //   spinner (i.e. get a 300).
+    let half_spins_required_for_completion =
+        (seconds_duration * MINIMUM_ROTATIONS_PER_SECOND) as i32;
+
+    // * To be able to receive bonus points, the spinner must be rotated another 1.5
+    //   times.
     let half_spins_required_before_bonus = half_spins_required_for_completion + 3;
 
     let mut score: i64 = 0;
@@ -83,7 +80,8 @@ fn calculate_spinner_score(duration_ms: f64) -> f64 {
 
     let mut bonus_spins = (total_half_spins_possible - half_spins_required_before_bonus) / 2;
 
-    // * Reduce amount of bonus spins because we want to represent the more average case, rather than the best one.
+    // * Reduce amount of bonus spins because we want to represent the more average
+    //   case, rather than the best one.
     bonus_spins = (bonus_spins - full_spins / 2).max(0);
 
     score += BONUS_SPIN_SCORE * i64::from(bonus_spins);
@@ -93,7 +91,7 @@ fn calculate_spinner_score(duration_ms: f64) -> f64 {
 
 pub fn calculate_difficulty_peppy_stars(beatmap: &Beatmap) -> i32 {
     let object_count = beatmap.hit_objects.len();
-    
+
     if object_count == 0 {
         return 0;
     }
@@ -101,9 +99,9 @@ pub fn calculate_difficulty_peppy_stars(beatmap: &Beatmap) -> i32 {
     let drain_length = if object_count > 0 {
         let last_obj_time = beatmap.hit_objects.last().map_or(0.0, |h| h.start_time);
         let first_obj_time = beatmap.hit_objects.first().map_or(0.0, |h| h.start_time);
-        
+
         let break_length = beatmap.total_break_time();
-        
+
         ((last_obj_time - first_obj_time - break_length) / 1000.0) as i32
     } else {
         0
@@ -129,7 +127,7 @@ fn calculate_difficulty_peppy_stars_from_params(
      * WARNING: DO NOT TOUCH IF YOU DO NOT KNOW WHAT YOU ARE DOING
      * See: https://github.com/ppy/osu/blob/0f54608ceee7ae1a284dfcb89909d4b55b3dacd1/osu.Game/Rulesets/Objects/Legacy/LegacyRulesetExtensions.cs#L66-L75
      */
-    
+
     // TODO: Use https://docs.rs/rug/latest/rug/, for exact precision?
     //       but it's unecessarily heavy for this.
     // NOTE: Where MANTISSA = 64
@@ -159,25 +157,23 @@ fn calculate_difficulty_peppy_stars_from_params(
     } else {
         dec!(16)
     };
-    
+
     // Mimic (decimal)(double)x casting for precision
     // See: https://github.com/ppy/osu/blob/0f54608ceee7ae1a284dfcb89909d4b55b3dacd1/osu.Game/Rulesets/Objects/Legacy/LegacyRulesetExtensions.cs#L89-L91
     let drain_rate = Decimal::from_f64(f64::from(hp)).unwrap();
     let overall_difficulty = Decimal::from_f64(f64::from(od)).unwrap();
     let circle_size = Decimal::from_f64(f64::from(cs)).unwrap();
-    
-    let result = (drain_rate + overall_difficulty + circle_size + object_to_drain_ratio)
-        / dec!(38)
+
+    let result = (drain_rate + overall_difficulty + circle_size + object_to_drain_ratio) / dec!(38)
         * dec!(5);
-    
+
     result.round().to_i32().unwrap()
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::Beatmap;
-
     use super::*;
+    use crate::Beatmap;
 
     #[test]
     fn peppy_stars() {

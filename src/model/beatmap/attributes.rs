@@ -1,10 +1,9 @@
 use rosu_map::section::general::GameMode;
 
-use crate::{
-    Difficulty, any::difficulty::ModsDependent, model::mods::GameMods, util::float_ext::FloatExt,
-};
-
 use super::Beatmap;
+use crate::{
+    any::difficulty::ModsDependent, model::mods::GameMods, util::float_ext::FloatExt, Difficulty,
+};
 
 /// Summary struct for a [`Beatmap`]'s attributes.
 #[derive(Clone, Debug, PartialEq)]
@@ -28,13 +27,16 @@ pub struct BeatmapAttributes {
 pub struct HitWindows {
     /// Hit window for approach rate i.e. `TimePreempt` in milliseconds.
     pub ar: f64,
-    /// Great hit window for overall difficulty i.e. time to hit a 300 ("Great") in milliseconds.
+    /// Great hit window for overall difficulty i.e. time to hit a 300 ("Great")
+    /// in milliseconds.
     pub od_great: f64,
-    /// Ok hit window for overall difficulty i.e. time to hit a 100 ("Ok") in milliseconds.
+    /// Ok hit window for overall difficulty i.e. time to hit a 100 ("Ok") in
+    /// milliseconds.
     ///
     /// `None` for osu!mania.
     pub od_ok: Option<f64>,
-    /// Meh hit window for overall difficulty i.e. time to hit a 50 ("Meh") in milliseconds.
+    /// Meh hit window for overall difficulty i.e. time to hit a 50 ("Meh") in
+    /// milliseconds.
     ///
     /// Only `Some` for osu!standard.
     pub od_meh: Option<f64>,
@@ -118,10 +120,7 @@ impl GameModeHitWindows {
     fn inverse_difficulty_range(&self, difficulty_value: f64) -> f64 {
         let Self { min, avg: mid, max } = *self;
 
-        if FloatExt::eq(
-            f64::signum(difficulty_value - mid),
-            f64::signum(max - mid),
-        ) {
+        if FloatExt::eq(f64::signum(difficulty_value - mid), f64::signum(max - mid)) {
             (difficulty_value - mid) / (max - mid) * 5.0 + 5.0
         } else {
             (difficulty_value - mid) / (mid - min) * 5.0 + 5.0

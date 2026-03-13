@@ -1,27 +1,27 @@
 use std::f64::consts::PI;
 
+use super::{n_large_tick_miss, n_slider_ends_dropped, total_imperfect_hits};
 use crate::{
-    GameMods,
     osu::{
-        OsuDifficultyAttributes, OsuPerformanceAttributes, OsuScoreState, difficulty::{
-            skills::{
-                flashlight::Flashlight, reading::Reading, speed::Speed, strain::OsuHarmonicSkill
-            }
-        }
-    }, util::{
+        difficulty::skills::{
+            flashlight::Flashlight, reading::Reading, speed::Speed, strain::OsuHarmonicSkill,
+        },
+        OsuDifficultyAttributes, OsuPerformanceAttributes, OsuScoreState,
+    },
+    util::{
         difficulty::{norm, reverse_lerp},
         float_ext::FloatExt,
         special_functions::{erf, erf_inv},
-    }
+    },
+    GameMods,
 };
 
-use super::{n_large_tick_miss, n_slider_ends_dropped, total_imperfect_hits};
-
-// * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
+// * This is being adjusted to keep the final pp value scaled around what it
+//   used to be when changing things.
 pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.12;
 pub const PERFORMANCE_NORM_EXPONENT: f64 = 1.1;
 
-struct RelaxStreamsNerf{
+struct RelaxStreamsNerf {
     aim_multiplier: f64,
     accuracy_depression: f64,
 }
@@ -108,18 +108,16 @@ impl OsuPerformanceCalculator<'_> {
         let flashlight_value = self.compute_flashlight_value();
         let cognition_value = sum_cognition_difficulty(reading_value, flashlight_value);
 
-        let adjusted_speed_exponent_value = 
+        let adjusted_speed_exponent_value =
             self.calculate_adjusted_speed_exponent(accuracy_depression_value);
 
         let pp = if self.mods.rx() {
             let exp = PERFORMANCE_NORM_EXPONENT;
 
-            (
-                aim_value.powf(exp)
+            (aim_value.powf(exp)
                 + speed_value.powf(adjusted_speed_exponent_value)
                 + acc_value.powf(exp)
-                + cognition_value.powf(exp)
-            )
+                + cognition_value.powf(exp))
             .powf(1.0 / exp)
                 * multiplier
         } else {
@@ -155,7 +153,8 @@ impl OsuPerformanceCalculator<'_> {
 
         if self.attrs.n_sliders > 0 && self.attrs.aim_difficult_slider_count > 0.0 {
             let estimate_improperly_followed_difficult_sliders = if self.using_classic_slider_acc {
-                // * When the score is considered classic (regardless if it was made on old client or not)
+                // * When the score is considered classic (regardless if it was made on old
+                //   client or not)
                 // * we consider all missing combo to be dropped difficult sliders
                 let maximum_possible_dropped_sliders = total_imperfect_hits(&self.state);
 
@@ -168,9 +167,12 @@ impl OsuPerformanceCalculator<'_> {
                     self.attrs.aim_difficult_slider_count,
                 )
             } else {
-                // * We add tick misses here since they too mean that the player didn't follow the slider properly
-                // * We however aren't adding misses here because missing slider heads has a harsh penalty
-                // * by itself and doesn't mean that the rest of the slider wasn't followed properly
+                // * We add tick misses here since they too mean that the player didn't follow
+                //   the slider properly
+                // * We however aren't adding misses here because missing slider heads has a
+                //   harsh penalty
+                // * by itself and doesn't mean that the rest of the slider wasn't followed
+                //   properly
                 f64::clamp(
                     f64::from(
                         n_slider_ends_dropped(&self.attrs, &self.state)
@@ -202,13 +204,20 @@ impl OsuPerformanceCalculator<'_> {
         aim_value *= len_bonus;
 
         if self.effective_miss_count > 0.0 {
-            let relevant_miss_count = (self.effective_miss_count + self.aim_estimated_slider_breaks)
-                .min(total_imperfect_hits(&self.state) + f64::from(n_large_tick_miss(&self.attrs, &self.state)));
+            let relevant_miss_count =
+                (self.effective_miss_count + self.aim_estimated_slider_breaks).min(
+                    total_imperfect_hits(&self.state)
+                        + f64::from(n_large_tick_miss(&self.attrs, &self.state)),
+                );
 
-            aim_value *= Self::calculate_miss_penalty(relevant_miss_count, self.attrs.aim_difficult_strain_count);
+            aim_value *= Self::calculate_miss_penalty(
+                relevant_miss_count,
+                self.attrs.aim_difficult_strain_count,
+            );
         }
 
-        // * TC bonuses are excluded when blinds is present as the increased visual difficulty is unimportant when notes cannot be seen.
+        // * TC bonuses are excluded when blinds is present as the increased visual
+        //   difficulty is unimportant when notes cannot be seen.
         if self.mods.bl() {
             aim_value *= 1.3
                 + (total_hits
@@ -232,13 +241,20 @@ impl OsuPerformanceCalculator<'_> {
         let mut speed_value = Speed::difficulty_to_performance(self.attrs.speed);
 
         if self.effective_miss_count > 0.0 {
-            let relevant_miss_count = (self.effective_miss_count + self.speed_estimated_slider_breaks)
-                .min(total_imperfect_hits(&self.state) + f64::from(n_large_tick_miss(&self.attrs, &self.state)));
+            let relevant_miss_count =
+                (self.effective_miss_count + self.speed_estimated_slider_breaks).min(
+                    total_imperfect_hits(&self.state)
+                        + f64::from(n_large_tick_miss(&self.attrs, &self.state)),
+                );
 
-            speed_value *= Self::calculate_miss_penalty(relevant_miss_count, self.attrs.speed_difficult_strain_count);
+            speed_value *= Self::calculate_miss_penalty(
+                relevant_miss_count,
+                self.attrs.speed_difficult_strain_count,
+            );
         }
 
-        // * TC bonuses are excluded when blinds is present as the increased visual difficulty is unimportant when notes cannot be seen.
+        // * TC bonuses are excluded when blinds is present as the increased visual
+        //   difficulty is unimportant when notes cannot be seen.
         if self.mods.bl() {
             // * Increasing the speed value by object count for Blinds isn't
             // * ideal, so the minimum buff is given.
@@ -250,11 +266,14 @@ impl OsuPerformanceCalculator<'_> {
         let speed_high_deviation_mult = self.calculate_speed_high_deviation_nerf(speed_deviation);
         speed_value *= speed_high_deviation_mult;
 
-        // * An effective hit window is created based on the speed SR. The higher the speed difficulty, the shorter the hit window.
-        // * For example, a speed SR of 4.0 leads to an effective hit window of 20ms, which is OD 10.
+        // * An effective hit window is created based on the speed SR. The higher the
+        //   speed difficulty, the shorter the hit window.
+        // * For example, a speed SR of 4.0 leads to an effective hit window of 20ms,
+        //   which is OD 10.
         let effective_hit_window = 20.0 * f64::powf(4.0 / self.attrs.speed, 0.35);
 
-        // * Find the proportion of 300s on speed notes assuming the hit window was the effective hit window.
+        // * Find the proportion of 300s on speed notes assuming the hit window was the
+        //   effective hit window.
         let effective_accuracy = erf(effective_hit_window / speed_deviation);
 
         // * Scale speed value by normalized accuracy.
@@ -287,17 +306,20 @@ impl OsuPerformanceCalculator<'_> {
             0.0
         };
 
-        // * It is possible to reach a negative accuracy with this formula. Cap it at zero - zero points.
+        // * It is possible to reach a negative accuracy with this formula. Cap it at
+        //   zero - zero points.
         if better_acc_percentage < 0.0 {
             better_acc_percentage = 0.0;
         }
 
         // * Lots of arbitrary values from testing.
-        // * Considering to use derivation from perfect accuracy in a probabilistic manner - assume normal distribution.
+        // * Considering to use derivation from perfect accuracy in a probabilistic
+        //   manner - assume normal distribution.
         let mut acc_value =
             1.52163_f64.powf(self.attrs.od()) * better_acc_percentage.powf(24.0) * 2.83;
 
-        // * Bonus for many hitcircles - it's harder to keep good accuracy up for longer.
+        // * Bonus for many hitcircles - it's harder to keep good accuracy up for
+        //   longer.
         let amount_hit_objects_f64 = f64::from(amount_hit_objects_with_acc);
         acc_value *= if amount_hit_objects_with_acc < 1000 {
             (amount_hit_objects_f64 / 1000.0).powf(0.3)
@@ -330,7 +352,8 @@ impl OsuPerformanceCalculator<'_> {
 
         let total_hits = self.total_hits();
 
-        // * Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
+        // * Penalize misses by assessing # of misses relative to the total # of
+        //   objects. Default a 3% reduction for any # of misses.
         if self.effective_miss_count > 0.0 {
             flashlight_value *= 0.97
                 * (1.0 - (self.effective_miss_count / total_hits).powf(0.775))
@@ -351,7 +374,7 @@ impl OsuPerformanceCalculator<'_> {
         if self.effective_miss_count > 0.0 {
             reading_value *= Self::calculate_miss_penalty(
                 self.effective_miss_count + self.aim_estimated_slider_breaks,
-                self.attrs.reading_difficult_note_count
+                self.attrs.reading_difficult_note_count,
             );
         }
 
@@ -386,11 +409,7 @@ impl OsuPerformanceCalculator<'_> {
             speed_note_count - relevant_count_miss - relevant_count_meh - relevant_count_ok,
         );
 
-        self.calculate_deviation(
-            relevant_count_great,
-            relevant_count_ok,
-            relevant_count_meh,
-        )
+        self.calculate_deviation(relevant_count_great, relevant_count_ok, relevant_count_meh)
     }
 
     fn calculate_deviation(
@@ -410,7 +429,8 @@ impl OsuPerformanceCalculator<'_> {
         #[allow(clippy::items_after_statements, clippy::unreadable_literal)]
         const Z: f64 = 2.32634787404; // * 99% critical value for the normal distribution (one-tailed).
 
-        // * We can be 99% confident that the population proportion is at least this value.
+        // * We can be 99% confident that the population proportion is at least this
+        //   value.
         let p_lower_bound = f64::min(
             p,
             (n * p + Z * Z / 2.0) / (n + Z * Z)
@@ -428,8 +448,10 @@ impl OsuPerformanceCalculator<'_> {
             // * Compute deviation assuming greats and oks are normally distributed.
             deviation = great_hit_window / (f64::sqrt(2.0) * erf_inv(p_lower_bound));
 
-            // * Subtract the deviation provided by tails that land outside the ok hit window from the deviation computed above.
-            // * This is equivalent to calculating the deviation of a normal distribution truncated at +-okHitWindow.
+            // * Subtract the deviation provided by tails that land outside the ok hit
+            //   window from the deviation computed above.
+            // * This is equivalent to calculating the deviation of a normal distribution
+            //   truncated at +-okHitWindow.
             let ok_hit_window_tail_amount = f64::sqrt(2.0 / PI)
                 * ok_hit_window
                 * f64::exp(-0.5 * f64::powf(ok_hit_window / deviation, 2.0))
@@ -441,7 +463,8 @@ impl OsuPerformanceCalculator<'_> {
             deviation = ok_hit_window / f64::sqrt(3.0);
         }
 
-        // * Compute and add the variance for mehs, assuming that they are uniformly distributed.
+        // * Compute and add the variance for mehs, assuming that they are uniformly
+        //   distributed.
         let meh_variance = (meh_hit_window * meh_hit_window
             + ok_hit_window * meh_hit_window
             + ok_hit_window * ok_hit_window)
@@ -459,8 +482,11 @@ impl OsuPerformanceCalculator<'_> {
     fn calculate_speed_high_deviation_nerf(&self, speed_deviation: f64) -> f64 {
         let speed_value = Speed::difficulty_to_performance(self.attrs.speed);
 
-        // * Decides a point where the PP value achieved compared to the speed deviation is assumed to be tapped improperly. Any PP above this point is considered "excess" speed difficulty.
-        // * This is used to cause PP above the cutoff to scale logarithmically towards the original speed value thus nerfing the value.
+        // * Decides a point where the PP value achieved compared to the speed deviation
+        //   is assumed to be tapped improperly. Any PP above this point is considered
+        //   "excess" speed difficulty.
+        // * This is used to cause PP above the cutoff to scale logarithmically towards
+        //   the original speed value thus nerfing the value.
         let excess_speed_difficulty_cutoff = 100.0 + 220.0 * f64::powf(22.0 / speed_deviation, 6.5);
 
         if speed_value <= excess_speed_difficulty_cutoff {
@@ -474,16 +500,18 @@ impl OsuPerformanceCalculator<'_> {
             * (f64::ln((speed_value - excess_speed_difficulty_cutoff) / SCALE + 1.0)
                 + excess_speed_difficulty_cutoff / SCALE);
 
-        // * 220 UR and less are considered tapped correctly to ensure that normal scores will be punished as little as possible
+        // * 220 UR and less are considered tapped correctly to ensure that normal
+        //   scores will be punished as little as possible
         let lerp = 1.0 - reverse_lerp(speed_deviation, 22.0, 27.0);
         adjusted_speed_value = f64::lerp(adjusted_speed_value, speed_value, lerp);
 
         adjusted_speed_value / speed_value
     }
 
-    /// Applies a nerf to scores with Relax when stream difficulty exceeds aim difficulty.
-    /// lower ratio => heavier nerf on both speed and accuracy performance values.
-    /// NOTE: logic copied from akatsuki's, but more harsher.
+    /// Applies a nerf to scores with Relax when stream difficulty exceeds aim
+    /// difficulty. lower ratio => heavier nerf on both speed and accuracy
+    /// performance values. NOTE: logic copied from akatsuki's, but more
+    /// harsher.
     fn calculate_rx_streams_nerf(&self) -> Option<RelaxStreamsNerf> {
         if !self.mods.rx() {
             return None;
@@ -500,27 +528,22 @@ impl OsuPerformanceCalculator<'_> {
         };
 
         // NOTE: density threshold scales inversely with streams_nerf.
-        let density_threshold = 
-            0.50 - ((1.05 - streams_nerf).max(0.0) / 1.05) * 0.45;
+        let density_threshold = 0.50 - ((1.05 - streams_nerf).max(0.0) / 1.05) * 0.45;
 
         let mut aim_multiplier = 1.0;
         let mut acc_depression = 1.0;
-        
+
         if streams_nerf < 1.05 && speed_density > density_threshold {
             let acc_factor = (1.0 - self.acc).abs();
-            
-            let density_factor = 
-                (speed_density - density_threshold) 
-                / (1.0 - density_threshold);
+
+            let density_factor = (speed_density - density_threshold) / (1.0 - density_threshold);
 
             let density_factor = density_factor.clamp(0.0, 1.0);
 
-            acc_depression = f64::lerp(
-                0.82, (0.84 + acc_factor * 0.04).max(0.55), density_factor
-            );
+            acc_depression = f64::lerp(0.82, (0.84 + acc_factor * 0.04).max(0.55), density_factor);
 
             aim_multiplier *= acc_depression;
-            
+
             // Penalize low accuracy even more :skull:
             if self.acc < 0.95 {
                 let acc_penalty = 1.0 - (0.95 - self.acc) * 0.3;
@@ -529,12 +552,12 @@ impl OsuPerformanceCalculator<'_> {
         }
 
         Some(RelaxStreamsNerf {
-            aim_multiplier, 
-            accuracy_depression: acc_depression
+            aim_multiplier,
+            accuracy_depression: acc_depression,
         })
     }
 
-    /// Actually unecessary to have this as a separate function 
+    /// Actually unecessary to have this as a separate function
     /// but for consistency with other parts of the codebase.
     fn calculate_adjusted_speed_exponent(&self, accuracy_depression: f64) -> f64 {
         if self.mods.rx() {
@@ -568,7 +591,8 @@ impl OsuPerformanceCalculator<'_> {
     }
 
     // * Miss penalty assumes that a player will miss on the hardest parts of a map,
-    // * so we use the amount of relatively difficult sections to adjust miss penalty
+    // * so we use the amount of relatively difficult sections to adjust miss
+    //   penalty
     // * to make it more punishing on maps with lower amount of hard sections.
     fn calculate_miss_penalty(miss_count: f64, diff_strain_count: f64) -> f64 {
         0.96 / (miss_count / (4.0 * diff_strain_count.ln().powf(0.94)) + 1.0)
@@ -588,7 +612,10 @@ impl OsuPerformanceCalculator<'_> {
     }
 }
 
-pub fn sum_cognition_difficulty(reading_difficulty_value: f64, flashlight_difficulty_value: f64) -> f64 {
+pub fn sum_cognition_difficulty(
+    reading_difficulty_value: f64,
+    flashlight_difficulty_value: f64,
+) -> f64 {
     if reading_difficulty_value <= 0.0 {
         return flashlight_difficulty_value;
     }
@@ -597,13 +624,15 @@ pub fn sum_cognition_difficulty(reading_difficulty_value: f64, flashlight_diffic
         return reading_difficulty_value;
     }
 
-    // * Nerf flashlight value in cognition sum when reading is greater than flashlight
+    // * Nerf flashlight value in cognition sum when reading is greater than
+    //   flashlight
     norm(
         PERFORMANCE_NORM_EXPONENT,
         [
-            reading_difficulty_value, 
-            flashlight_difficulty_value * (flashlight_difficulty_value / reading_difficulty_value).clamp(0.25, 1.0)
-        ]
+            reading_difficulty_value,
+            flashlight_difficulty_value
+                * (flashlight_difficulty_value / reading_difficulty_value).clamp(0.25, 1.0),
+        ],
     )
 }
 

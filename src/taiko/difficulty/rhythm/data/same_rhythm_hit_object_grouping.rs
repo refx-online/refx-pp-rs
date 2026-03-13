@@ -21,7 +21,8 @@ impl SameRhythmHitObjectGrouping {
         previous: Option<Weak<Self>>,
         hit_objects: Vec<Weak<TaikoDifficultyObject>>,
     ) -> Self {
-        // * Calculate the average interval between hitobjects, or null if there are fewer than two
+        // * Calculate the average interval between hitobjects, or null if there are
+        //   fewer than two
         let hit_object_interval = if hit_objects.len() < 2 {
             None
         } else {
@@ -30,7 +31,8 @@ impl SameRhythmHitObjectGrouping {
 
         let upgraded_prev = upgraded_previous(previous.as_ref());
 
-        // * Calculate the ratio between this group's interval and the previous group's interval
+        // * Calculate the ratio between this group's interval and the previous group's
+        //   interval
         let hit_object_interval_ratio = if let Some((prev, curr)) = upgraded_prev
             .as_ref()
             .and_then(|prev| prev.get().hit_object_interval)

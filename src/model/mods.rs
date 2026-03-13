@@ -26,7 +26,7 @@ pub mod rosu_mods {
 ///
 /// ```
 /// use refx_pp::GameMods;
-/// use rosu_mods::{GameModsIntermode, GameModsLegacy, GameMods as GameModsLazer};
+/// use rosu_mods::{GameMods as GameModsLazer, GameModsIntermode, GameModsLegacy};
 ///
 /// let int = GameMods::from(64 + 8);
 /// let legacy = GameMods::from(GameModsLegacy::Hidden | GameModsLegacy::Easy);
@@ -233,7 +233,9 @@ impl GameMods {
     }
 
     pub(crate) fn scroll_speed(&self) -> Option<f64> {
-        let Self::Lazer(mods) = self else { return None };
+        let Self::Lazer(mods) = self else {
+            return None;
+        };
 
         mods.iter()
             .find_map(|m| match m {
@@ -244,39 +246,44 @@ impl GameMods {
     }
 
     pub(crate) fn random_seed(&self) -> Option<i32> {
-        let Self::Lazer(mods) = self else { return None };
+        let Self::Lazer(mods) = self else {
+            return None;
+        };
 
         mods.iter()
-            .find_map(|m| match m {
-                // `RandomOsu` is not implemented because it relies on
-                // hitobjects' combo index which is never stored.
-                GameMod::RandomTaiko(m) => m.seed,
-                GameMod::RandomMania(m) => m.seed,
-                _ => None,
+            .find_map(|m| {
+                match m {
+                    // `RandomOsu` is not implemented because it relies on
+                    // hitobjects' combo index which is never stored.
+                    GameMod::RandomTaiko(m) => m.seed,
+                    GameMod::RandomMania(m) => m.seed,
+                    _ => None,
+                }
             })
             .map(|seed| seed as i32)
     }
 
     pub(crate) fn attraction_strength(&self) -> Option<f64> {
-        let Self::Lazer(mods) = self else { return None };
+        let Self::Lazer(mods) = self else {
+            return None;
+        };
 
-        mods.iter()
-            .find_map(|m| match m {
-                GameMod::MagnetisedOsu(m) => m.attraction_strength,
-                _ => None,
-            })
+        mods.iter().find_map(|m| match m {
+            GameMod::MagnetisedOsu(m) => m.attraction_strength,
+            _ => None,
+        })
     }
 
     pub(crate) fn start_scale(&self) -> Option<f64> {
-        let Self::Lazer(mods) = self else { return None };
+        let Self::Lazer(mods) = self else {
+            return None;
+        };
 
-        mods.iter()
-            .find_map(|m| match m {
-                GameMod::DeflateOsu(m) => m.start_scale,
-                _ => None,
-            })
+        mods.iter().find_map(|m| match m {
+            GameMod::DeflateOsu(m) => m.start_scale,
+            _ => None,
+        })
     }
-
 }
 
 macro_rules! impl_map_attr {

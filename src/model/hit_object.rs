@@ -4,7 +4,6 @@ use rosu_map::section::{
     general::GameMode,
     hit_objects::{BorrowedCurve, Curve, CurveBuffers},
 };
-
 pub use rosu_map::{
     section::hit_objects::{hit_samples::HitSoundType, PathControlPoint, PathType, SplineType},
     util::Pos,

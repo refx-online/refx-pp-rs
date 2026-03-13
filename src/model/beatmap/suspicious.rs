@@ -2,12 +2,11 @@ use std::{cmp, error, fmt, ops::ControlFlow};
 
 use rosu_map::{section::general::GameMode, util::Pos};
 
+use super::Beatmap;
 use crate::{
     model::hit_object::{HitObject, HitObjectKind},
     util::hint::unlikely,
 };
-
-use super::Beatmap;
 
 /// Resulting error type of [`Beatmap::check_suspicion`].
 ///

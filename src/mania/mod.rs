@@ -1,19 +1,18 @@
 use rosu_map::section::general::GameMode;
 
-use crate::{
-    model::{
-        beatmap::Beatmap,
-        mode::{ConvertError, IGameMode},
-    },
-    Difficulty, GameMods,
-};
-
 pub use self::{
     attributes::{ManiaDifficultyAttributes, ManiaPerformanceAttributes},
     difficulty::gradual::ManiaGradualDifficulty,
     performance::{gradual::ManiaGradualPerformance, ManiaPerformance},
     score_state::ManiaScoreState,
     strains::ManiaStrains,
+};
+use crate::{
+    model::{
+        beatmap::Beatmap,
+        mode::{ConvertError, IGameMode},
+    },
+    Difficulty, GameMods,
 };
 
 mod attributes;
@@ -38,10 +37,10 @@ impl Mania {
 
 impl IGameMode for Mania {
     type DifficultyAttributes = ManiaDifficultyAttributes;
-    type Strains = ManiaStrains;
-    type Performance<'map> = ManiaPerformance<'map>;
     type GradualDifficulty = ManiaGradualDifficulty;
     type GradualPerformance = ManiaGradualPerformance;
+    type Performance<'map> = ManiaPerformance<'map>;
+    type Strains = ManiaStrains;
 
     fn difficulty(
         difficulty: &Difficulty,

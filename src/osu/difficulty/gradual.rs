@@ -2,21 +2,19 @@ use std::{cmp, mem};
 
 use rosu_map::section::general::GameMode;
 
+use self::osu_objects::OsuObjects;
+use super::{
+    object::OsuDifficultyObject, skills::OsuSkills, DifficultyValues, OsuDifficultyAttributes,
+    OsuDifficultySetup,
+};
 use crate::{
     any::difficulty::skills::{HarmonicSkill, StrainSkill},
-    model::{mode::ConvertError},
+    model::mode::ConvertError,
     osu::{
         convert::convert_objects,
         object::{OsuObject, OsuObjectKind},
     },
     Beatmap, Difficulty,
-};
-
-use self::osu_objects::OsuObjects;
-
-use super::{
-    object::OsuDifficultyObject, skills::OsuSkills, DifficultyValues, OsuDifficultyAttributes,
-    OsuDifficultySetup,
 };
 
 /// Gradually calculate the difficulty attributes of an osu!standard map.
@@ -32,15 +30,15 @@ use super::{
 /// # Example
 ///
 /// ```
-/// use refx_pp::{Beatmap, Difficulty};
 /// use refx_pp::osu::{Osu, OsuGradualDifficulty};
+/// use refx_pp::{Beatmap, Difficulty};
 ///
 /// let map = Beatmap::from_path("./resources/2785319.osu").unwrap();
 ///
 /// let difficulty = Difficulty::new().mods(64); // DT
 /// let mut iter = OsuGradualDifficulty::new(difficulty, &map).unwrap();
 ///
-///  // the difficulty of the map after the first hit object
+/// // the difficulty of the map after the first hit object
 /// let attrs1 = iter.next();
 /// // ... after the second hit object
 /// let attrs2 = iter.next();
@@ -238,9 +236,8 @@ mod osu_objects {
 
 #[cfg(test)]
 mod tests {
-    use crate::{osu::Osu, Beatmap};
-
     use super::*;
+    use crate::{osu::Osu, Beatmap};
 
     #[test]
     fn empty() {

@@ -5,6 +5,7 @@ use std::{
 
 use rosu_map::section::general::GameMode;
 
+use super::{attributes::DifficultyAttributes, InspectDifficulty, Strains};
 use crate::{
     catch::Catch,
     mania::Mania,
@@ -13,8 +14,6 @@ use crate::{
     taiko::Taiko,
     GradualDifficulty, GradualPerformance,
 };
-
-use super::{attributes::DifficultyAttributes, InspectDifficulty, Strains};
 
 pub mod gradual;
 pub mod inspect;
@@ -28,7 +27,8 @@ use crate::model::mode::IGameMode;
 /// # Example
 ///
 /// ```
-/// use refx_pp::{Beatmap, Difficulty, any::DifficultyAttributes};
+/// use refx_pp::any::DifficultyAttributes;
+/// use refx_pp::{Beatmap, Difficulty};
 ///
 /// let map = Beatmap::from_path("./resources/2118524.osu").unwrap();
 ///
@@ -325,7 +325,8 @@ impl Difficulty {
         GradualDifficulty::new(self, map)
     }
 
-    /// Create a gradual difficulty calculator for a [`Beatmap`] on a specific [`IGameMode`].
+    /// Create a gradual difficulty calculator for a [`Beatmap`] on a specific
+    /// [`IGameMode`].
     pub fn gradual_difficulty_for_mode<M: IGameMode>(
         self,
         map: &Beatmap,
@@ -338,7 +339,8 @@ impl Difficulty {
         GradualPerformance::new(self, map)
     }
 
-    /// Create a gradual performance calculator for a [`Beatmap`] on a specific [`IGameMode`].
+    /// Create a gradual performance calculator for a [`Beatmap`] on a specific
+    /// [`IGameMode`].
     pub fn gradual_performance_for_mode<M: IGameMode>(
         self,
         map: &Beatmap,

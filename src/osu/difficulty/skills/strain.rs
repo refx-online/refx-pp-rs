@@ -94,8 +94,9 @@ pub fn harmonic_difficulty_value(
     for (index, &note) in object_difficulties.iter().enumerate() {
         let i = index as f64;
 
-        // * Use a harmonic sum that considers each note of the map according to a predefined weight.
-        let weight = (1.0 + (harmonic_scale / (1.0 + i))) 
+        // * Use a harmonic sum that considers each note of the map according to a
+        //   predefined weight.
+        let weight = (1.0 + (harmonic_scale / (1.0 + i)))
             / (f64::powf(i, decay_exponent) + 1.0 + (harmonic_scale / (1.0 + i)));
 
         note_weight_sum += weight;

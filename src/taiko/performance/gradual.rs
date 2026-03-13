@@ -1,10 +1,9 @@
+use super::TaikoPerformanceAttributes;
 use crate::{
     model::mode::ConvertError,
     taiko::{difficulty::gradual::TaikoGradualDifficulty, TaikoScoreState},
     Beatmap, Difficulty,
 };
-
-use super::TaikoPerformanceAttributes;
 
 /// Gradually calculate the performance attributes of an osu!taiko map.
 ///
@@ -130,9 +129,8 @@ impl TaikoGradualPerformance {
 
 #[cfg(test)]
 mod tests {
-    use crate::{taiko::TaikoPerformance, Beatmap};
-
     use super::*;
+    use crate::{taiko::TaikoPerformance, Beatmap};
 
     #[test]
     fn next_and_nth() {

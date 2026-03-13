@@ -1,9 +1,8 @@
-use crate::util::sync::RefCount;
-
 use super::data::{
     same_patterns_grouped_hit_objects::SamePatternsGroupedHitObjects,
     same_rhythm_hit_object_grouping::SameRhythmHitObjectGrouping,
 };
+use crate::util::sync::RefCount;
 
 #[derive(Debug)]
 pub struct RhythmData {

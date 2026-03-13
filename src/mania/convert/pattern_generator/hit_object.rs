@@ -2,6 +2,7 @@ use std::cmp;
 
 use rosu_map::section::hit_objects::hit_samples::HitSoundType;
 
+use super::PatternGenerator;
 use crate::{
     mania::{
         convert::{pattern::Pattern, pattern_type::PatternType, PrevValues},
@@ -14,8 +15,6 @@ use crate::{
     },
     util::random::osu::Random,
 };
-
-use super::PatternGenerator;
 
 pub struct HitObjectPatternGenerator<'h> {
     pub sample: HitSoundType,
@@ -151,7 +150,8 @@ impl<'h> HitObjectPatternGenerator<'h> {
             // * Make sure the last column was not the centre column
             && (self.inner.total_columns % 2 == 0 || last_column != self.inner.total_columns as u8 / 2)
         {
-            // * Generate a new pattern by cycling backwards (similar to Reverse but for only one hit object)
+            // * Generate a new pattern by cycling backwards (similar to Reverse but for
+            //   only one hit object)
             let column = random_start + self.inner.total_columns as u8 - last_column - 1;
 
             return Pattern::new_note(self, column);
@@ -406,9 +406,12 @@ impl<'h> HitObjectPatternGenerator<'h> {
             4 => {
                 centre_probability = 0.0;
 
-                // * Stable requires rngValue > x, which is an inverse-probability. Lazer uses true probability (1 - x).
-                // * But multiplying this value by 2 (stable) is not the same operation as dividing it by 2 (lazer),
-                // * so it needs to be converted to from a probability and then back after the multiplication.
+                // * Stable requires rngValue > x, which is an inverse-probability. Lazer uses
+                //   true probability (1 - x).
+                // * But multiplying this value by 2 (stable) is not the same operation as
+                //   dividing it by 2 (lazer),
+                // * so it needs to be converted to from a probability and then back after the
+                //   multiplication.
                 p2 = 1.0 - ((1.0 - p2) * 2.0).max(0.8);
                 p3 = 0.0;
             }
@@ -419,9 +422,12 @@ impl<'h> HitObjectPatternGenerator<'h> {
             6 => {
                 centre_probability = 0.0;
 
-                // * Stable requires rngValue > x, which is an inverse-probability. Lazer uses true probability (1 - x).
-                // * But multiplying this value by 2 (stable) is not the same operation as dividing it by 2 (lazer),
-                // * so it needs to be converted to from a probability and then back after the multiplication.
+                // * Stable requires rngValue > x, which is an inverse-probability. Lazer uses
+                //   true probability (1 - x).
+                // * But multiplying this value by 2 (stable) is not the same operation as
+                //   dividing it by 2 (lazer),
+                // * so it needs to be converted to from a probability and then back after the
+                //   multiplication.
                 p2 = 1.0 - ((1.0 - p2) * 2.0).max(0.05);
                 p3 = 1.0 - ((1.0 - p3) * 2.0).max(0.85);
             }
@@ -429,7 +435,8 @@ impl<'h> HitObjectPatternGenerator<'h> {
         }
 
         // * The stable values were allowed to exceed 1, which indicate <0% probability.
-        // * These values needs to be clamped otherwise GetRandomNoteCount() will throw an exception.
+        // * These values needs to be clamped otherwise GetRandomNoteCount() will throw
+        //   an exception.
         p2 = p2.clamp(0.0, 1.0);
         p3 = p3.clamp(0.0, 1.0);
 
@@ -465,11 +472,13 @@ impl<'h> HitObjectPatternGenerator<'h> {
             return initial_column;
         }
 
-        // * Ensure that we have at least one free column, so that an endless loop is avoided
+        // * Ensure that we have at least one free column, so that an endless loop is
+        //   avoided
         let has_valid_column = (lower..upper).any(is_valid);
         assert!(has_valid_column);
 
-        // * Iterate until a valid column is found. This is a random iteration in the default case.
+        // * Iterate until a valid column is found. This is a random iteration in the
+        //   default case.
         while {
             initial_column = if let Some(fun) = next_column {
                 (fun)(self, initial_column)

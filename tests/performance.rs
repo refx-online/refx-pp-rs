@@ -553,8 +553,14 @@ impl AssertEq for OsuPerformanceAttributes {
         assert_eq_float(*pp_speed, expected.pp_speed);
         assert_eq_float(*effective_miss_count, expected.effective_miss_count);
         assert_eq_option(*speed_deviation, expected.speed_deviation);
-        assert_eq_float(*aim_estimated_slider_breaks, expected.aim_estimated_slider_breaks);
-        assert_eq_float(*speed_estimated_slider_breaks, expected.speed_estimated_slider_breaks);
+        assert_eq_float(
+            *aim_estimated_slider_breaks,
+            expected.aim_estimated_slider_breaks,
+        );
+        assert_eq_float(
+            *speed_estimated_slider_breaks,
+            expected.speed_estimated_slider_breaks,
+        );
     }
 }
 

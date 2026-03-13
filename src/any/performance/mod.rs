@@ -1,13 +1,11 @@
 use rosu_map::section::general::GameMode;
 
+use self::into::IntoPerformance;
+use super::{attributes::PerformanceAttributes, score_state::ScoreState};
 use crate::{
     catch::CatchPerformance, mania::ManiaPerformance, osu::OsuPerformance, taiko::TaikoPerformance,
     Difficulty, GameMods,
 };
-
-use self::into::IntoPerformance;
-
-use super::{attributes::PerformanceAttributes, score_state::ScoreState};
 
 pub mod gradual;
 pub mod into;
@@ -323,9 +321,9 @@ impl<'map> Performance<'map> {
             Self::Mania(m) => Self::Mania(m.lazer(lazer)),
         }
     }
-    
+
     /// Specify the total score of a play for legacy score calculation.
-    /// 
+    ///
     /// Only relevant for osu!standard, stable.
     pub fn legacy_total_score(self, total_score: i64) -> Self {
         if let Self::Osu(osu) = self {
@@ -443,7 +441,8 @@ impl<'map> Performance<'map> {
     }
 }
 
-/// While generating remaining hitresults, decide how they should be distributed.
+/// While generating remaining hitresults, decide how they should be
+/// distributed.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum HitResultPriority {
@@ -473,6 +472,7 @@ impl<'a, T: IntoPerformance<'a>> From<T> for Performance<'a> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::{
         any::DifficultyAttributes,
         catch::{CatchDifficultyAttributes, CatchPerformanceAttributes},
@@ -481,8 +481,6 @@ mod tests {
         taiko::{TaikoDifficultyAttributes, TaikoPerformanceAttributes},
         Beatmap,
     };
-
-    use super::*;
 
     #[test]
     fn create() {

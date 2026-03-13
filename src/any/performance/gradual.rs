@@ -25,7 +25,8 @@ use crate::{
 /// [`OsuGradualPerformance`], [`TaikoGradualPerformance`],
 /// [`CatchGradualPerformance`], or [`ManiaGradualPerformance`].
 ///
-/// If you only want to calculate difficulty attributes use [`GradualDifficulty`] instead.
+/// If you only want to calculate difficulty attributes use
+/// [`GradualDifficulty`] instead.
 ///
 /// # Example
 ///
@@ -105,7 +106,8 @@ impl GradualPerformance {
         Self::new_with_mode(difficulty, map, map.mode).expect("no conversion required")
     }
 
-    /// Create a [`GradualPerformance`] for a [`Beatmap`] on a specific [`GameMode`].
+    /// Create a [`GradualPerformance`] for a [`Beatmap`] on a specific
+    /// [`GameMode`].
     pub fn new_with_mode(
         difficulty: Difficulty,
         map: &Beatmap,

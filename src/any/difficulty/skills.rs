@@ -74,7 +74,11 @@ pub trait HarmonicSkill: Sized {
     fn count_top_weighted_difficulties(&self, difficulty_value: f64) -> f64;
 }
 
-pub fn count_top_weighted_strains(object_strains: &[f64], difficulty_value: f64, decay_weight: f64) -> f64 {
+pub fn count_top_weighted_strains(
+    object_strains: &[f64],
+    difficulty_value: f64,
+    decay_weight: f64,
+) -> f64 {
     if unlikely(object_strains.is_empty()) {
         return 0.0;
     }
@@ -86,7 +90,8 @@ pub fn count_top_weighted_strains(object_strains: &[f64], difficulty_value: f64,
         return object_strains.len() as f64;
     }
 
-    // * Use a weighted sum of all strains. Constants are arbitrary and give nice values
+    // * Use a weighted sum of all strains. Constants are arbitrary and give nice
+    //   values
     object_strains
         .iter()
         .map(|s| 1.1 / (1.0 + f64::exp(-10.0 * (s / consistent_top_strain - 0.88))))
@@ -97,7 +102,8 @@ pub fn difficulty_value(current_strain_peaks: StrainsVec, decay_weight: f64) -> 
     let mut difficulty = 0.0;
     let mut weight = 1.0;
 
-    // * Sections with 0 strain are excluded to avoid worst-case time complexity of the following sort (e.g. /b/2351871).
+    // * Sections with 0 strain are excluded to avoid worst-case time complexity of
+    //   the following sort (e.g. /b/2351871).
     // * These sections will not contribute to the difficulty.
     let mut peaks = current_strain_peaks;
     peaks.retain_non_zero_and_sort();

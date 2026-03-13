@@ -12,7 +12,8 @@ pub trait FloatExt: Sized {
     /// `self != other`
     fn not_eq(self, other: Self) -> bool;
 
-    /// Performs a linear interpolation between two values based on the given weight.
+    /// Performs a linear interpolation between two values based on the given
+    /// weight.
     fn lerp(value1: Self, value2: Self, amount: Self) -> Self;
 }
 

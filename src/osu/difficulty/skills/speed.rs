@@ -1,15 +1,12 @@
+use super::strain::OsuHarmonicSkill;
 use crate::{
-    any::difficulty::{
-        skills::strain_decay,
-    },
+    any::difficulty::skills::strain_decay,
     osu::difficulty::{
         evaluators::{RhythmEvaluator, SpeedEvaluator},
         object::OsuDifficultyObject,
         skills::strain::harmonic_difficulty_value,
     },
 };
-
-use super::strain::OsuHarmonicSkill;
 
 define_skill! {
     pub struct Speed: HarmonicSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
@@ -39,12 +36,10 @@ impl Speed {
         let decay = strain_decay(curr.adjusted_delta_time, Self::STRAIN_DECAY_BASE);
 
         self.current_strain *= decay;
-        self.current_strain += SpeedEvaluator::evaluate_diff_of(
-            curr,
-            objects,
-            self.hit_window,
-        ) * (1.0 - decay) * Self::SKILL_MULTIPLIER;
-        
+        self.current_strain += SpeedEvaluator::evaluate_diff_of(curr, objects, self.hit_window)
+            * (1.0 - decay)
+            * Self::SKILL_MULTIPLIER;
+
         let current_rhythm = RhythmEvaluator::evaluate_diff_of(curr, objects, self.hit_window);
         let total_difficulty = self.current_strain * current_rhythm;
 
@@ -99,10 +94,13 @@ impl Speed {
             return 0.0;
         }
 
-        // * Use a weighted sum of all notes. Constants are arbitrary and give nice values
+        // * Use a weighted sum of all notes. Constants are arbitrary and give nice
+        //   values
         self.slider_strains
             .iter()
-            .map(|&s| crate::util::difficulty::logistic(s / consistent_top_note, 0.88, 10.0, Some(1.1)))
+            .map(|&s| {
+                crate::util::difficulty::logistic(s / consistent_top_note, 0.88, 10.0, Some(1.1))
+            })
             .sum()
     }
 

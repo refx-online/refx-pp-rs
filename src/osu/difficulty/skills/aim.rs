@@ -1,16 +1,19 @@
+use super::strain::OsuStrainSkill;
 use crate::{
     any::difficulty::{
         object::{HasStartTime, IDifficultyObject},
-        skills::{StrainSkill, strain_decay},
+        skills::{strain_decay, StrainSkill},
     },
     osu::difficulty::{
         evaluators::{AgilityEvaluator, FlowAimEvaluator, SnapAimEvaluator},
         object::OsuDifficultyObject,
     },
-    util::{difficulty::{count_top_weighted_sliders, logistic_exp, norm}, float_ext::FloatExt, strains_vec::StrainsVec},
+    util::{
+        difficulty::{count_top_weighted_sliders, logistic_exp, norm},
+        float_ext::FloatExt,
+        strains_vec::StrainsVec,
+    },
 };
-
-use super::strain::OsuStrainSkill;
 
 define_skill! {
     #[derive(Clone)]
@@ -24,11 +27,11 @@ define_skill! {
 }
 
 impl Aim {
-    const SKILL_MULTIPLIER_SNAP: f64 = 71.0;
+    const MEAN_EXPONENT: f64 = 1.2;
     const SKILL_MULTIPLIER_AGILITY: f64 = 2.0;
     const SKILL_MULTIPLIER_FLOW: f64 = 244.0;
+    const SKILL_MULTIPLIER_SNAP: f64 = 71.0;
     const SKILL_MULTIPLIER_TOTAL: f64 = 1.1;
-    const MEAN_EXPONENT: f64 = 1.2;
     const STRAIN_DECAY_BASE: f64 = 0.15;
 
     fn calculate_initial_strain(
@@ -51,16 +54,19 @@ impl Aim {
     ) -> f64 {
         let decay = strain_decay(curr.adjusted_delta_time, Self::STRAIN_DECAY_BASE);
 
-        let mut snap_difficulty = SnapAimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders)
-            * Self::SKILL_MULTIPLIER_SNAP;
-        let agility_difficulty = AgilityEvaluator::evaluate_diff_of(curr, objects)
-            * Self::SKILL_MULTIPLIER_AGILITY;
-        let mut flow_difficulty = FlowAimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders, self.radius)
-            * Self::SKILL_MULTIPLIER_FLOW;
+        let mut snap_difficulty =
+            SnapAimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders)
+                * Self::SKILL_MULTIPLIER_SNAP;
+        let agility_difficulty =
+            AgilityEvaluator::evaluate_diff_of(curr, objects) * Self::SKILL_MULTIPLIER_AGILITY;
+        let mut flow_difficulty =
+            FlowAimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders, self.radius)
+                * Self::SKILL_MULTIPLIER_FLOW;
 
         if self.with_td {
             snap_difficulty = snap_difficulty.powf(0.89);
-            // * we don't adjust agility here since agility represents TD difficulty in a decent enough way
+            // * we don't adjust agility here since agility represents TD difficulty in a
+            //   decent enough way
             flow_difficulty = flow_difficulty.powf(1.1);
         }
 
@@ -89,12 +95,16 @@ impl Aim {
         flow_difficulty: f64,
         skill_multiplier_total: f64,
     ) -> f64 {
-        // * We compare flow to combined snap and agility because snap by itself doesn't have enough difficulty to be above flow on streams
-        // * Agility on the other hand is supposed to measure the rate of cursor velocity changes while snapping
-        // * So snapping every circle on a stream requires an enormous amount of agility at which point it's easier to flow
+        // * We compare flow to combined snap and agility because snap by itself doesn't
+        //   have enough difficulty to be above flow on streams
+        // * Agility on the other hand is supposed to measure the rate of cursor
+        //   velocity changes while snapping
+        // * So snapping every circle on a stream requires an enormous amount of agility
+        //   at which point it's easier to flow
         let combined_snap_difficulty = norm(mean_exponent, [snap_difficulty, agility_difficulty]);
 
-        let p_snap = Self::calculate_snap_flow_probability(flow_difficulty / combined_snap_difficulty);
+        let p_snap =
+            Self::calculate_snap_flow_probability(flow_difficulty / combined_snap_difficulty);
         let p_flow = 1.0 - p_snap;
 
         let total_difficulty = combined_snap_difficulty * p_snap + flow_difficulty * p_flow;

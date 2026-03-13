@@ -2,6 +2,7 @@ use std::cmp;
 
 use rosu_map::section::hit_objects::hit_samples::HitSoundType;
 
+use super::PatternGenerator;
 use crate::{
     mania::{
         convert::{pattern::Pattern, pattern_type::PatternType},
@@ -14,8 +15,6 @@ use crate::{
     },
     util::{get_precision_adjusted_beat_len, random::osu::Random},
 };
-
-use super::PatternGenerator;
 
 pub struct PathObjectPatternGenerator<'h> {
     pub segment_duration: i32,
@@ -100,7 +99,8 @@ impl<'h> PathObjectPatternGenerator<'h> {
 
         // * We need to split the intermediate pattern into two new patterns:
         // * 1. A pattern containing all objects that do not end at our EndTime.
-        // * 2. A pattern containing all objects that end at our EndTime. This will be used for further pattern generation.
+        // * 2. A pattern containing all objects that end at our EndTime. This will be
+        //   used for further pattern generation.
         let mut intermediate_pattern = Pattern::default();
         let mut end_time_pattern = Pattern::default();
 
@@ -390,7 +390,8 @@ impl<'h> PathObjectPatternGenerator<'h> {
 
         let column_repeat = cmp::min(self.span_count, self.inner.total_columns) as usize;
 
-        // * Due to integer rounding, this is not guaranteed to be the same as EndTime (the class-level variable).
+        // * Due to integer rounding, this is not guaranteed to be the same as EndTime
+        //   (the class-level variable).
         let end_time = start_time + self.segment_duration * self.span_count;
 
         let mut next_column = self.inner.get_column(Some(true));
@@ -534,11 +535,13 @@ impl<'h> PathObjectPatternGenerator<'h> {
             return initial_column;
         }
 
-        // * Ensure that we have at least one free column, so that an endless loop is avoided
+        // * Ensure that we have at least one free column, so that an endless loop is
+        //   avoided
         let has_valid_column = (lower..upper).any(is_valid);
         assert!(has_valid_column);
 
-        // * Iterate until a valid column is found. This is a random iteration in the default case.
+        // * Iterate until a valid column is found. This is a random iteration in the
+        //   default case.
         while {
             initial_column = self.inner.get_random_column(Some(lower), Some(upper));
 

@@ -132,7 +132,8 @@ fn should_convert_slider_to_taiko_hits(map: &Beatmap, params: &mut SliderParams<
         slider_velocity,
     } = params;
 
-    // * The true distance, accounting for any repeats. This ends up being the drum roll distance later
+    // * The true distance, accounting for any repeats. This ends up being the drum
+    //   roll distance later
     let spans = slider.span_count() as f64;
     let mut dist = slider.expected_dist.unwrap_or(0.0);
 
@@ -150,18 +151,21 @@ fn should_convert_slider_to_taiko_hits(map: &Beatmap, params: &mut SliderParams<
         * (map.slider_multiplier * f64::from(VELOCITY_MULTIPLIER))
         / map.slider_tick_rate;
 
-    // * The velocity and duration of the taiko hit object - calculated as the velocity of a drum roll.
+    // * The velocity and duration of the taiko hit object - calculated as the
+    //   velocity of a drum roll.
     let taiko_vel = slider_scoring_point_dist * map.slider_tick_rate;
     *duration = (dist / taiko_vel * beat_len) as u32;
 
     let osu_vel = taiko_vel * (f64::from(1000.0_f32) / beat_len);
 
-    // * osu-stable always uses the speed-adjusted beatlength to determine the osu! velocity, but only uses it for conversion if beatmap version < 8
+    // * osu-stable always uses the speed-adjusted beatlength to determine the osu!
+    //   velocity, but only uses it for conversion if beatmap version < 8
     if map.version >= 8 {
         beat_len = timing_beat_len;
     }
 
-    // * If the drum roll is to be split into hit circles, assume the ticks are 1/8 spaced within the duration of one beat
+    // * If the drum roll is to be split into hit circles, assume the ticks are 1/8
+    //   spaced within the duration of one beat
     *tick_spacing = (beat_len / map.slider_tick_rate).min(f64::from(*duration) / spans);
 
     *tick_spacing > 0.0 && dist / osu_vel * 1000.0 < 2.0 * beat_len

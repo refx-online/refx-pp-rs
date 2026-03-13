@@ -1,6 +1,5 @@
-use crate::{model::mods::GameMods, Difficulty};
-
 use super::ModsDependent;
+use crate::{model::mods::GameMods, Difficulty};
 
 /// [`Difficulty`] but all fields are public for inspection.
 #[derive(Clone, Debug, Default, PartialEq)]

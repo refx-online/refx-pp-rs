@@ -547,8 +547,7 @@ where
         // Print full debug representations to capture current computed values
         panic!(
             "Mods: {mods}\nActual: {:#?}\nExpected: {:#?}",
-            actual,
-            expected
+            actual, expected
         );
     }
 }
@@ -625,10 +624,7 @@ impl AssertEq for OsuDifficultyAttributes {
             *speed_top_weighted_slider_factor,
             expected.speed_top_weighted_slider_factor,
         );
-        assert_eq_float(
-            *nested_score_per_object,
-            expected.nested_score_per_object,
-        );
+        assert_eq_float(*nested_score_per_object, expected.nested_score_per_object);
         assert_eq_float(
             *legacy_score_base_multiplier,
             expected.legacy_score_base_multiplier,

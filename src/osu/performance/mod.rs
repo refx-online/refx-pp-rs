@@ -3,22 +3,23 @@ use std::{borrow::Cow, cmp};
 use rosu_map::section::general::GameMode;
 
 use self::calculator::OsuPerformanceCalculator;
-
+use super::{
+    attributes::{OsuDifficultyAttributes, OsuPerformanceAttributes},
+    legacy::calculator::OsuLegacyScoreMissCalculator,
+    score_state::{OsuScoreOrigin, OsuScoreState},
+    Osu,
+};
 use crate::{
     any::{Difficulty, HitResultPriority, IntoModePerformance, IntoPerformance, Performance},
     catch::CatchPerformance,
     mania::ManiaPerformance,
     model::{mode::ConvertError, mods::GameMods},
     taiko::TaikoPerformance,
-    util::{map_or_attrs::MapOrAttrs, difficulty::{logistic, smoothstep}},
+    util::{
+        difficulty::{logistic, smoothstep},
+        map_or_attrs::MapOrAttrs,
+    },
     Beatmap,
-};
-
-use super::{
-    attributes::{OsuDifficultyAttributes, OsuPerformanceAttributes},
-    score_state::{OsuScoreOrigin, OsuScoreState},
-    legacy::calculator::OsuLegacyScoreMissCalculator,
-    Osu,
 };
 
 pub mod calculator;
@@ -47,8 +48,8 @@ impl<'map> OsuPerformance<'map> {
     /// Create a new performance calculator for osu! maps.
     ///
     /// The argument `map_or_attrs` must be either
-    /// - previously calculated attributes ([`OsuDifficultyAttributes`]
-    ///   or [`OsuPerformanceAttributes`])
+    /// - previously calculated attributes ([`OsuDifficultyAttributes`] or
+    ///   [`OsuPerformanceAttributes`])
     /// - a [`Beatmap`] (by reference or value)
     ///
     /// If a map is given, difficulty attributes will need to be calculated
@@ -366,7 +367,8 @@ impl<'map> OsuPerformance<'map> {
         self
     }
 
-    /// Create the [`OsuScoreState`] that will be used for performance calculation.
+    /// Create the [`OsuScoreState`] that will be used for performance
+    /// calculation.
     #[allow(clippy::too_many_lines)]
     pub fn generate_state(&mut self) -> Result<OsuScoreState, ConvertError> {
         let attrs = match self.map_or_attrs {
@@ -745,12 +747,13 @@ impl<'map> OsuPerformance<'map> {
         // * Scores with more oks are more likely to have sliderbreaks
         let ok_adjustment = ((f64::from(n100) - estimated_sliderbreaks) + 0.5) / f64::from(n100);
 
-        // * There is a low probability of extra slider breaks on effective miss counts close to 1, 
-        // * as score based calculations are good at indicating if only a single break occurred
+        // * There is a low probability of extra slider breaks on effective miss counts
+        //   close to 1,
+        // * as score based calculations are good at indicating if only a single break
+        //   occurred
         estimated_sliderbreaks *= smoothstep(effective_miss_count, 1.0, 2.0);
 
-        estimated_sliderbreaks * ok_adjustment
-            * logistic(missed_combo_percent, 0.33, 15.0, None)
+        estimated_sliderbreaks * ok_adjustment * logistic(missed_combo_percent, 0.33, 15.0, None)
     }
 
     fn calculate_combo_based_estimated_miss_count(
@@ -772,8 +775,10 @@ impl<'map> OsuPerformance<'map> {
             let likely_missed_sliderend_portion =
                 0.04 + 0.06 * attrs.aim_top_weighted_slider_factor.min(1.0).powi(2);
 
-            // * Consider that full combo is maximum combo minus dropped slider tails since they don't contribute to combo but also don't break it
-            // * In classic scores we can't know the amount of dropped sliders so we estimate it
+            // * Consider that full combo is maximum combo minus dropped slider tails since
+            //   they don't contribute to combo but also don't break it
+            // * In classic scores we can't know the amount of dropped sliders so we
+            //   estimate it
             let full_combo_threshold = f64::from(attrs.max_combo)
                 - f64::min(
                     4.0 + likely_missed_sliderend_portion * f64::from(attrs.n_sliders),
@@ -784,35 +789,39 @@ impl<'map> OsuPerformance<'map> {
                 miss_count = full_combo_threshold / score_max_combo.max(1.0);
             }
 
-            // * In classic scores there can't be more misses than a sum of all non-perfect judgements
+            // * In classic scores there can't be more misses than a sum of all non-perfect
+            //   judgements
             miss_count = miss_count.min(total_imperfect_hits(state));
 
             // * Every slider has *at least* 2 combo attributed in classic mechanics.
-            // * If they broke on a slider with a tick, then this still works since they would have lost at least 2 combo (the tick and the end)
-            // * Using this as a max means a score that loses 1 combo on a map can't possibly have been a slider break.
+            // * If they broke on a slider with a tick, then this still works since they
+            //   would have lost at least 2 combo (the tick and the end)
+            // * Using this as a max means a score that loses 1 combo on a map can't
+            //   possibly have been a slider break.
             // * It must have been a slider end.
             let max_possible_slider_breaks = f64::from(attrs.n_sliders)
                 .min(f64::from(attrs.max_combo.saturating_sub(self.combo.unwrap_or(0))) / 2.0);
 
             let slider_breaks = miss_count - f64::from(self.misses.unwrap_or(0));
 
-            miss_count = f64::from(self.misses.unwrap_or(0)) + slider_breaks.min(max_possible_slider_breaks);
+            miss_count =
+                f64::from(self.misses.unwrap_or(0)) + slider_breaks.min(max_possible_slider_breaks);
         } else {
-            let full_combo_threshold = f64::from(attrs.max_combo) - f64::from(n_slider_ends_dropped(attrs, state));
+            let full_combo_threshold =
+                f64::from(attrs.max_combo) - f64::from(n_slider_ends_dropped(attrs, state));
 
             if score_max_combo < full_combo_threshold {
                 miss_count = full_combo_threshold / score_max_combo.max(1.0);
             }
 
-            // * Combine regular misses with tick misses since tick misses break combo as well
-            miss_count = miss_count.min(
-                f64::from(n_large_tick_miss(attrs, state)) + f64::from(state.misses),
-            );
+            // * Combine regular misses with tick misses since tick misses break combo as
+            //   well
+            miss_count = miss_count
+                .min(f64::from(n_large_tick_miss(attrs, state)) + f64::from(state.misses));
         }
 
         miss_count
     }
-
 
     /// Calculate all performance related values, including pp and stars.
     pub fn calculate(mut self) -> Result<OsuPerformanceAttributes, ConvertError> {
@@ -843,8 +852,11 @@ impl<'map> OsuPerformance<'map> {
 
         let mut effective_miss_count;
 
-        let combo_based_estimated_miss_count =
-            self.calculate_combo_based_estimated_miss_count(&attrs, &state, using_classic_slider_acc);
+        let combo_based_estimated_miss_count = self.calculate_combo_based_estimated_miss_count(
+            &attrs,
+            &state,
+            using_classic_slider_acc,
+        );
 
         let mut score_based_estimated_miss_count = 0.0;
 
@@ -866,11 +878,21 @@ impl<'map> OsuPerformance<'map> {
         effective_miss_count = effective_miss_count.max(f64::from(state.misses));
         effective_miss_count = effective_miss_count.min(f64::from(state.total_hits()));
 
-        let aim_estimated_slider_breaks =
-            self.calculate_estimated_sliderbreaks(attrs.aim_top_weighted_slider_factor, effective_miss_count, using_classic_slider_acc, state.max_combo, &attrs);
+        let aim_estimated_slider_breaks = self.calculate_estimated_sliderbreaks(
+            attrs.aim_top_weighted_slider_factor,
+            effective_miss_count,
+            using_classic_slider_acc,
+            state.max_combo,
+            &attrs,
+        );
 
-        let speed_estimated_slider_breaks =
-            self.calculate_estimated_sliderbreaks(attrs.speed_top_weighted_slider_factor, effective_miss_count, using_classic_slider_acc, state.max_combo, &attrs);
+        let speed_estimated_slider_breaks = self.calculate_estimated_sliderbreaks(
+            attrs.speed_top_weighted_slider_factor,
+            effective_miss_count,
+            using_classic_slider_acc,
+            state.max_combo,
+            &attrs,
+        );
 
         let inner = OsuPerformanceCalculator::new(
             attrs,
@@ -1004,13 +1026,12 @@ mod test {
     use proptest::prelude::*;
     use rosu_mods::{GameModIntermode, GameModsIntermode};
 
+    use super::*;
     use crate::{
         any::{DifficultyAttributes, PerformanceAttributes},
         taiko::{TaikoDifficultyAttributes, TaikoPerformanceAttributes},
         Beatmap,
     };
-
-    use super::*;
 
     static ATTRS: OnceLock<OsuDifficultyAttributes> = OnceLock::new();
 

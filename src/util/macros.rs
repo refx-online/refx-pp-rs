@@ -453,7 +453,7 @@ macro_rules! define_skill {
                 }
             }
         }
-        
+
     };
 
     (

@@ -6,6 +6,7 @@ use rosu_map::{
     util::Pos,
 };
 
+use super::PLAYFIELD_BASE_SIZE;
 use crate::{
     model::{
         control_point::{DifficultyPoint, TimingPoint},
@@ -16,8 +17,6 @@ use crate::{
     Beatmap,
 };
 
-use super::PLAYFIELD_BASE_SIZE;
-
 pub struct OsuObject {
     pub pos: Pos,
     pub start_time: f64,
@@ -27,10 +26,9 @@ pub struct OsuObject {
 }
 
 impl OsuObject {
+    const BASE_SCORING_DIST: f32 = 100.0;
     pub const OBJECT_RADIUS: f32 = 64.0;
     pub const PREEMPT_MIN: f64 = 450.0;
-
-    const BASE_SCORING_DIST: f32 = 100.0;
 
     pub fn new(
         h: &HitObject,
@@ -239,11 +237,13 @@ impl OsuSlider {
                         start_time: start_time + f64::from(e.span_idx + 1) * span_duration,
                         kind: NestedSliderObjectKind::Repeat,
                     },
-                    SliderEventType::Tail => NestedSliderObject {
-                        pos: end_path_pos, // no `h.pos` yet to keep order of float operations
-                        start_time: e.time,
-                        kind: NestedSliderObjectKind::Tail,
-                    },
+                    SliderEventType::Tail => {
+                        NestedSliderObject {
+                            pos: end_path_pos, // no `h.pos` yet to keep order of float operations
+                            start_time: e.time,
+                            kind: NestedSliderObjectKind::Tail,
+                        }
+                    }
                     SliderEventType::Head | SliderEventType::LastTick => return None,
                 };
 

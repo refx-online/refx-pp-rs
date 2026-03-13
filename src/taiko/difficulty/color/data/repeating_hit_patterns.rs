@@ -1,11 +1,10 @@
 use std::cmp;
 
+use super::alternating_mono_pattern::AlternatingMonoPattern;
 use crate::{
     taiko::difficulty::object::TaikoDifficultyObject,
     util::sync::{RefCount, Weak},
 };
-
-use super::alternating_mono_pattern::AlternatingMonoPattern;
 
 const MAX_REPETITION_INTERVAL: usize = 16;
 

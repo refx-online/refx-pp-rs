@@ -1,13 +1,11 @@
+use super::strain::OsuHarmonicSkill;
 use crate::{
     osu::difficulty::{
-        evaluators::ReadingEvaluator,
-        object::OsuDifficultyObject,
+        evaluators::ReadingEvaluator, object::OsuDifficultyObject,
         skills::strain::harmonic_difficulty_value,
     },
     util::{difficulty::logistic, float_ext::FloatExt},
 };
-
-use super::strain::OsuHarmonicSkill;
 
 define_skill! {
     pub struct Reading: HarmonicSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
@@ -28,11 +26,11 @@ define_skill! {
 }
 
 impl Reading {
-    const SKILL_MULTIPLIER: f64 = 2.5;
-    const STRAIN_DECAY_BASE: f64 = 0.8;
     // * Assume the first seconds are completely memorised
     const REDUCED_DIFFICULTY_BASE_LINE: f64 = 0.0;
     const REDUCED_DIFFICULTY_DURATION: f64 = 60_000.0;
+    const SKILL_MULTIPLIER: f64 = 2.5;
+    const STRAIN_DECAY_BASE: f64 = 0.8;
 
     fn strain_value_at(
         &mut self,
@@ -61,11 +59,7 @@ impl Reading {
 
         self.apply_difficulty_transformation(&mut difficulties);
 
-        harmonic_difficulty_value(
-            difficulties,
-            Self::HARMONIC_SCALE,
-            Self::DECAY_EXPONENT,
-        )
+        harmonic_difficulty_value(difficulties, Self::HARMONIC_SCALE, Self::DECAY_EXPONENT)
     }
 
     fn strain_decay(ms: f64) -> f64 {

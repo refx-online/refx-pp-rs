@@ -1,15 +1,14 @@
+use self::utils::{MAXIMUM_ROTATIONS_PER_SECOND, MINIMUM_ROTATIONS_PER_SECOND};
 use crate::{
     model::hit_object::Spinner,
     osu::{
         attributes::OsuLegacyScoreAttributes,
-        object::{OsuObject, OsuObjectKind, NestedSliderObjectKind, OsuSlider},
+        object::{NestedSliderObjectKind, OsuObject, OsuObjectKind, OsuSlider},
     },
 };
 
-use self::utils::{MAXIMUM_ROTATIONS_PER_SECOND, MINIMUM_ROTATIONS_PER_SECOND};
-
-pub mod utils;
 pub mod calculator;
+pub mod utils;
 
 pub struct OsuLegacyScoreSimulator {
     legacy_bonus_score: i32,
@@ -28,7 +27,11 @@ impl OsuLegacyScoreSimulator {
         }
     }
 
-    pub fn simulate(&mut self, osu_objects: &[OsuObject], score_multiplier: f64) -> OsuLegacyScoreAttributes {
+    pub fn simulate(
+        &mut self,
+        osu_objects: &[OsuObject],
+        score_multiplier: f64,
+    ) -> OsuLegacyScoreAttributes {
         self.legacy_bonus_score = 0;
         self.standardised_bonus_score = 0;
         self.combo = 0;
@@ -73,11 +76,7 @@ impl OsuLegacyScoreSimulator {
         self.combo += 1;
     }
 
-    fn simulate_slider(
-        &mut self,
-        slider: &OsuSlider,
-        attributes: &mut OsuLegacyScoreAttributes,
-    ) {
+    fn simulate_slider(&mut self, slider: &OsuSlider, attributes: &mut OsuLegacyScoreAttributes) {
         for nested in &slider.nested_objects {
             match nested.kind {
                 NestedSliderObjectKind::Tick => {
@@ -103,24 +102,26 @@ impl OsuLegacyScoreSimulator {
         attributes.accuracy_score += score_increase;
     }
 
-    fn simulate_spinner(
-        &mut self,
-        spinner: Spinner,
-        attributes: &mut OsuLegacyScoreAttributes,
-    ) {
+    fn simulate_spinner(&mut self, spinner: Spinner, attributes: &mut OsuLegacyScoreAttributes) {
         let seconds_duration = spinner.duration / 1000.0;
 
         // * The total amount of half spins possible for the entire spinner.
-        let total_half_spins_possible = (seconds_duration * MAXIMUM_ROTATIONS_PER_SECOND * 2.0) as i32;
-        
-        // * The amount of half spins that are required to successfully complete the spinner (i.e. get a 300).
-        let half_spins_required_for_completion = (seconds_duration * MINIMUM_ROTATIONS_PER_SECOND) as i32;
-        
-        // * To be able to receive bonus points, the spinner must be rotated another 1.5 times.
+        let total_half_spins_possible =
+            (seconds_duration * MAXIMUM_ROTATIONS_PER_SECOND * 2.0) as i32;
+
+        // * The amount of half spins that are required to successfully complete the
+        //   spinner (i.e. get a 300).
+        let half_spins_required_for_completion =
+            (seconds_duration * MINIMUM_ROTATIONS_PER_SECOND) as i32;
+
+        // * To be able to receive bonus points, the spinner must be rotated another 1.5
+        //   times.
         let half_spins_required_before_bonus = half_spins_required_for_completion + 3;
 
         for i in 0..=total_half_spins_possible {
-            if i > half_spins_required_before_bonus && (i - half_spins_required_before_bonus) % 2 == 0 {
+            if i > half_spins_required_before_bonus
+                && (i - half_spins_required_before_bonus) % 2 == 0
+            {
                 self.legacy_bonus_score += 1100;
                 self.standardised_bonus_score += 50;
             } else if i > 1 && i % 2 == 0 {
@@ -137,6 +138,7 @@ impl OsuLegacyScoreSimulator {
 
     fn add_combo_score(&self, score_increase: i32, attributes: &mut OsuLegacyScoreAttributes) {
         // * Integer division is intentional to match stable's behavior
-        attributes.combo_score += (f64::from((self.combo - 1).max(0) * (score_increase / 25)) * self.score_multiplier) as i32;
+        attributes.combo_score += (f64::from((self.combo - 1).max(0) * (score_increase / 25))
+            * self.score_multiplier) as i32;
     }
 }

@@ -16,12 +16,13 @@ use crate::{
 /// [`Iterator::next`], the next object will be processed and the
 /// [`DifficultyAttributes`] will be updated and returned.
 ///
-/// If you want to calculate performance attributes, use [`GradualPerformance`] instead.
+/// If you want to calculate performance attributes, use [`GradualPerformance`]
+/// instead.
 ///
 /// # Example
 ///
 /// ```
-/// use refx_pp::{Beatmap, GradualDifficulty, Difficulty};
+/// use refx_pp::{Beatmap, Difficulty, GradualDifficulty};
 ///
 /// let map = Beatmap::from_path("./resources/2785319.osu").unwrap();
 /// let difficulty = Difficulty::new().mods(64); // DT
@@ -56,7 +57,8 @@ impl GradualDifficulty {
         Self::new_with_mode(difficulty, map, map.mode).expect("no conversion required")
     }
 
-    /// Create a [`GradualDifficulty`] for a [`Beatmap`] on a specific [`GameMode`].
+    /// Create a [`GradualDifficulty`] for a [`Beatmap`] on a specific
+    /// [`GameMode`].
     pub fn new_with_mode(
         difficulty: Difficulty,
         map: &Beatmap,

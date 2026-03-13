@@ -1,9 +1,8 @@
+use super::{mono_streak::MonoStreak, repeating_hit_patterns::RepeatingHitPatterns};
 use crate::{
     taiko::difficulty::object::TaikoDifficultyObject,
     util::sync::{RefCount, Weak},
 };
-
-use super::{mono_streak::MonoStreak, repeating_hit_patterns::RepeatingHitPatterns};
 
 #[derive(Debug)]
 pub struct AlternatingMonoPattern {

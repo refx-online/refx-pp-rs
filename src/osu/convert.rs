@@ -1,12 +1,11 @@
 use rosu_map::section::hit_objects::CurveBuffers;
 
-use crate::model::{beatmap::Beatmap, mods::Reflection};
-
 use super::{
     attributes::OsuDifficultyAttributes,
     difficulty::scaling_factor::ScalingFactor,
     object::{NestedSliderObjectKind, OsuObject, OsuObjectKind},
 };
+use crate::model::{beatmap::Beatmap, mods::Reflection};
 
 pub fn convert_objects(
     map: &Beatmap,
@@ -88,11 +87,13 @@ fn stacking(hit_objects: &mut [OsuObject], stack_threshold: f64) {
         let mut obj_i_idx = i;
         // * We should check every note which has not yet got a stack.
         // * Consider the case we have two interwound stacks and this will make sense.
-        // *   o <-1      o <-2
-        // *    o <-3      o <-4
+        // * o <-1      o <-2
+        // * o <-3      o <-4
         // * We first process starting from 4 and handle 2,
-        // * then we come backwards on the i loop iteration until we reach 3 and handle 1.
-        // * 2 and 1 will be ignored in the i loop because they already have a stack value.
+        // * then we come backwards on the i loop iteration until we reach 3 and handle
+        //   1.
+        // * 2 and 1 will be ignored in the i loop because they already have a stack
+        //   value.
 
         if hit_objects[obj_i_idx].stack_height != 0 || hit_objects[obj_i_idx].is_spinner() {
             continue;
@@ -114,7 +115,8 @@ fn stacking(hit_objects: &mut [OsuObject], stack_threshold: f64) {
                 }
 
                 if hit_objects[obj_i_idx].start_time - hit_objects[n].end_time() > stack_threshold {
-                    break; // * We are no longer within stacking range of the previous object.
+                    break; // * We are no longer within stacking range of the
+                           //   previous object.
                 }
 
                 // * HitObjects before the specified update range haven't been reset yet
@@ -123,11 +125,12 @@ fn stacking(hit_objects: &mut [OsuObject], stack_threshold: f64) {
                     extended_start_idx = n;
                 }
 
-                // * This is a special case where hticircles are moved DOWN and RIGHT (negative stacking)
+                // * This is a special case where hticircles are moved DOWN and RIGHT (negative
+                //   stacking)
                 // * if they are under the *last* slider in a stacked pattern.
-                // *    o==o <- slider is at original location
-                // *        o <- hitCircle has stack of -1
-                // *         o <- hitCircle has stack of -2
+                // * o==o <- slider is at original location
+                // * o <- hitCircle has stack of -1
+                // * o <- hitCircle has stack of -2
                 if hit_objects[n].is_slider()
                     && hit_objects[n]
                         .end_pos()
@@ -145,7 +148,8 @@ fn stacking(hit_objects: &mut [OsuObject], stack_threshold: f64) {
                         }
                     }
 
-                    // * We have hit a slider. We should restart calculation using this as the new base.
+                    // * We have hit a slider. We should restart calculation using this as the new
+                    //   base.
                     // * Breaking here will mean that the slider still has StackCount of 0,
                     // * so will be handled in the i-outer-loop.
                     break;
@@ -175,7 +179,8 @@ fn stacking(hit_objects: &mut [OsuObject], stack_threshold: f64) {
                 }
 
                 if hit_objects[obj_i_idx].start_time - hit_objects[n].start_time > stack_threshold {
-                    break; // * We are no longer within stacking range of the previous object.
+                    break; // * We are no longer within stacking range of the
+                           //   previous object.
                 }
 
                 if hit_objects[n]
@@ -229,11 +234,15 @@ fn old_stacking(hit_objects: &mut [OsuObject], stack_threshold: f64) {
                 break;
             }
 
-            // * Note the use of `StartTime` in the code below doesn't match stable's use of `EndTime`.
-            // * This is because in the stable implementation, `UpdateCalculations` is not called on the inner-loop hitobject (j)
-            // * and therefore it does not have a correct `EndTime`, but instead the default of `EndTime = StartTime`.
+            // * Note the use of `StartTime` in the code below doesn't match stable's use of
+            //   `EndTime`.
+            // * This is because in the stable implementation, `UpdateCalculations` is not
+            //   called on the inner-loop hitobject (j)
+            // * and therefore it does not have a correct `EndTime`, but instead the default
+            //   of `EndTime = StartTime`.
             // *
-            // * Effects of this can be seen on https://osu.ppy.sh/beatmapsets/243#osu/1146 at sliders around 86647 ms, where
+            // * Effects of this can be seen on https://osu.ppy.sh/beatmapsets/243#osu/1146
+            //   at sliders around 86647 ms, where
             // * if we use `EndTime` here it would result in unexpected stacking.
 
             if hit_objects[j].pos.distance(hit_objects[i].pos) < STACK_DISTANCE {

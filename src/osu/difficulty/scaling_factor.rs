@@ -1,8 +1,7 @@
 use rosu_map::util::Pos;
 
-use crate::osu::object::OsuObject;
-
 use super::object::OsuDifficultyObject;
+use crate::osu::object::OsuObject;
 
 const BROKEN_GAMEFIELD_ROUNDING_ALLOWANCE: f32 = 1.00041;
 

@@ -1,5 +1,6 @@
 use std::f64::consts::PI;
 
+use super::stamina::StaminaEvaluator;
 use crate::{
     taiko::difficulty::{
         object::{TaikoDifficultyObject, TaikoDifficultyObjects},
@@ -10,8 +11,6 @@ use crate::{
         sync::RefCount,
     },
 };
-
-use super::stamina::StaminaEvaluator;
 
 define_skill! {
     #[derive(Clone)]
@@ -31,7 +30,8 @@ impl Rhythm {
     ) -> f64 {
         let mut difficulty = RhythmEvaluator::evaluate_diff_of(curr, self.great_hit_window);
 
-        // * To prevent abuse of exceedingly long intervals between awkward rhythms, we penalise its difficulty.
+        // * To prevent abuse of exceedingly long intervals between awkward rhythms, we
+        //   penalise its difficulty.
         let stamina_difficulty = StaminaEvaluator::evaluate_diff_of(curr, objects) - 0.5; // * Remove base strain
         difficulty *= logistic(stamina_difficulty, 1.0 / 15.0, 50.0, None);
 
@@ -101,7 +101,8 @@ impl RhythmEvaluator {
         let borrowed = same_rhythm_grouped_hit_objects.get();
         let duration = borrowed.duration();
 
-        // * If a previous interval exists and there are multiple hit objects in the sequence:
+        // * If a previous interval exists and there are multiple hit objects in the
+        //   sequence:
         if let Some(prev_interval) = prev_interval.filter(|_| borrowed.hit_objects.len() > 1) {
             if let Some(duration) = duration {
                 let expected_duration_from_prev = prev_interval * borrowed.hit_objects.len() as f64;
@@ -147,7 +148,8 @@ impl RhythmEvaluator {
                 }
 
                 if intervals.len() < interval_count {
-                    return 1.0; // * No penalty if there aren't enough valid intervals.
+                    return 1.0; // * No penalty if there aren't enough valid
+                                //   intervals.
                 }
 
                 for i in 0..intervals.len() {
@@ -191,7 +193,8 @@ impl RhythmEvaluator {
         let terms = terms.unwrap_or(8);
         let mut difficulty = 0.0;
 
-        // * Validate the ratio by ensuring it is a normal number in cases where maps breach regular mapping conditions.
+        // * Validate the ratio by ensuring it is a normal number in cases where maps
+        //   breach regular mapping conditions.
         ratio = if ratio.is_normal() { ratio } else { 0.0 };
 
         for i in 1..=terms {

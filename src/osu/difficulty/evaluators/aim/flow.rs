@@ -1,10 +1,8 @@
+use super::snap::SnapAimEvaluator;
 use crate::{
-    any::difficulty::object::IDifficultyObject,
-    osu::difficulty::object::OsuDifficultyObject,
+    any::difficulty::object::IDifficultyObject, osu::difficulty::object::OsuDifficultyObject,
     util::difficulty::smoothstep,
 };
-
-use super::snap::SnapAimEvaluator;
 
 pub struct FlowAimEvaluator;
 
@@ -48,7 +46,8 @@ impl FlowAimEvaluator {
 
         let mut curr_velocity = curr_distance / osu_curr_obj.adjusted_delta_time;
 
-        // * If the last object is a slider, then we extend the travel velocity through the slider into the current object.
+        // * If the last object is a slider, then we extend the travel velocity through
+        //   the slider into the current object.
         if osu_last_obj.base.is_slider() && with_slider_travel_distance {
             let slider_distance = osu_last_obj.lazy_travel_dist + osu_curr_obj.lazy_jump_dist;
             curr_velocity = curr_velocity.max(slider_distance / osu_curr_obj.adjusted_delta_time);
@@ -62,30 +61,39 @@ impl FlowAimEvaluator {
         flow_difficulty *= osu_curr_obj.small_circle_bonus;
 
         // * Rhythm changes are harder to flow
-        let delta_diff = (osu_curr_obj.adjusted_delta_time.max(osu_last_obj.adjusted_delta_time)
-            - osu_curr_obj.adjusted_delta_time.min(osu_last_obj.adjusted_delta_time))
+        let delta_diff = (osu_curr_obj
+            .adjusted_delta_time
+            .max(osu_last_obj.adjusted_delta_time)
+            - osu_curr_obj
+                .adjusted_delta_time
+                .min(osu_last_obj.adjusted_delta_time))
             / 50.0;
         flow_difficulty *= 1.0 + delta_diff.powf(4.0).min(0.25);
 
         if let Some(angular_velocity) = osu_curr_obj.angular_velocity {
-            // * Low angular velocity flow (angles are consistent) is easier to follow than erratic flow
+            // * Low angular velocity flow (angles are consistent) is easier to follow than
+            //   erratic flow
             flow_difficulty *= 0.8 + (angular_velocity / 270.0).sqrt();
         }
 
-        // * If all three notes are overlapping - don't reward bonuses as you don't have to do additional movement
+        // * If all three notes are overlapping - don't reward bonuses as you don't have
+        //   to do additional movement
         let mut overlapped_notes_weight = 1.0;
 
         if osu_curr_obj.idx > 2 {
             let o1 = Self::calculate_overlap_factor(osu_curr_obj, osu_last_obj, objects_radius);
-            let o2 = Self::calculate_overlap_factor(osu_curr_obj, osu_last_last_obj, objects_radius);
-            let o3 = Self::calculate_overlap_factor(osu_last_obj, osu_last_last_obj, objects_radius);
+            let o2 =
+                Self::calculate_overlap_factor(osu_curr_obj, osu_last_last_obj, objects_radius);
+            let o3 =
+                Self::calculate_overlap_factor(osu_last_obj, osu_last_last_obj, objects_radius);
 
             overlapped_notes_weight = 1.0 - o1 * o2 * o3;
         }
 
         if let (Some(curr_angle), Some(_last_angle)) = (osu_curr_obj.angle, osu_last_obj.angle) {
             // * Acute angles are also hard to flow
-            // * We square root velocity to make acute angle switches in streams aren't having difficulty higher than snap
+            // * We square root velocity to make acute angle switches in streams aren't
+            //   having difficulty higher than snap
             flow_difficulty += curr_velocity.sqrt()
                 * SnapAimEvaluator::calc_acute_angle_bonus(curr_angle)
                 * overlapped_notes_weight;
@@ -104,12 +112,17 @@ impl FlowAimEvaluator {
                 1.0,
             );
 
-            // * Reward for % distance up to 125 / strainTime for overlaps where velocity is still changing.
-            let overlap_velocity_buff = (f64::from(OsuDifficultyObject::NORMALIZED_DIAMETER) * 1.25
-                / osu_curr_obj.adjusted_delta_time.min(osu_last_obj.adjusted_delta_time))
+            // * Reward for % distance up to 125 / strainTime for overlaps where velocity is
+            //   still changing.
+            let overlap_velocity_buff = (f64::from(OsuDifficultyObject::NORMALIZED_DIAMETER)
+                * 1.25
+                / osu_curr_obj
+                    .adjusted_delta_time
+                    .min(osu_last_obj.adjusted_delta_time))
             .min((prev_velocity - curr_velocity).abs());
 
-            flow_difficulty += overlap_velocity_buff * dist_ratio * Self::VELOCITY_CHANGE_MULTIPLIER;
+            flow_difficulty +=
+                overlap_velocity_buff * dist_ratio * Self::VELOCITY_CHANGE_MULTIPLIER;
         }
 
         if osu_curr_obj.base.is_slider() {
@@ -117,7 +130,8 @@ impl FlowAimEvaluator {
             flow_difficulty += osu_curr_obj.travel_dist / osu_curr_obj.travel_time;
         }
 
-        // * Final velocity is being raised to a power because flow difficulty scales harder with both high distance and time, and we want to account for that
+        // * Final velocity is being raised to a power because flow difficulty scales
+        //   harder with both high distance and time, and we want to account for that
         flow_difficulty.powf(1.45)
     }
 

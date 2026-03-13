@@ -2,6 +2,7 @@ use std::cmp;
 
 use rosu_map::section::general::GameMode;
 
+use super::{attributes::ManiaDifficultyAttributes, convert};
 use crate::{
     any::difficulty::{skills::StrainSkill, Difficulty},
     mania::{
@@ -11,8 +12,6 @@ use crate::{
     model::mode::ConvertError,
     Beatmap,
 };
-
-use super::{attributes::ManiaDifficultyAttributes, convert};
 
 pub mod gradual;
 mod object;

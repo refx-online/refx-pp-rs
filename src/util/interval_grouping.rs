@@ -1,6 +1,5 @@
-use crate::util::float_ext::FloatExt;
-
 use super::sync::{RefCount, Weak};
+use crate::util::float_ext::FloatExt;
 
 pub trait HasInterval {
     fn interval(&self) -> f64;
@@ -60,8 +59,10 @@ impl<T: HasInterval> GroupedByIntervalIter<'_, T> {
                 .interval()
                 .almost_eq(objects[*i + 1].get().interval(), MARGIN_OF_ERROR))
             {
-                // * When an interval change occurs, include the object with the differing interval in the case it increased
-                // * See https://github.com/ppy/osu/pull/31636#discussion_r1942368372 for rationale.
+                // * When an interval change occurs, include the object with the differing
+                //   interval in the case it increased
+                // * See https://github.com/ppy/osu/pull/31636#discussion_r1942368372 for
+                //   rationale.
                 if objects[*i + 1].get().interval() > objects[*i].get().interval() + MARGIN_OF_ERROR
                 {
                     grouped_objects.push(objects[*i].downgrade());
@@ -77,8 +78,10 @@ impl<T: HasInterval> GroupedByIntervalIter<'_, T> {
             *i += 1;
         }
 
-        // * Check if the last two objects in the object form a "flat" rhythm pattern within the specified margin of error.
-        // * If true, add the current object to the group and increment the index to process the next object.
+        // * Check if the last two objects in the object form a "flat" rhythm pattern
+        //   within the specified margin of error.
+        // * If true, add the current object to the group and increment the index to
+        //   process the next object.
         if objects.len() > 2
             && *i < objects.len()
             && objects[objects.len() - 1]

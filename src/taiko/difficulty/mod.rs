@@ -4,6 +4,8 @@ use rhythm::preprocessor::RhythmDifficultyPreprocessor;
 use rosu_map::section::general::GameMode;
 use skills::{color::Color, reading::Reading, rhythm::Rhythm, stamina::Stamina};
 
+pub(crate) use self::skills::TaikoSkills;
+use super::{attributes::TaikoDifficultyAttributes, convert};
 use crate::{
     any::difficulty::skills::StrainSkill,
     model::{beatmap::HitWindows, mode::ConvertError},
@@ -17,10 +19,6 @@ use crate::{
     util::difficulty::norm,
     Beatmap, Difficulty, GameMods,
 };
-
-pub(crate) use self::skills::TaikoSkills;
-
-use super::{attributes::TaikoDifficultyAttributes, convert};
 
 mod color;
 pub mod gradual;
@@ -128,7 +126,8 @@ fn combined_difficulty_value(
             ],
         );
 
-        // * Sections with 0 strain are excluded to avoid worst-case time complexity of the following sort (e.g. /b/2351871).
+        // * Sections with 0 strain are excluded to avoid worst-case time complexity of
+        //   the following sort (e.g. /b/2351871).
         // * These sections will not contribute to the difficulty.
         if peak > 0.0 {
             peaks.push(peak);
@@ -225,7 +224,8 @@ impl DifficultyValues {
         let stamina_difficult_strains =
             stamina.count_top_weighted_strains(stamina_difficulty_value);
 
-        // * As we don't have pattern integration in osu!taiko, we apply the other two skills relative to rhythm.
+        // * As we don't have pattern integration in osu!taiko, we apply the other two
+        //   skills relative to rhythm.
         let pattern_multiplier = f64::powf(stamina_rating * color_rating, 0.10);
 
         #[allow(clippy::manual_clamp)]

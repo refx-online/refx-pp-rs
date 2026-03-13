@@ -51,7 +51,9 @@ impl Stamina {
             .and_then(Weak::upgrade)
             .and_then(|mono| {
                 mono.get().hit_objects.iter().position(|h| {
-                    let Some(h) = h.upgrade() else { return false };
+                    let Some(h) = h.upgrade() else {
+                        return false;
+                    };
                     let h = h.get();
 
                     h.idx == curr.idx
@@ -83,7 +85,8 @@ impl StaminaEvaluator {
             return 0.0;
         }
 
-        // * Find the previous hit object hit by the current finger, which is n notes prior, n being the number of
+        // * Find the previous hit object hit by the current finger, which is n notes
+        //   prior, n being the number of
         // * available fingers.
         let prev = curr.previous(1, objects);
         let prev_mono = objects.previous_mono(curr, Self::available_fingers_for(curr, objects) - 1);
