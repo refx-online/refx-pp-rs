@@ -201,8 +201,7 @@ impl DifficultyValues {
         let flashlight_rating = calculator.compute_flashlight_rating(flashlight_difficulty_value);
 
         let base_aim_performance = difficulty_to_performance(aim_rating);
-        let base_speed_performance =
-            <Speed as OsuHarmonicSkill>::difficulty_to_performance(speed_rating);
+        let base_speed_performance = Speed::difficulty_to_performance(speed_rating);
         let base_reading_performance = Reading::difficulty_to_performance(reading_rating);
         let base_flashlight_performance = Flashlight::difficulty_to_performance(flashlight_rating);
         let base_cognition_performance =
