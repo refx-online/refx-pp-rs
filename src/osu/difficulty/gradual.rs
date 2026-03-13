@@ -55,7 +55,6 @@ use super::{
 pub struct OsuGradualDifficulty {
     pub(crate) idx: usize,
     pub(crate) difficulty: Difficulty,
-    map: Beatmap,
     attrs: OsuDifficultyAttributes,
     skills: OsuSkills,
     // Lifetimes actually depend on `osu_objects` so this type is
@@ -115,7 +114,6 @@ impl OsuGradualDifficulty {
 
         Ok(Self {
             idx: 0,
-            map: map.as_ref().to_owned(),
             difficulty,
             attrs,
             skills,
@@ -175,7 +173,7 @@ impl Iterator for OsuGradualDifficulty {
 
         let mut attrs = self.attrs.clone();
 
-        DifficultyValues::eval(&self.map, &mut attrs, self.difficulty.get_mods(), &self.skills);
+        DifficultyValues::eval(&mut attrs, self.difficulty.get_mods(), &self.skills);
 
         Some(attrs)
     }

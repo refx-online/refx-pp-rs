@@ -63,7 +63,7 @@ pub fn difficulty(
     let DifficultyValues { skills, mut attrs } = DifficultyValues::calculate(difficulty, &map);
 
     let mods = difficulty.get_mods();
-    DifficultyValues::eval(&map, &mut attrs, mods, &skills);
+    DifficultyValues::eval(&mut attrs, mods, &skills);
 
     Ok(attrs)
 }
@@ -140,12 +140,29 @@ impl DifficultyValues {
         for hit_object in diff_objects.iter().take(take_diff_objects) {
             skills.process(hit_object, &diff_objects);
         }
+        
+        let mut simulator = OsuLegacyScoreSimulator::new();
+
+        let slider_nested_score_per_object = calculate_nested_score_per_object(
+            map,
+            &osu_objects,
+        );
+
+        let legacy_score_base_multiplier = f64::from(
+            calculate_difficulty_peppy_stars(map)
+        );
+
+        let legacy_score_attrs = simulator.simulate(&osu_objects, legacy_score_base_multiplier);
+
+        attrs.nested_score_per_object = slider_nested_score_per_object;
+        attrs.legacy_score_base_multiplier = legacy_score_base_multiplier;
+        attrs.maximum_legacy_combo_score = f64::from(legacy_score_attrs.combo_score);
 
         Self { skills, attrs }
     }
 
     /// Process the difficulty values and store the results in `attrs`.
-    pub fn eval(map: &Beatmap, attrs: &mut OsuDifficultyAttributes, mods: &GameMods, skills: &OsuSkills) {
+    pub fn eval(attrs: &mut OsuDifficultyAttributes, mods: &GameMods, skills: &OsuSkills) {
         let OsuSkills {
             aim,
             aim_no_sliders,
@@ -203,15 +220,6 @@ impl DifficultyValues {
         let reading_rating = calculator.compute_reading_rating(reading_difficulty_value);
         let flashlight_rating = calculator.compute_flashlight_rating(flashlight_difficulty_value);
 
-        let slider_nested_score_per_object = calculate_nested_score_per_object(
-            map,
-            mods
-        );
-        let legacy_score_base_multiplier = f64::from(calculate_difficulty_peppy_stars(map));
-
-        let mut simulator = OsuLegacyScoreSimulator::new();
-        let legacy_score_attributes = simulator.simulate(map, mods);
-
         let base_aim_performance = difficulty_to_performance(aim_rating);
         let base_speed_performance = <Speed as OsuHarmonicSkill>::difficulty_to_performance(speed_rating);
         let base_reading_performance = Reading::difficulty_to_performance(reading_rating);
@@ -242,9 +250,6 @@ impl DifficultyValues {
         attrs.reading_difficult_note_count = reading_difficult_note_count;
         attrs.aim_top_weighted_slider_factor = aim_top_weighted_slider_factor;
         attrs.speed_top_weighted_slider_factor = speed_top_weighted_slider_factor;
-        attrs.nested_score_per_object = slider_nested_score_per_object;
-        attrs.legacy_score_base_multiplier = legacy_score_base_multiplier;
-        attrs.maximum_legacy_combo_score = f64::from(legacy_score_attributes.combo_score);
         attrs.stars = star_rating;
         attrs.speed_note_count = speed.relevant_note_count();
     }

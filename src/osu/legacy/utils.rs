@@ -2,13 +2,11 @@ use rust_decimal::Decimal;
 use rust_decimal::prelude::*;
 use rust_decimal_macros::dec;
 
+use crate::osu::object::OsuObject;
 use crate::{
     Beatmap,
-    model::mods::GameMods,
     osu::{
         object::{OsuObjectKind, NestedSliderObjectKind},
-        convert::convert_objects,
-        difficulty::scaling_factor::ScalingFactor,
     },
 };
 
@@ -20,34 +18,21 @@ const BONUS_SPIN_SCORE: i64 = 1000;
 pub const MAXIMUM_ROTATIONS_PER_SECOND: f64 = 477.0 / 60.0;
 pub const MINIMUM_ROTATIONS_PER_SECOND: f64 = 3.0;
 
-pub fn calculate_nested_score_per_object(beatmap: &Beatmap, mods: &GameMods) -> f64 {
+pub fn calculate_nested_score_per_object(
+    beatmap: &Beatmap,
+    osu_objects: &[OsuObject],
+) -> f64 {
     let object_count = beatmap.hit_objects.len();
     
     if object_count == 0 {
         return 0.0;
     }
 
-    let map_attrs = beatmap.attributes()
-        .mods(mods.clone())
-        .build();
-    let scaling_factor = ScalingFactor::new(map_attrs.cs);
-    let time_preempt = map_attrs.hit_windows.ar * map_attrs.clock_rate;
-    
-    let mut attrs = crate::osu::OsuDifficultyAttributes::default();
-    let osu_objects = convert_objects(
-        beatmap,
-        &scaling_factor,
-        mods.reflection(),
-        time_preempt,
-        beatmap.hit_objects.len(),
-        &mut attrs,
-    );
-
     let mut amount_of_big_ticks = 0;
     let mut amount_of_small_ticks = 0;
     let mut spinner_score = 0.0;
 
-    for obj in &osu_objects {
+    for obj in osu_objects.iter() {
         match &obj.kind {
             OsuObjectKind::Slider(slider) => {
                 // * 1 for head, 1 for tail

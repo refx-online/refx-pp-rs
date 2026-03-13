@@ -1,18 +1,12 @@
 use crate::{
-    Beatmap,
-    model::{
-        mods::GameMods,
-        hit_object::Spinner
-    },
+    model::hit_object::Spinner,
     osu::{
         attributes::OsuLegacyScoreAttributes,
         object::{OsuObject, OsuObjectKind, NestedSliderObjectKind, OsuSlider},
-        convert::convert_objects,
-        difficulty::scaling_factor::ScalingFactor,
     },
 };
 
-use self::utils::{calculate_difficulty_peppy_stars, MAXIMUM_ROTATIONS_PER_SECOND, MINIMUM_ROTATIONS_PER_SECOND};
+use self::utils::{MAXIMUM_ROTATIONS_PER_SECOND, MINIMUM_ROTATIONS_PER_SECOND};
 
 pub mod utils;
 pub mod calculator;
@@ -34,30 +28,16 @@ impl OsuLegacyScoreSimulator {
         }
     }
 
-    pub fn simulate(&mut self, beatmap: &Beatmap, mods: &GameMods) -> OsuLegacyScoreAttributes {
+    pub fn simulate(&mut self, osu_objects: &[OsuObject], score_multiplier: f64) -> OsuLegacyScoreAttributes {
         self.legacy_bonus_score = 0;
         self.standardised_bonus_score = 0;
         self.combo = 0;
 
-        self.score_multiplier = f64::from(calculate_difficulty_peppy_stars(beatmap));
-
-        let map_attrs = beatmap.attributes().mods(mods.clone()).build();
-        let scaling_factor = ScalingFactor::new(map_attrs.cs);
-        let time_preempt = map_attrs.hit_windows.ar * map_attrs.clock_rate;
-        
-        let mut attrs = crate::osu::OsuDifficultyAttributes::default();
-        let osu_objects = convert_objects(
-            beatmap,
-            &scaling_factor,
-            mods.reflection(),
-            time_preempt,
-            beatmap.hit_objects.len(),
-            &mut attrs,
-        );
+        self.score_multiplier = score_multiplier;
 
         let mut attributes = OsuLegacyScoreAttributes::default();
 
-        for obj in osu_objects.iter() {
+        for obj in osu_objects {
             self.simulate_hit(obj, &mut attributes);
         }
 
