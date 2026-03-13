@@ -2,7 +2,7 @@ use super::strain::OsuStrainSkill;
 use crate::{
     any::difficulty::{
         object::{HasStartTime, IDifficultyObject},
-        skills::{StrainSkill, strain_decay},
+        skills::{strain_decay, StrainSkill},
     },
     osu::difficulty::{
         evaluators::{AgilityEvaluator, FlowAimEvaluator, SnapAimEvaluator},
