@@ -57,6 +57,7 @@ impl<'a> OsuDifficultyObject<'a> {
         let start_time = hit_object.start_time / clock_rate;
         let end_time = hit_object.end_time() / clock_rate;
 
+        // * Capped to 25ms to prevent difficulty calculation breaking from simultaneous objects.
         let adjusted_delta_time = delta_time.max(Self::MIN_DELTA_TIME);
         let last_obj_end_delta_time = if let Some(last_obj) = last_diff_obj {
             (start_time - last_obj.end_time).max(Self::MIN_DELTA_TIME)
@@ -112,7 +113,9 @@ impl<'a> OsuDifficultyObject<'a> {
         }
 
         let fade_in_start_time = self.base.start_time - time_preempt;
-        let fade_in_duration = time_fade_in;
+
+        // * Equal to `OsuHitObject.TimeFadeIn` minus any adjustments from the HD mod.
+        let fade_in_duration = 400.0 * (time_preempt / OsuObject::PREEMPT_MIN).min(1.0);
 
         if hidden {
             // * Taken from OsuModHidden.
@@ -155,6 +158,7 @@ impl<'a> OsuDifficultyObject<'a> {
         scaling_factor: &ScalingFactor,
     ) {
         if let OsuObjectKind::Slider(ref slider) = self.base.kind {
+            // * Bonus for repeat sliders until a better per nested object strain system can be achieved.
             self.travel_dist =
                 self.lazy_travel_dist * ((slider.repeat_count() as f64).powf(0.3)).max(1.0);
 
@@ -162,10 +166,12 @@ impl<'a> OsuDifficultyObject<'a> {
                 (self.lazy_travel_time / clock_rate).max(OsuDifficultyObject::MIN_DELTA_TIME);
         }
 
+        // * We don't need to calculate either angle or distance when one of the last->curr objects is a spinner
         if self.base.is_spinner() || last_object.is_spinner() {
             return;
         }
 
+        // * We will scale distances by this factor, so we can assume a uniform CircleSize among beatmaps.
         let scaling_factor = scaling_factor.factor;
 
         let mut last_cursor_pos = if let Some(last_diff_obj) = last_diff_obj {
@@ -196,6 +202,29 @@ impl<'a> OsuDifficultyObject<'a> {
 
             let tail_pos = last_slider.tail().map_or(last_object.pos, |tail| tail.pos);
             let stacked_tail_pos = tail_pos + last_object.stack_offset;
+
+            //
+            // * There are two types of slider-to-object patterns to consider in order to better approximate the real movement a player will take to jump between the hitobjects.
+            //
+            // * 1. The anti-flow pattern, where players cut the slider short in order to move to the next hitobject.
+            //
+            // *      <======o==>  ← slider
+            // *             |     ← most natural jump path
+            // *             o     ← a follow-up hitcircle
+            //
+            // * In this case the most natural jump path is approximated by LazyJumpDistance.
+            //
+            // * 2. The flow pattern, where players follow through the slider to its visual extent into the next hitobject.
+            //
+            // *      <======o==>---o
+            // *                  ↑
+            // *        most natural jump path
+            //
+            // * In this case the most natural jump path is better approximated by a new distance called "tailJumpDistance" 
+            //   - the distance between the slider's tail and the next hitobject.
+            //
+            // * Thus, the player is assumed to jump the minimum of these two distances in all cases.
+            //
 
             let tail_jump_dist =
                 (stacked_tail_pos - self.base.stacked_pos()).length() * scaling_factor;
