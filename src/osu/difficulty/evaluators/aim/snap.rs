@@ -14,8 +14,8 @@ impl SnapAimEvaluator {
     const VELOCITY_CHANGE_MULTIPLIER: f64 = 0.9;
     // * WARNING: Increasing this multiplier beyond 1.02 reduces difficulty as
     //   distance increases. Refer to the desmos link above the wiggle bonus
-    const WIDE_ANGLE_MULTIPLIER: f64 = 1.05;
     //   calculation
+    const WIDE_ANGLE_MULTIPLIER: f64 = 1.05;
     const WIGGLE_MULTIPLIER: f64 = 1.02;
 
     #[allow(clippy::too_many_lines)]
