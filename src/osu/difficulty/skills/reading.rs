@@ -55,7 +55,6 @@ impl Reading {
         }
 
         let mut difficulties = self.harmonic_skill_object_difficulties.clone();
-        difficulties.retain(|&d| d > 0.0);
 
         self.apply_difficulty_transformation(&mut difficulties);
 

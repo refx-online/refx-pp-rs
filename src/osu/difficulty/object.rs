@@ -181,13 +181,10 @@ impl<'a> OsuDifficultyObject<'a> {
         };
 
         self.jump_dist = f64::from(
-            (last_object.stacked_pos() * scaling_factor - self.base.stacked_pos() * scaling_factor)
-                .length(),
+            (last_object.stacked_pos() - self.base.stacked_pos()).length() * scaling_factor,
         );
-        self.lazy_jump_dist = f64::from(
-            (self.base.stacked_pos() * scaling_factor - last_cursor_pos * scaling_factor).length(),
-        );
-        self.min_jump_time = self.adjusted_delta_time;
+        self.lazy_jump_dist =
+            f64::from((self.base.stacked_pos() - last_cursor_pos).length() * scaling_factor);
         self.min_jump_dist = self.lazy_jump_dist;
 
         let Some(last_diff_obj) = last_diff_obj else {
