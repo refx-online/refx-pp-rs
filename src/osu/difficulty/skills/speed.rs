@@ -25,7 +25,7 @@ define_skill! {
 }
 
 impl Speed {
-    const SKILL_MULTIPLIER: f64 = 1.15;
+    const SKILL_MULTIPLIER: f64 = 1.16;
     const STRAIN_DECAY_BASE: f64 = 0.3;
 
     fn strain_value_at(

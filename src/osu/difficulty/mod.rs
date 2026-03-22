@@ -37,7 +37,7 @@ mod object;
 pub mod scaling_factor;
 pub mod skills;
 
-const HD_FADE_IN_DURATION_MULTIPLIER: f64 = 0.4;
+pub(crate) const HD_FADE_IN_DURATION_MULTIPLIER: f64 = 0.4;
 const HD_FADE_OUT_DURATION_MULTIPLIER: f64 = 0.3;
 
 pub fn difficulty(
@@ -104,6 +104,12 @@ impl DifficultyValues {
             time_preempt,
         } = OsuDifficultySetup::new(difficulty, map);
 
+        let time_fade_in = if mods.hd() {
+            time_preempt * HD_FADE_IN_DURATION_MULTIPLIER
+        } else {
+            400.0 * (time_preempt / OsuObject::PREEMPT_MIN).min(1.0)
+        };
+
         let mut osu_objects = convert_objects(
             map,
             &scaling_factor,
@@ -115,10 +121,15 @@ impl DifficultyValues {
 
         let osu_object_iter = osu_objects.iter_mut().map(Pin::new);
 
-        let diff_objects =
-            Self::create_difficulty_objects(difficulty, &scaling_factor, osu_object_iter);
+        let diff_objects = Self::create_difficulty_objects(
+            difficulty,
+            &scaling_factor,
+            osu_object_iter,
+            time_preempt,
+            time_fade_in,
+        );
 
-        let mut skills = OsuSkills::new(mods, &scaling_factor, &map_attrs, time_preempt);
+        let mut skills = OsuSkills::new(mods, &scaling_factor, &map_attrs);
 
         // The first hit object has no difficulty object
         let take_diff_objects = cmp::min(map.hit_objects.len(), take).saturating_sub(1);
@@ -241,6 +252,8 @@ impl DifficultyValues {
         difficulty: &Difficulty,
         scaling_factor: &ScalingFactor,
         osu_objects: impl ExactSizeIterator<Item = Pin<&'a mut OsuObject>>,
+        time_preempt: f64,
+        time_fade_in: f64,
     ) -> Vec<OsuDifficultyObject<'a>> {
         let take = difficulty.get_passed_objects();
         let clock_rate = difficulty.get_clock_rate();
@@ -274,6 +287,8 @@ impl DifficultyValues {
                 clock_rate,
                 idx,
                 scaling_factor,
+                time_preempt,
+                time_fade_in,
             );
 
             last = h;

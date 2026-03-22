@@ -11,15 +11,13 @@ define_skill! {
     pub struct Reading: HarmonicSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
         current_strain: f64 = 0.0,
         has_hidden_mod: bool,
-        evaluator: ReadingEvaluator,
         object_start_times: Vec<f64> = Vec::with_capacity(256),
     }
 
-    pub fn new(has_hidden_mod: bool, time_preempt: f64, time_fade_in: f64) -> Self {
+    pub fn new(has_hidden_mod: bool) -> Self {
         Self {
             current_strain: 0.0,
             has_hidden_mod: has_hidden_mod,
-            evaluator: ReadingEvaluator::new(time_preempt, time_fade_in),
             object_start_times: Vec::with_capacity(256),
         }
     }
@@ -41,10 +39,9 @@ impl Reading {
 
         self.current_strain *= Self::strain_decay(curr.delta_time);
 
-        self.current_strain += self
-            .evaluator
-            .evaluate_diff_of(curr, objects, self.has_hidden_mod)
-            * Self::SKILL_MULTIPLIER;
+        self.current_strain +=
+            ReadingEvaluator::evaluate_diff_of(curr, objects, self.has_hidden_mod)
+                * Self::SKILL_MULTIPLIER;
 
         self.current_strain
     }

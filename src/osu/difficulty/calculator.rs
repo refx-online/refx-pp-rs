@@ -24,7 +24,7 @@ impl OsuRatingCalculator<'_> {
             return 0.0;
         }
 
-        let mut aim_rating = aim_difficulty_value.powf(0.62) * 0.0248;
+        let mut aim_rating = aim_difficulty_value.powf(0.63) * 0.02275;
 
         if self.mods.td() {
             aim_rating = aim_rating.powf(0.8);

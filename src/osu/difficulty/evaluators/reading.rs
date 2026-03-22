@@ -7,10 +7,7 @@ use crate::{
     },
 };
 
-pub struct ReadingEvaluator {
-    time_preempt: f64,
-    time_fade_in: f64,
-}
+pub struct ReadingEvaluator;
 
 impl ReadingEvaluator {
     const DENSITY_DIFFICULTY_BASE: f64 = 2.5;
@@ -27,15 +24,7 @@ impl ReadingEvaluator {
     // * 3 seconds
     const READING_WINDOW_SIZE: f64 = 3000.0;
 
-    pub const fn new(time_preempt: f64, time_fade_in: f64) -> Self {
-        Self {
-            time_preempt,
-            time_fade_in,
-        }
-    }
-
     pub fn evaluate_diff_of(
-        &self,
         curr: &OsuDifficultyObject<'_>,
         objects: &[OsuDifficultyObject<'_>],
         hidden: bool,
@@ -44,17 +33,20 @@ impl ReadingEvaluator {
             return 0.0;
         }
 
-        let velocity = 1.0_f64.max(curr.lazy_jump_dist / curr.adjusted_delta_time); // * Only allow velocity to buff
+        let curr_obj = curr;
+        let next_obj = curr.next(0, objects);
+
+        let velocity = 1.0_f64.max(curr_obj.lazy_jump_dist / curr_obj.adjusted_delta_time); // * Only allow velocity to buff
 
         let current_visible_object_density =
-            self.retrieve_current_visible_object_density(curr, objects);
+            Self::retrieve_current_visible_object_density(curr_obj, objects);
         let past_object_difficulty_influence =
-            self.get_past_object_difficulty_influence(curr, objects);
+            Self::get_past_object_difficulty_influence(curr_obj, objects);
 
-        let constant_angle_nerf_factor = Self::get_constant_angle_nerf_factor(curr, objects);
+        let constant_angle_nerf_factor = Self::get_constant_angle_nerf_factor(curr_obj, objects);
 
         let note_density_difficulty = Self::calculate_density_difficulty(
-            curr.next(0, objects),
+            next_obj,
             velocity,
             constant_angle_nerf_factor,
             past_object_difficulty_influence,
@@ -62,8 +54,8 @@ impl ReadingEvaluator {
         );
 
         let hidden_difficulty = if hidden {
-            self.calculate_hidden_difficulty(
-                curr,
+            Self::calculate_hidden_difficulty(
+                curr_obj,
                 objects,
                 past_object_difficulty_influence,
                 current_visible_object_density,
@@ -77,7 +69,7 @@ impl ReadingEvaluator {
         let preempt_difficulty = Self::calculate_preempt_difficulty(
             velocity,
             constant_angle_nerf_factor,
-            self.time_preempt,
+            curr_obj.preempt,
         );
 
         norm(
@@ -139,7 +131,6 @@ impl ReadingEvaluator {
     }
 
     fn calculate_hidden_difficulty(
-        &self,
         curr: &OsuDifficultyObject<'_>,
         objects: &[OsuDifficultyObject<'_>],
         past_object_difficulty_influence: f64,
@@ -149,7 +140,7 @@ impl ReadingEvaluator {
     ) -> f64 {
         // * Higher preempt means that time spent invisible is higher too, we want to
         //   reward that
-        let preempt_factor = self.time_preempt.powf(2.2) * 0.01;
+        let preempt_factor = curr.preempt.powf(2.2) * 0.01;
 
         // * Account for both past and current densities
         let density_factor =
@@ -165,16 +156,8 @@ impl ReadingEvaluator {
         //   time you click the previous note.
         if let Some(previous_obj) = curr.previous(0, objects) {
             if FloatExt::eq(curr.lazy_jump_dist, 0.0)
-                && FloatExt::eq(
-                    curr.opacity_at(
-                        previous_obj.start_time,
-                        true,
-                        self.time_preempt,
-                        self.time_fade_in,
-                    ),
-                    0.0,
-                )
-                && previous_obj.start_time > curr.start_time - self.time_preempt
+                && FloatExt::eq(curr.opacity_at(previous_obj.start_time, true), 0.0)
+                && previous_obj.start_time > curr.start_time - curr.preempt
             {
                 // * Perfect stacks are harder the less time between notes
                 hidden_difficulty +=
@@ -186,7 +169,6 @@ impl ReadingEvaluator {
     }
 
     fn get_past_object_difficulty_influence(
-        &self,
         curr: &OsuDifficultyObject<'_>,
         objects: &[OsuDifficultyObject<'_>],
     ) -> f64 {
@@ -200,18 +182,13 @@ impl ReadingEvaluator {
             let time_diff = curr.start_time - loop_obj.start_time;
 
             if time_diff > Self::READING_WINDOW_SIZE
-                || loop_obj.start_time + self.time_preempt < curr.start_time
+                || loop_obj.start_time < curr.start_time - curr.preempt
             {
                 // * Current object not visible at the time object needs to be clicked
                 break;
             }
 
-            let mut loop_difficulty = curr.opacity_at(
-                loop_obj.base.start_time,
-                false,
-                self.time_preempt,
-                self.time_fade_in,
-            );
+            let mut loop_difficulty = curr.opacity_at(loop_obj.base.start_time, false);
 
             // * When aiming an object small distances mean previous objects may be cheesed,
             //   so it doesn't matter whether they were arranged confusingly.
@@ -229,7 +206,6 @@ impl ReadingEvaluator {
     }
 
     fn retrieve_current_visible_object_density(
-        &self,
         curr: &OsuDifficultyObject<'_>,
         objects: &[OsuDifficultyObject<'_>],
     ) -> f64 {
@@ -240,19 +216,15 @@ impl ReadingEvaluator {
             let time_diff = hit_object.start_time - curr.start_time;
 
             if time_diff > Self::READING_WINDOW_SIZE
-                || curr.start_time + self.time_preempt < hit_object.start_time
+                || curr.start_time < hit_object.start_time - hit_object.preempt
             {
                 // * Current object not visible at the time object needs to be clicked
                 break;
             }
 
-            let time_nerf_factor = Self::get_time_nerf_factor(time_diff);
-            visible_object_count += hit_object.opacity_at(
-                curr.base.start_time,
-                false,
-                self.time_preempt,
-                self.time_fade_in,
-            ) * time_nerf_factor;
+            let time_nerf_factor = Self::get_time_nerf_factor(time_diff)
+                * hit_object.opacity_at(curr.base.start_time, false);
+            visible_object_count += time_nerf_factor;
 
             i += 1;
         }

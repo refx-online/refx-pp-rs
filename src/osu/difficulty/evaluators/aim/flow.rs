@@ -53,12 +53,13 @@ impl FlowAimEvaluator {
             curr_velocity = curr_velocity.max(slider_distance / osu_curr_obj.adjusted_delta_time);
         }
 
-        let mut prev_velocity = prev_distance / osu_last_obj.adjusted_delta_time;
+        let prev_velocity = prev_distance / osu_last_obj.adjusted_delta_time;
 
         let mut flow_difficulty = curr_velocity;
 
-        // * Apply high circle size bonus to the base velocity
-        flow_difficulty *= osu_curr_obj.small_circle_bonus;
+        // * Apply high circle size bonus to the base velocity.
+        // * We use reduced CS bonus here because the bonus was made for an evaluator with a different d/t scaling
+        flow_difficulty *= osu_curr_obj.small_circle_bonus.powf(0.75);
 
         // * Rhythm changes are harder to flow
         let delta_diff = (osu_curr_obj
@@ -70,7 +71,10 @@ impl FlowAimEvaluator {
             / 50.0;
         flow_difficulty *= 1.0 + delta_diff.powf(4.0).min(0.25);
 
-        if let Some(angular_velocity) = osu_curr_obj.angular_velocity {
+        if let (Some(angle), Some(last_angle)) = (osu_curr_obj.angle, osu_last_obj.angle) {
+            let angle_diff = (angle - last_angle).abs();
+            let angle_diff_adjusted = (angle_diff / 2.0).sin() * 180.0;
+            let angular_velocity = angle_diff_adjusted / (osu_curr_obj.adjusted_delta_time * 0.1);
             // * Low angular velocity flow (angles are consistent) is easier to follow than
             //   erratic flow
             flow_difficulty *= 0.8 + (angular_velocity / 270.0).sqrt();
@@ -90,7 +94,7 @@ impl FlowAimEvaluator {
             overlapped_notes_weight = 1.0 - o1 * o2 * o3;
         }
 
-        if let (Some(curr_angle), Some(_last_angle)) = (osu_curr_obj.angle, osu_last_obj.angle) {
+        if let Some(curr_angle) = osu_curr_obj.angle {
             // * Acute angles are also hard to flow
             // * We square root velocity to make acute angle switches in streams aren't
             //   having difficulty higher than snap
@@ -102,7 +106,6 @@ impl FlowAimEvaluator {
         if prev_velocity.max(curr_velocity) != 0.0 {
             if with_slider_travel_distance {
                 curr_velocity = curr_distance / osu_curr_obj.adjusted_delta_time;
-                prev_velocity = prev_distance / osu_last_obj.adjusted_delta_time;
             }
 
             // * Scale with ratio of difference compared to 0.5 * max dist.
@@ -121,11 +124,13 @@ impl FlowAimEvaluator {
                     .min(osu_last_obj.adjusted_delta_time))
             .min((prev_velocity - curr_velocity).abs());
 
-            flow_difficulty +=
-                overlap_velocity_buff * dist_ratio * Self::VELOCITY_CHANGE_MULTIPLIER;
+            flow_difficulty += overlap_velocity_buff
+                * dist_ratio
+                * overlapped_notes_weight
+                * Self::VELOCITY_CHANGE_MULTIPLIER;
         }
 
-        if osu_curr_obj.base.is_slider() {
+        if osu_curr_obj.base.is_slider() && with_slider_travel_distance {
             // * Include slider velocity to make velocity more consistent with snap
             flow_difficulty += osu_curr_obj.travel_dist / osu_curr_obj.travel_time;
         }

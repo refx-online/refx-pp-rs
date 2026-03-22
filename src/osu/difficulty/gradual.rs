@@ -5,7 +5,7 @@ use rosu_map::section::general::GameMode;
 use self::osu_objects::OsuObjects;
 use super::{
     object::OsuDifficultyObject, skills::OsuSkills, DifficultyValues, OsuDifficultyAttributes,
-    OsuDifficultySetup,
+    OsuDifficultySetup, HD_FADE_IN_DURATION_MULTIPLIER,
 };
 use crate::{
     any::difficulty::skills::{HarmonicSkill, StrainSkill},
@@ -101,13 +101,21 @@ impl OsuGradualDifficulty {
 
         let mut osu_objects = OsuObjects::new(osu_objects);
 
+        let time_fade_in = if mods.hd() {
+            time_preempt * HD_FADE_IN_DURATION_MULTIPLIER
+        } else {
+            400.0 * (time_preempt / OsuObject::PREEMPT_MIN).min(1.0)
+        };
+
         let diff_objects = DifficultyValues::create_difficulty_objects(
             &difficulty,
             &scaling_factor,
             osu_objects.iter_mut(),
+            time_preempt,
+            time_fade_in,
         );
 
-        let skills = OsuSkills::new(mods, &scaling_factor, &map_attrs, time_preempt);
+        let skills = OsuSkills::new(mods, &scaling_factor, &map_attrs);
         let diff_objects = extend_lifetime(diff_objects.into_boxed_slice());
 
         Ok(Self {

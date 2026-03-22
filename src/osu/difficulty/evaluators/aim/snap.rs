@@ -38,10 +38,6 @@ impl SnapAimEvaluator {
             return 0.0;
         }
 
-        let Some(osu_last_last_obj) = osu_curr_obj.previous(1, diff_objects) else {
-            return 0.0;
-        };
-
         let osu_last_2_obj = osu_curr_obj.previous(2, diff_objects);
 
         #[expect(clippy::items_after_statements, reason = "staying in-sync with lazer")]
@@ -65,18 +61,12 @@ impl SnapAimEvaluator {
             curr_velocity = curr_velocity.max(slider_distance / osu_curr_obj.adjusted_delta_time);
         }
 
-        // * As above, do the same for the previous hitobject.
         let prev_distance = if with_slider_travel_distance {
             osu_last_obj.lazy_jump_dist
         } else {
             osu_last_obj.jump_dist
         };
-        let mut prev_velocity = prev_distance / osu_last_obj.adjusted_delta_time;
-
-        if osu_last_last_obj.base.is_slider() && with_slider_travel_distance {
-            let slider_distance = osu_last_last_obj.lazy_travel_dist + osu_last_obj.lazy_jump_dist;
-            prev_velocity = prev_velocity.max(slider_distance / osu_last_obj.adjusted_delta_time);
-        }
+        let prev_velocity = prev_distance / osu_last_obj.adjusted_delta_time;
 
         let mut wide_angle_bonus = 0.0;
         let mut acute_angle_bonus = 0.0;
@@ -166,13 +156,8 @@ impl SnapAimEvaluator {
 
         if prev_velocity.max(curr_velocity) != 0.0 {
             if with_slider_travel_distance {
-                // * We want to use the average velocity over the whole object when awarding
-                //   differences, not the individual jump and slider path velocities.
-                prev_velocity = (osu_last_obj.lazy_jump_dist + osu_last_last_obj.travel_dist)
-                    / osu_last_obj.adjusted_delta_time;
-
-                curr_velocity = (osu_curr_obj.lazy_jump_dist + osu_last_obj.travel_dist)
-                    / osu_curr_obj.adjusted_delta_time;
+                // * We want to use just the object jump without slider velocity when awarding differences
+                curr_velocity = curr_distance / osu_curr_obj.adjusted_delta_time;
             }
 
             // * Scale with ratio of difference compared to 0.5 * max dist.

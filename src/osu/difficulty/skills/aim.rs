@@ -29,7 +29,7 @@ define_skill! {
 impl Aim {
     const MEAN_EXPONENT: f64 = 1.2;
     const SKILL_MULTIPLIER_AGILITY: f64 = 2.0;
-    const SKILL_MULTIPLIER_FLOW: f64 = 244.0;
+    const SKILL_MULTIPLIER_FLOW: f64 = 245.0;
     const SKILL_MULTIPLIER_SNAP: f64 = 71.0;
     const SKILL_MULTIPLIER_TOTAL: f64 = 1.1;
     const STRAIN_DECAY_BASE: f64 = 0.15;

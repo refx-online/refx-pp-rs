@@ -14,13 +14,13 @@ define_skill! {
         evaluator: FlashlightEvaluator,
     }
 
-    pub fn new(has_hidden_mod: bool, radius: f64, time_preempt: f64, time_fade_in: f64) -> Self {
+    pub fn new(has_hidden_mod: bool, radius: f64) -> Self {
         let scaling_factor = 52.0 / radius;
 
         Self {
             current_strain: 0.0,
             has_hidden_mod: has_hidden_mod,
-            evaluator: FlashlightEvaluator::new(scaling_factor, time_preempt, time_fade_in),
+            evaluator: FlashlightEvaluator::new(scaling_factor),
         }
     }
 }

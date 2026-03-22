@@ -739,7 +739,7 @@ impl<'map> OsuPerformance<'map> {
 
         let mut score_based_estimated_miss_count = 0.0;
 
-        if using_classic_slider_acc && self.legacy_total_score.is_some() {
+        if using_classic_slider_acc && self.legacy_total_score.is_some() && !mods.score_v2() {
             let legacy_score_miss_calculator = OsuLegacyScoreMissCalculator::new(
                 &state,
                 &attrs,

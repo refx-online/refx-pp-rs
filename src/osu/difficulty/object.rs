@@ -35,6 +35,8 @@ pub struct OsuDifficultyObject<'a> {
     pub angular_velocity: Option<f64>,
 
     pub small_circle_bonus: f64,
+    pub preempt: f64,
+    pub fade_in: f64,
 }
 
 impl<'a> OsuDifficultyObject<'a> {
@@ -44,6 +46,7 @@ impl<'a> OsuDifficultyObject<'a> {
     pub const NORMALIZED_DIAMETER: i32 = Self::NORMALIZED_RADIUS * 2;
     pub const NORMALIZED_RADIUS: i32 = 50;
 
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         hit_object: &'a OsuObject,
         last_object: &'a OsuObject,
@@ -52,6 +55,8 @@ impl<'a> OsuDifficultyObject<'a> {
         clock_rate: f64,
         idx: usize,
         scaling_factor: &ScalingFactor,
+        time_preempt: f64,
+        time_fade_in: f64,
     ) -> Self {
         let delta_time = (hit_object.start_time - last_object.start_time) / clock_rate;
         let start_time = hit_object.start_time / clock_rate;
@@ -88,6 +93,8 @@ impl<'a> OsuDifficultyObject<'a> {
             normalized_vec_angle: None,
             angular_velocity: None,
             small_circle_bonus,
+            preempt: time_preempt,
+            fade_in: time_fade_in,
         };
 
         this.compute_slider_cursor_pos(scaling_factor.radius);
@@ -102,7 +109,7 @@ impl<'a> OsuDifficultyObject<'a> {
         this
     }
 
-    pub fn opacity_at(&self, time: f64, hidden: bool, time_preempt: f64, time_fade_in: f64) -> f64 {
+    pub fn opacity_at(&self, time: f64, hidden: bool) -> f64 {
         if time > self.base.start_time {
             // * Consider a hitobject as being invisible when its start time is passed.
             // * In reality the hitobject will be visible beyond its start time up until its
@@ -112,15 +119,15 @@ impl<'a> OsuDifficultyObject<'a> {
             return 0.0;
         }
 
-        let fade_in_start_time = self.base.start_time - time_preempt;
+        let fade_in_start_time = self.base.start_time - self.preempt;
 
         // * Equal to `OsuHitObject.TimeFadeIn` minus any adjustments from the HD mod.
-        let fade_in_duration = 400.0 * (time_preempt / OsuObject::PREEMPT_MIN).min(1.0);
+        let fade_in_duration = 400.0 * (self.preempt / OsuObject::PREEMPT_MIN).min(1.0);
 
         if hidden {
             // * Taken from OsuModHidden.
-            let fade_out_start_time = self.base.start_time - time_preempt + time_fade_in;
-            let fade_out_duration = time_preempt * HD_FADE_OUT_DURATION_MULTIPLIER;
+            let fade_out_start_time = self.base.start_time - self.preempt + self.fade_in;
+            let fade_out_duration = self.preempt * HD_FADE_OUT_DURATION_MULTIPLIER;
 
             (((time - fade_in_start_time) / fade_in_duration).clamp(0.0, 1.0))
                 .min(1.0 - ((time - fade_out_start_time) / fade_out_duration).clamp(0.0, 1.0))
@@ -179,6 +186,8 @@ impl<'a> OsuDifficultyObject<'a> {
         } else {
             last_object.stacked_pos()
         };
+
+        let last_end_cursor_pos = last_cursor_pos;
 
         self.jump_dist = f64::from(
             (last_object.stacked_pos() - self.base.stacked_pos()).length() * scaling_factor,
@@ -257,7 +266,7 @@ impl<'a> OsuDifficultyObject<'a> {
                 self.base.stacked_pos(),
                 last_object,
                 last_diff_obj,
-                last_cursor_pos,
+                last_end_cursor_pos,
                 last_last_cursor_pos,
             );
 
@@ -399,9 +408,14 @@ impl<'a> OsuDifficultyObject<'a> {
         if let (OsuObjectKind::Slider(ref prev_slider), last_diff) =
             (&last_object.kind, last_diff_obj)
         {
-            if last_diff.travel_dist > 0.0 && prev_slider.nested_objects.len() >= 2 {
-                let second_last = &prev_slider.nested_objects[prev_slider.nested_objects.len() - 2];
-                last_last_cursor_pos = second_last.pos + last_object.stack_offset;
+            if last_diff.travel_dist > 0.0 {
+                if prev_slider.nested_objects.len() >= 2 {
+                    let second_last =
+                        &prev_slider.nested_objects[prev_slider.nested_objects.len() - 2];
+                    last_last_cursor_pos = second_last.pos + last_object.stack_offset;
+                } else {
+                    last_last_cursor_pos = last_object.stacked_pos();
+                }
             }
         }
 

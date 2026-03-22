@@ -7,8 +7,6 @@ use crate::{
 
 pub struct FlashlightEvaluator {
     scaling_factor: f64,
-    time_preempt: f64,
-    time_fade_in: f64,
 }
 
 impl FlashlightEvaluator {
@@ -18,12 +16,8 @@ impl FlashlightEvaluator {
     const MIN_VELOCITY: f64 = 0.5;
     const SLIDER_MULTIPLIER: f64 = 1.3;
 
-    pub const fn new(scaling_factor: f64, time_preempt: f64, time_fade_in: f64) -> Self {
-        Self {
-            scaling_factor,
-            time_preempt,
-            time_fade_in,
-        }
+    pub const fn new(scaling_factor: f64) -> Self {
+        Self { scaling_factor }
     }
 
     pub fn evaluate_diff_of<'a>(
@@ -76,13 +70,7 @@ impl FlashlightEvaluator {
                 // * Bonus based on how visible the object is.
                 let opacity_bonus = 1.0
                     + Self::MAX_OPACITY_BONUS
-                        * (1.0
-                            - osu_curr.opacity_at(
-                                curr_hit_obj.start_time,
-                                hidden,
-                                self.time_preempt,
-                                self.time_fade_in,
-                            ));
+                        * (1.0 - osu_curr.opacity_at(curr_hit_obj.start_time, hidden));
 
                 result += stack_nerf * opacity_bonus * self.scaling_factor * jump_dist
                     / cumulative_strain_time;
