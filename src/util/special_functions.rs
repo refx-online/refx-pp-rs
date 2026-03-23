@@ -5,8 +5,12 @@
     clippy::many_single_char_names
 )]
 
+use std::f64::consts::PI;
+
+use crate::util::float_ext::FloatExt;
+
 pub fn erf(x: f64) -> f64 {
-    if x == 0.0 {
+    if FloatExt::eq(x, 0.0) {
         return 0.0;
     }
 
@@ -46,17 +50,18 @@ pub fn erf_inv(mut x: f64) -> f64 {
         return f64::INFINITY;
     }
 
-    if x == 0.0 {
+    if FloatExt::eq(x, 0.0) {
         return 0.0;
     }
 
-    let a = 0.147;
+    #[expect(clippy::items_after_statements, reason = "staying in-sync with lazer")]
+    const A: f64 = 0.147;
     let sgn = x.signum();
     x = x.abs();
 
     let ln = f64::ln(1.0 - x * x);
-    let t1 = 2.0 / (std::f64::consts::PI * a) + ln / 2.0;
-    let t2 = ln / a;
+    let t1 = 2.0 / (PI * A) + ln / 2.0;
+    let t2 = ln / A;
     let base_approx = f64::sqrt(t1 * t1 - t2) - t1;
 
     // * Correction reduces max error from -0.005 to -0.00045.

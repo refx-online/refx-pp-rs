@@ -29,28 +29,12 @@ macro_rules! test_cases {
     };
     ( @Osu {
         $map:ident,
-        pp: $pp:expr,
-        pp_acc: $pp_acc:expr,
-        pp_aim: $pp_aim:expr,
-        pp_flashlight: $pp_flashlight:expr,
-        pp_speed: $pp_speed:expr,
-        effective_miss_count: $effective_miss_count:expr,
-        speed_deviation: $speed_deviation:expr,
-        aim_estimated_slider_breaks: $aim_estimated_slider_breaks:expr,
-        speed_estimated_slider_breaks: $speed_estimated_slider_breaks:expr,
+        $( $key:ident: $value:expr, )*
     }) => {
         (
             OsuPerformance::from(&$map).lazer(true),
             OsuPerformanceAttributes {
-                pp: $pp,
-                pp_acc: $pp_acc,
-                pp_aim: $pp_aim,
-                pp_flashlight: $pp_flashlight,
-                pp_speed: $pp_speed,
-                effective_miss_count: $effective_miss_count,
-                speed_deviation: $speed_deviation,
-                aim_estimated_slider_breaks: $aim_estimated_slider_breaks,
-                speed_estimated_slider_breaks: $speed_estimated_slider_breaks,
+                $( $key: $value, )*
                 ..Default::default()
             },
         )
@@ -109,13 +93,14 @@ fn basic_osu() {
     test_cases! {
         Osu: OSU {
             NM => {
-                pp: 271.27311209442854,
-                pp_acc: 97.62287463107766,
-                pp_aim: 98.93969440570889,
+                pp: 315.9204917828142,
+                pp_acc: 98.99847982709288,
+                pp_aim: 150.43289360066123,
                 pp_flashlight: 0.0,
-                pp_speed: 65.97387258620209,
+                pp_reading: 2.5538634650307226,
+                pp_speed: 58.57212419435475,
                 effective_miss_count: 0.0,
-                speed_deviation: Some(11.855079578025586),
+                speed_deviation: Some(11.804712293267748),
                 aim_estimated_slider_breaks: 0.0,
                 speed_estimated_slider_breaks: 0.0,
             };
@@ -124,6 +109,7 @@ fn basic_osu() {
                 pp_acc: 105.43270460156388,
                 pp_aim: 147.80814449752506,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 99.57012085136238,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.855079578025586),
@@ -135,6 +121,7 @@ fn basic_osu() {
                 pp_acc: 16.6270597231239,
                 pp_aim: 107.51075437922465,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 74.29468671347082,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(23.1539101317497),
@@ -146,6 +133,7 @@ fn basic_osu() {
                 pp_acc: 161.55575439788055,
                 pp_aim: 147.50036358525037,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 80.74831318600936,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(8.823851275303134),
@@ -157,6 +145,7 @@ fn basic_osu() {
                 pp_acc: 184.09450675506795,
                 pp_aim: 302.2306653116079,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 225.42353095885375,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(7.873979522967204),
@@ -168,6 +157,7 @@ fn basic_osu() {
                 pp_acc: 257.56571695089025,
                 pp_aim: 513.9559236214852,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 306.79439386984944,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(5.835415978964492),
@@ -232,6 +222,7 @@ fn basic_osu_rx() {
                 pp_acc: 328.79732860865414,
                 pp_aim: 3001.0723727195955,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 591.469656001033,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(4.982527280600511),
@@ -243,6 +234,7 @@ fn basic_osu_rx() {
                 pp_acc: 337.5652573715516,
                 pp_aim: 3950.8622533392077,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 779.5929349165175,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(4.982527280600511),
@@ -254,6 +246,7 @@ fn basic_osu_rx() {
                 pp_acc: 328.79732860865414,
                 pp_aim: 3680.426248231621,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 595.8862283966607,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(4.983049299279781),
@@ -274,6 +267,7 @@ fn basic_osu_precision() {
                 pp_acc: 110.08622031074181,
                 pp_aim: 1321.181690151598,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 161.1095465579516,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(11.064670108647732),
@@ -285,6 +279,7 @@ fn basic_osu_precision() {
                 pp_acc: 180.48973670161635,
                 pp_aim: 4594.93464322394,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 587.3103401933898,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(7.373090709552876),
@@ -296,6 +291,7 @@ fn basic_osu_precision() {
                 pp_acc: 119.72772727278569,
                 pp_aim: 2237.9905160901353,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 168.66386777265313,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(10.433212319308803),
@@ -307,6 +303,7 @@ fn basic_osu_precision() {
                 pp_acc: 119.72772727278569,
                 pp_aim: 2237.9905160901353,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 168.66386777265313,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(10.433212319308803),
@@ -327,6 +324,7 @@ fn sidetracked_day() {
                 pp_acc: 203.11371996655805,
                 pp_aim: 460.3469892326364,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 916.0951611460462,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(6.361094470269358),
@@ -338,6 +336,7 @@ fn sidetracked_day() {
                 pp_acc: 210.69663355609595,
                 pp_aim: 471.99026000698325,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 939.2264764070319,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(6.361094470269358),
@@ -349,6 +348,7 @@ fn sidetracked_day() {
                 pp_acc: 233.61942332760358,
                 pp_aim: 661.54880888371,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 1173.9394442013802,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(5.601995328148896),
@@ -369,6 +369,7 @@ fn ne_pleach() {
                 pp_acc: 203.11371996655805,
                 pp_aim: 460.3469892326364,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 916.0951611460462,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(6.361094470269358),
@@ -389,6 +390,7 @@ fn dick() {
                 pp_acc: 203.11371996655805,
                 pp_aim: 460.3469892326364,
                 pp_flashlight: 0.0,
+                pp_reading: 0.0,
                 pp_speed: 916.0951611460462,
                 effective_miss_count: 0.0,
                 speed_deviation: Some(6.361094470269358),
@@ -537,7 +539,7 @@ impl AssertEq for OsuPerformanceAttributes {
             pp_aim,
             pp_flashlight,
             pp_speed,
-            pp_reading: _,
+            pp_reading,
             effective_miss_count,
             speed_deviation,
             aim_estimated_slider_breaks,
@@ -551,6 +553,7 @@ impl AssertEq for OsuPerformanceAttributes {
         assert_eq_float(*pp_aim, expected.pp_aim);
         assert_eq_float(*pp_flashlight, expected.pp_flashlight);
         assert_eq_float(*pp_speed, expected.pp_speed);
+        assert_eq_float(*pp_reading, expected.pp_reading);
         assert_eq_float(*effective_miss_count, expected.effective_miss_count);
         assert_eq_option(*speed_deviation, expected.speed_deviation);
         assert_eq_float(

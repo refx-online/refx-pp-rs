@@ -53,6 +53,14 @@ impl Reading {
 
         let mut difficulties = self.harmonic_skill_object_difficulties.clone();
 
+        // * Notes with 0 difficulty are excluded to avoid worst-case time complexity of the following sort (e.g. /b/2351871).
+        // * These notes will not contribute to the difficulty.
+        difficulties.retain(|&d| d > 0.0);
+
+        if difficulties.is_empty() {
+            return (0.0, 0.0);
+        }
+
         self.apply_difficulty_transformation(&mut difficulties);
 
         harmonic_difficulty_value(difficulties, Self::HARMONIC_SCALE, Self::DECAY_EXPONENT)
