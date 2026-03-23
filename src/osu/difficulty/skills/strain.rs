@@ -22,6 +22,7 @@ pub trait OsuHarmonicSkill {
             return 0.0;
         }
 
+        // * What would the top difficulty be if all object difficulties were identical
         let consistent_top_note = difficulty_value / note_weight_sum;
         if consistent_top_note == 0.0 {
             return 0.0;

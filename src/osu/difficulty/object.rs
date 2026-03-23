@@ -36,6 +36,7 @@ pub struct OsuDifficultyObject<'a> {
 
     pub small_circle_bonus: f64,
     pub preempt: f64,
+    pub clock_rate_adjusted_preempt: f64,
     pub fade_in: f64,
 }
 
@@ -94,6 +95,7 @@ impl<'a> OsuDifficultyObject<'a> {
             angular_velocity: None,
             small_circle_bonus,
             preempt: time_preempt,
+            clock_rate_adjusted_preempt: time_preempt / clock_rate,
             fade_in: time_fade_in,
         };
 

@@ -69,7 +69,7 @@ impl ReadingEvaluator {
         let preempt_difficulty = Self::calculate_preempt_difficulty(
             velocity,
             constant_angle_nerf_factor,
-            curr_obj.preempt,
+            curr_obj.clock_rate_adjusted_preempt,
         );
 
         norm(
