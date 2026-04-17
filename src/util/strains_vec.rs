@@ -96,16 +96,6 @@ mod inner {
             self.sort_desc();
         }
 
-        /// Removes all zeros, sorts the remaining entries in descending order,
-        /// and returns an iterator over mutable references to the
-        /// values.
-        #[inline]
-        pub fn sorted_non_zero_iter_mut(&mut self) -> impl ExactSizeIterator<Item = &mut f64> {
-            self.retain_non_zero_and_sort();
-
-            self.inner.iter_mut().map(StrainsEntry::as_value_mut)
-        }
-
         /// Sum up all values.
         #[inline]
         pub fn sum(&self) -> f64 {
@@ -294,11 +284,6 @@ mod inner {
                 } else {
                     None
                 }
-            }
-
-            #[inline]
-            pub const fn as_value_mut(&mut self) -> &mut f64 {
-                unsafe { &mut self.value }
             }
 
             #[inline]

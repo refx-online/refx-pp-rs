@@ -59,7 +59,7 @@ impl FlowAimEvaluator {
 
         // * Apply high circle size bonus to the base velocity.
         // * We use reduced CS bonus here because the bonus was made for an evaluator with a different d/t scaling
-        flow_difficulty *= osu_curr_obj.small_circle_bonus.powf(0.75);
+        flow_difficulty *= osu_curr_obj.small_circle_bonus.sqrt();
 
         // * Rhythm changes are harder to flow
         let delta_diff = (osu_curr_obj
@@ -99,7 +99,7 @@ impl FlowAimEvaluator {
             // * We square root velocity to make acute angle switches in streams aren't
             //   having difficulty higher than snap
             flow_difficulty += curr_velocity.sqrt()
-                * SnapAimEvaluator::calc_acute_angle_bonus(curr_angle)
+                * SnapAimEvaluator::calc_angle_acuteness(curr_angle)
                 * overlapped_notes_weight;
         }
 

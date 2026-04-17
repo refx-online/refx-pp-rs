@@ -331,7 +331,7 @@ impl OsuPerformanceCalculator<'_> {
         // * ideal, so the minimum buff is given.
         if self.mods.bl() {
             acc_value *= 1.14;
-        } else if self.mods.hd() || self.mods.tc() {
+        } else if self.mods.tc() {
             // * Decrease bonus for AR > 10
             acc_value *= 1.0 + 0.08 * reverse_lerp(self.attrs.ar, 11.5, 10.0);
         }

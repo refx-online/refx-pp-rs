@@ -30,7 +30,7 @@ impl AgilityEvaluator {
         let distance_scaled = distance.min(Self::DISTANCE_CAP) / Self::DISTANCE_CAP;
         let mut strain = distance_scaled * 1000.0 / osu_curr_obj.adjusted_delta_time;
 
-        strain *= osu_curr_obj.small_circle_bonus;
+        strain *= osu_curr_obj.small_circle_bonus.powf(1.5);
 
         strain *= Self::high_bpm_bonus(osu_curr_obj.adjusted_delta_time);
 
@@ -38,6 +38,6 @@ impl AgilityEvaluator {
     }
 
     fn high_bpm_bonus(ms: f64) -> f64 {
-        1.0 / (1.0 - 0.3_f64.powf((ms / 1000.0).powf(0.9)))
+        1.0 / (1.0 - 0.2_f64.powf(ms / 1000.0))
     }
 }

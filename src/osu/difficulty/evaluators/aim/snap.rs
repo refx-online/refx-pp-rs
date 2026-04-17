@@ -68,17 +68,16 @@ impl SnapAimEvaluator {
         };
         let prev_velocity = prev_distance / osu_last_obj.adjusted_delta_time;
 
-        let mut wide_angle_bonus = 0.0;
-        let mut acute_angle_bonus = 0.0;
-        let mut slider_bonus = 0.0;
-        let mut velocity_change_bonus = 0.0;
-        let mut wiggle_bonus = 0.0;
-
         let mut aim_strain = curr_velocity;
+
+        // * Penalize angle repetition.
+        aim_strain *= Self::vector_angle_repetition(osu_curr_obj, osu_last_obj, diff_objects);
 
         if let (Some(curr_angle), Some(last_angle)) = (osu_curr_obj.angle, osu_last_obj.angle) {
             // * Rewarding angles, take the smaller velocity as base.
-            let angle_bonus = curr_velocity.min(prev_velocity);
+            let velocity_influence = curr_velocity.min(prev_velocity);
+
+            let mut acute_angle_bonus = 0.0;
 
             // * If rhythms are the same.
             if osu_curr_obj
@@ -89,18 +88,16 @@ impl SnapAimEvaluator {
                         .adjusted_delta_time
                         .min(osu_last_obj.adjusted_delta_time)
             {
-                acute_angle_bonus = Self::calc_acute_angle_bonus(curr_angle);
+                acute_angle_bonus = Self::calc_angle_acuteness(curr_angle);
 
-                // * Penalize angle repetition.
                 acute_angle_bonus *= 0.08
                     + 0.92
                         * (1.0
                             - acute_angle_bonus
-                                .min(Self::calc_acute_angle_bonus(last_angle).powi(3)));
-
+                                .min(Self::calc_angle_acuteness(last_angle).powi(3)));
                 // * Apply acute angle bonus for BPM above 300 1/2 and distance more than one
                 //   diameter
-                acute_angle_bonus *= angle_bonus
+                acute_angle_bonus *= velocity_influence
                     * smootherstep(
                         milliseconds_to_bpm(osu_curr_obj.adjusted_delta_time, Some(2)),
                         300.0,
@@ -109,19 +106,37 @@ impl SnapAimEvaluator {
                     * smootherstep(curr_distance, 0.0, f64::from(DIAMETER) * 2.0);
             }
 
-            wide_angle_bonus = Self::calc_wide_angle_bonus(curr_angle);
+            let mut wide_angle_bonus = Self::calc_angle_wideness(curr_angle);
 
-            // * Penalize angle repetition.
+            // * Penalize angle repetition. It is important to do it _before_ multiplying by velocity because we compare raw wideness here
             wide_angle_bonus *= 0.25
                 + 0.75
-                    * (1.0 - wide_angle_bonus.min(Self::calc_wide_angle_bonus(last_angle).powi(3)));
+                    * (1.0 - wide_angle_bonus.min(Self::calc_angle_wideness(last_angle).powi(3)));
 
-            wide_angle_bonus *= angle_bonus;
+            wide_angle_bonus *= velocity_influence;
+
+            if let Some(osu_last_2_obj) = osu_last_2_obj {
+                // * If objects just go back and forth through a middle point - don't give as
+                //   much wide bonus
+                // * Use Previous(2) and Previous(0) because angles calculation is done
+                //   prevprev-prev-curr,
+                // * so any object's angle's center point is always the previous object
+                let distance =
+                    (osu_last_2_obj.base.stacked_pos() - osu_last_obj.base.stacked_pos()).length();
+
+                if distance < 1.0 {
+                    wide_angle_bonus *= 1.0 - 0.55 * (1.0 - f64::from(distance));
+                }
+            }
+
+            // * Add in acute angle bonus or wide angle bonus, whichever is larger.
+            aim_strain += (acute_angle_bonus * Self::ACUTE_ANGLE_MULTIPLIER)
+                .max(wide_angle_bonus * Self::WIDE_ANGLE_MULTIPLIER);
 
             // * Apply wiggle bonus for jumps that are [radius, 3*diameter] in distance,
             //   with < 110 angle
             // * https://www.desmos.com/calculator/dp0v0nvowc
-            wiggle_bonus = angle_bonus
+            let wiggle_bonus = velocity_influence
                 * smootherstep(curr_distance, f64::from(RADIUS), f64::from(DIAMETER))
                 * reverse_lerp(
                     curr_distance,
@@ -139,19 +154,7 @@ impl SnapAimEvaluator {
                 .powf(1.8)
                 * smootherstep(last_angle, 110_f64.to_radians(), 60_f64.to_radians());
 
-            if let Some(osu_last_2_obj) = osu_last_2_obj {
-                // * If objects just go back and forth through a middle point - don't give as
-                //   much wide bonus
-                // * Use Previous(2) and Previous(0) because angles calculation is done
-                //   prevprev-prev-curr,
-                // * so any object's angle's center point is always the previous object
-                let distance =
-                    (osu_last_2_obj.base.stacked_pos() - osu_last_obj.base.stacked_pos()).length();
-
-                if distance < 1.0 {
-                    wide_angle_bonus *= 1.0 - 0.55 * (1.0 - f64::from(distance));
-                }
-            }
+            aim_strain += wiggle_bonus * Self::WIGGLE_MULTIPLIER;
         }
 
         if prev_velocity.max(curr_velocity) != 0.0 {
@@ -175,7 +178,7 @@ impl SnapAimEvaluator {
                     .min(osu_last_obj.adjusted_delta_time))
             .min((prev_velocity - curr_velocity).abs());
 
-            velocity_change_bonus = overlap_velocity_buff * dist_ratio;
+            let mut velocity_change_bonus = overlap_velocity_buff * dist_ratio;
 
             // * Penalize for rhythm changes.
             velocity_change_bonus *= (osu_curr_obj
@@ -185,25 +188,13 @@ impl SnapAimEvaluator {
                     .adjusted_delta_time
                     .max(osu_last_obj.adjusted_delta_time))
             .powi(2);
+
+            aim_strain += velocity_change_bonus * Self::VELOCITY_CHANGE_MULTIPLIER;
         }
 
-        if osu_curr_obj.base.is_slider() {
-            // * Reward sliders based on velocity.
-            slider_bonus = osu_curr_obj.travel_dist / osu_curr_obj.travel_time;
-        }
-
-        // * Penalize angle repetition.
-        aim_strain *= Self::vector_angle_repetition(osu_curr_obj, osu_last_obj, diff_objects);
-
-        aim_strain += wiggle_bonus * Self::WIGGLE_MULTIPLIER;
-        aim_strain += velocity_change_bonus * Self::VELOCITY_CHANGE_MULTIPLIER;
-
-        // * Add in acute angle bonus or wide angle bonus, whichever is larger.
-        aim_strain += (acute_angle_bonus * Self::ACUTE_ANGLE_MULTIPLIER)
-            .max(wide_angle_bonus * Self::WIDE_ANGLE_MULTIPLIER);
-
-        // * Add in additional slider velocity bonus.
-        if with_slider_travel_distance {
+        // * Reward sliders based on velocity.
+        if osu_curr_obj.base.is_slider() && with_slider_travel_distance {
+            let slider_bonus = osu_curr_obj.travel_dist / osu_curr_obj.travel_time;
             aim_strain += if slider_bonus < 1.0 {
                 slider_bonus
             } else {
@@ -295,7 +286,7 @@ impl SnapAimEvaluator {
 
         let base_nerf = 1.0
             - Self::MAXIMUM_REPETITION_NERF
-                * Self::calc_acute_angle_bonus(last_angle)
+                * Self::calc_angle_acuteness(last_angle)
                 * angle_difference_adjusted;
 
         (base_nerf
@@ -303,11 +294,11 @@ impl SnapAimEvaluator {
             .powi(2)
     }
 
-    const fn calc_wide_angle_bonus(angle: f64) -> f64 {
+    const fn calc_angle_wideness(angle: f64) -> f64 {
         smoothstep(angle, 40_f64.to_radians(), 140_f64.to_radians())
     }
 
-    pub const fn calc_acute_angle_bonus(angle: f64) -> f64 {
+    pub const fn calc_angle_acuteness(angle: f64) -> f64 {
         smoothstep(angle, 140_f64.to_radians(), 40_f64.to_radians())
     }
 }

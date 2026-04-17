@@ -285,6 +285,51 @@ macro_rules! define_skill {
         }
     };
 
+    // Extend `VariableLengthStrainSkill`'s fields
+    (
+        @$trait:ident skip_impl $objects:ty[$object:ty]
+        extend_fields VariableLengthStrainSkill
+        fields { $( $fields:tt )* }
+        $( $rest:tt )*
+    ) => {
+        define_skill! {
+            @$trait skip_impl $objects[$object]
+            fields {
+                $( $fields )*
+                variable_length_strain_current_section_peak f64 = 0.0,
+                variable_length_strain_current_section_begin f64 = 0.0,
+                variable_length_strain_current_section_end f64 = 0.0,
+                variable_length_strain_queued_strains Vec<(f64, f64)> = Vec::new(),
+                variable_length_strain_total_length f64 = 0.0,
+                variable_length_strain_peaks Vec<crate::any::difficulty::skills::StrainPeak> = Vec::with_capacity(64),
+                variable_length_strain_object_strains Vec<f64> = Vec::with_capacity(256),
+            }
+            $( $rest )*
+        }
+    };
+
+    (
+        @$trait:ident $objects:ty[$object:ty]
+        extend_fields VariableLengthStrainSkill // <-
+        fields { $( $fields:tt )* }
+        $( $rest:tt )*
+    ) => {
+        define_skill! {
+            @$trait $objects[$object]
+            fields {
+                $( $fields )*
+                variable_length_strain_current_section_peak f64 = 0.0, // <-
+                variable_length_strain_current_section_begin f64 = 0.0,
+                variable_length_strain_current_section_end f64 = 0.0,
+                variable_length_strain_queued_strains Vec<(f64, f64)> = Vec::new(),
+                variable_length_strain_total_length f64 = 0.0,
+                variable_length_strain_peaks Vec<crate::any::difficulty::skills::StrainPeak> = Vec::with_capacity(64),
+                variable_length_strain_object_strains Vec<f64> = Vec::with_capacity(256),
+            }
+            $( $rest )*
+        }
+    };
+
     // Parse field without default
     (
         @$trait:ident skip_impl $objects:ty[$object:ty]
@@ -492,7 +537,7 @@ macro_rules! define_skill {
             use crate::{
                 any::difficulty::{
                     object::{IDifficultyObject, IDifficultyObjects, HasStartTime},
-                    skills::{StrainSkill, StrainDecaySkill, HarmonicSkill},
+                    skills::{StrainSkill, StrainDecaySkill, HarmonicSkill, VariableLengthStrainSkill},
                 },
                 util::strains_vec::StrainsVec,
             };
@@ -659,6 +704,186 @@ macro_rules! define_skill {
 
             fn strain_decay(ms: f64) -> f64 {
                 crate::any::difficulty::skills::strain_decay(ms, Self::STRAIN_DECAY_BASE)
+            }
+        }
+    };
+
+    // Implement `VariableLengthStrainSkill` trait
+    ( @impl VariableLengthStrainSkill $name:ident $objects:ty[$object:ty] ) => {
+        impl VariableLengthStrainSkill for $name {
+            type DifficultyObject<'a> = $object;
+            type DifficultyObjects<'a> = $objects;
+
+            fn process<'a>(
+                &mut self,
+                curr: &Self::DifficultyObject<'a>,
+                objects: &Self::DifficultyObjects<'a>,
+            ) {
+                let section_length = f64::from(Self::MAX_SECTION_LENGTH);
+
+                if curr.idx == 0 {
+                    self.variable_length_strain_current_section_begin = curr.start_time;
+                    self.variable_length_strain_current_section_end =
+                        self.variable_length_strain_current_section_begin + section_length;
+                    self.variable_length_strain_current_section_peak = self.strain_value_at(curr, objects);
+                    self.variable_length_strain_object_strains.push(self.variable_length_strain_current_section_peak);
+                    return;
+                }
+
+                while curr.start_time > self.variable_length_strain_current_section_end {
+                    self.save_current_peak(
+                        self.variable_length_strain_current_section_end - self.variable_length_strain_current_section_begin,
+                    );
+                    self.variable_length_strain_current_section_begin = self.variable_length_strain_current_section_end;
+
+                    if !self.variable_length_strain_queued_strains.is_empty() {
+                        let (strain, start_time) = self.variable_length_strain_queued_strains.remove(0);
+                        self.variable_length_strain_current_section_end = start_time + section_length;
+                        self.start_new_section_from(
+                            self.variable_length_strain_current_section_begin,
+                            curr,
+                            objects,
+                        );
+                        self.variable_length_strain_current_section_peak =
+                            f64::max(self.variable_length_strain_current_section_peak, strain);
+                    } else {
+                        self.variable_length_strain_current_section_end =
+                            self.variable_length_strain_current_section_begin + section_length;
+                        self.start_new_section_from(
+                            self.variable_length_strain_current_section_begin,
+                            curr,
+                            objects,
+                        );
+                    }
+                }
+
+                let current_strain = self.strain_value_at(curr, objects);
+                self.variable_length_strain_object_strains.push(current_strain);
+
+                if current_strain > self.variable_length_strain_current_section_peak {
+                    self.variable_length_strain_queued_strains.clear();
+                    self.save_current_peak(
+                        curr.start_time - self.variable_length_strain_current_section_begin,
+                    );
+                    self.variable_length_strain_current_section_begin = curr.start_time;
+                    self.variable_length_strain_current_section_end =
+                        self.variable_length_strain_current_section_begin + section_length;
+                    self.variable_length_strain_current_section_peak = current_strain;
+                } else {
+                    while let Some(&(strain, _)) = self.variable_length_strain_queued_strains.last() {
+                        if strain < current_strain {
+                            self.variable_length_strain_queued_strains.pop();
+                        } else {
+                            break;
+                        }
+                    }
+                    self.variable_length_strain_queued_strains.push((current_strain, curr.start_time));
+                }
+            }
+
+            fn save_current_peak(&mut self, section_length: f64) {
+                let peak = crate::any::difficulty::skills::StrainPeak {
+                    value: self.variable_length_strain_current_section_peak,
+                    section_length: f64::round(section_length),
+                };
+
+                let pos = self.variable_length_strain_peaks
+                    .partition_point(|p| p.value <= peak.value);
+                self.variable_length_strain_peaks.insert(pos, peak);
+                self.variable_length_strain_total_length += section_length;
+
+                let max_stored_sections = 11.0 / (1.0 - Self::DECAY_WEIGHT);
+                while self.variable_length_strain_total_length > max_stored_sections * f64::from(Self::MAX_SECTION_LENGTH) {
+                    self.variable_length_strain_total_length -= self.variable_length_strain_peaks[0].section_length;
+                    self.variable_length_strain_peaks.remove(0);
+                }
+            }
+
+            fn start_new_section_from<'a>(
+                &mut self,
+                time: f64,
+                curr: &Self::DifficultyObject<'a>,
+                objects: &Self::DifficultyObjects<'a>,
+            ) {
+                self.variable_length_strain_current_section_peak = self.calculate_initial_strain(time, curr, objects);
+            }
+
+            fn get_current_strain_peaks(&self) -> impl Iterator<Item = crate::any::difficulty::skills::StrainPeak> {
+                let current_peak = crate::any::difficulty::skills::StrainPeak {
+                    value: self.variable_length_strain_current_section_peak,
+                    section_length: self.variable_length_strain_current_section_end
+                        - self.variable_length_strain_current_section_begin,
+                };
+                let mut p = self.variable_length_strain_peaks.clone();
+                p.push(current_peak);
+                p.into_iter()
+            }
+
+            fn cloned_difficulty_value(&self) -> f64 {
+                let peaks: Vec<_> = self.get_current_strain_peaks().collect();
+                let mut strains = crate::any::difficulty::skills::get_reduced_strain_peaks(
+                    peaks,
+                    $name::REDUCED_SECTION_TIME,
+                    $name::REDUCED_STRAIN_BASELINE,
+                );
+
+                strains.retain(|p| p.value > 0.0);
+                strains.sort_unstable_by(|a, b| b.value.total_cmp(&a.value));
+
+                let max_section_length = f64::from(Self::MAX_SECTION_LENGTH);
+
+                let mut difficulty = 0.0;
+                let mut time = 0.0;
+
+                // * Difficulty is a continuous weighted sum of the sorted strains
+                for strain in &strains {
+                    // * Weighting function can be thought of as:
+                    // *         b
+                    // *         ∫ DecayWeight^x dx
+                    // *         a
+                    // *     where a = startTime and b = endTime
+                    // *
+                    // *     Technically, the function below has been slightly modified from the equation above.
+                    // *     The real function would be
+                    // *         double weight = Math.Pow(DecayWeight, startTime) - Math.Pow(DecayWeight, endTime);
+                    // *         ...
+                    // *         return difficulty / Math.Log(1 / DecayWeight);
+                    // *     E.g. for a DecayWeight of 0.9, we're multiplying by 10 instead of 9.49122...
+                    // *
+                    // *     This change makes it so that a map composed solely of MaxSectionLength chunks will have the exact same value when summed in this class and StrainSkill.
+                    // *     Doing this ensures the relationship between strain values and difficulty values remains the same between the two classes.
+                    let start_time = time;
+                    let end_time = time + strain.section_length / max_section_length;
+
+                    let weight = f64::powf(Self::DECAY_WEIGHT, start_time)
+                        - f64::powf(Self::DECAY_WEIGHT, end_time);
+
+                    difficulty += strain.value * weight;
+                    time = end_time;
+                }
+
+                difficulty / (1.0 - Self::DECAY_WEIGHT)
+            }
+
+            fn count_top_weighted_strains(&self, difficulty_value: f64) -> f64 {
+                crate::any::difficulty::skills::count_top_weighted_strains(
+                    &self.variable_length_strain_object_strains,
+                    difficulty_value,
+                    Self::DECAY_WEIGHT,
+                )
+            }
+
+            fn into_current_strain_peaks(mut self) -> Vec<f64> {
+                let current_peak = crate::any::difficulty::skills::StrainPeak {
+                    value: self.variable_length_strain_current_section_peak,
+                    section_length: self.variable_length_strain_current_section_end
+                        - self.variable_length_strain_current_section_begin,
+                };
+                self.variable_length_strain_peaks.push(current_peak);
+                self.variable_length_strain_peaks
+                    .into_iter()
+                    .map(|p| p.value)
+                    .collect()
             }
         }
     };

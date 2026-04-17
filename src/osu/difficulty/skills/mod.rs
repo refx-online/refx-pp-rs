@@ -1,7 +1,7 @@
 use self::{aim::Aim, flashlight::Flashlight, reading::Reading, speed::Speed};
 use super::{object::OsuDifficultyObject, scaling_factor::ScalingFactor};
 use crate::{
-    any::difficulty::skills::{HarmonicSkill, StrainSkill},
+    any::difficulty::skills::{HarmonicSkill, StrainSkill, VariableLengthStrainSkill},
     model::{beatmap::BeatmapAttributes, mods::GameMods},
 };
 

@@ -37,10 +37,13 @@ impl Reading {
     ) -> f64 {
         self.object_start_times.push(curr.start_time);
 
-        self.current_strain *= Self::strain_decay(curr.delta_time);
+        let decay = Self::strain_decay(curr.delta_time);
+
+        self.current_strain *= decay;
 
         self.current_strain +=
             ReadingEvaluator::evaluate_diff_of(curr, objects, self.has_hidden_mod)
+                * (1.0 - decay)
                 * Self::SKILL_MULTIPLIER;
 
         self.current_strain

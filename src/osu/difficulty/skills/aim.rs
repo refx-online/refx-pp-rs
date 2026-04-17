@@ -1,8 +1,7 @@
-use super::strain::OsuStrainSkill;
 use crate::{
     any::difficulty::{
         object::{HasStartTime, IDifficultyObject},
-        skills::{strain_decay, StrainSkill},
+        skills::{strain_decay, VariableLengthStrainSkill},
     },
     osu::difficulty::{
         evaluators::{AgilityEvaluator, FlowAimEvaluator, SnapAimEvaluator},
@@ -11,34 +10,46 @@ use crate::{
     util::{
         difficulty::{logistic, logistic_exp, norm},
         float_ext::FloatExt,
-        strains_vec::StrainsVec,
     },
 };
 
 define_skill! {
     #[derive(Clone)]
-    pub struct Aim: StrainSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
+    pub struct Aim: VariableLengthStrainSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
         include_sliders: bool,
         with_td: bool,
         radius: f64,
         current_strain: f64 = 0.0,
         slider_strains: Vec<f64> = Vec::with_capacity(64), // TODO: use `StrainsVec`?
     }
+
+    pub fn new(include_sliders: bool, with_td: bool, radius: f64) -> Self {
+        Self {
+            include_sliders: include_sliders,
+            with_td: with_td,
+            radius: radius,
+            current_strain: 0.0,
+            slider_strains: Vec::with_capacity(64),
+        }
+    }
 }
 
-impl Aim {
-    const MEAN_EXPONENT: f64 = 1.2;
-    const SKILL_MULTIPLIER_AGILITY: f64 = 2.0;
-    const SKILL_MULTIPLIER_FLOW: f64 = 245.0;
-    const SKILL_MULTIPLIER_SNAP: f64 = 71.0;
-    const SKILL_MULTIPLIER_TOTAL: f64 = 1.1;
-    const STRAIN_DECAY_BASE: f64 = 0.15;
+impl<'a> Aim {
+    const COMBINED_SNAP_NORM_EXPONENT: f64 = 1.2;
+    const SKILL_MULTIPLIER_AGILITY: f64 = 2.35;
+    const SKILL_MULTIPLIER_FLOW: f64 = 243.0;
+    const SKILL_MULTIPLIER_SNAP: f64 = 70.9;
+    const SKILL_MULTIPLIER_TOTAL: f64 = 1.12;
+    const STRAIN_DECAY_BASE: f64 = 0.2;
+
+    const REDUCED_SECTION_TIME: f64 = 4000.0;
+    const REDUCED_STRAIN_BASELINE: f64 = 0.727;
 
     fn calculate_initial_strain(
-        &mut self,
+        &self,
         time: f64,
-        curr: &OsuDifficultyObject<'_>,
-        objects: &[OsuDifficultyObject<'_>],
+        curr: &OsuDifficultyObject<'a>,
+        objects: &[OsuDifficultyObject<'a>],
     ) -> f64 {
         let prev_start_time = curr
             .previous(0, objects)
@@ -49,33 +60,27 @@ impl Aim {
 
     fn strain_value_at(
         &mut self,
-        curr: &OsuDifficultyObject<'_>,
-        objects: &[OsuDifficultyObject<'_>],
+        curr: &OsuDifficultyObject<'a>,
+        objects: &[OsuDifficultyObject<'a>],
     ) -> f64 {
         let decay = strain_decay(curr.adjusted_delta_time, Self::STRAIN_DECAY_BASE);
 
-        let mut snap_difficulty =
+        let snap_difficulty =
             SnapAimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders)
                 * Self::SKILL_MULTIPLIER_SNAP;
         let agility_difficulty =
             AgilityEvaluator::evaluate_diff_of(curr, objects) * Self::SKILL_MULTIPLIER_AGILITY;
-        let mut flow_difficulty =
+        let flow_difficulty =
             FlowAimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders, self.radius)
                 * Self::SKILL_MULTIPLIER_FLOW;
 
-        if self.with_td {
-            snap_difficulty = snap_difficulty.powf(0.89);
-            // * we don't adjust agility here since agility represents TD difficulty in a
-            //   decent enough way
-            flow_difficulty = flow_difficulty.powf(1.1);
-        }
-
         let total_difficulty = Self::calculate_total_value(
-            Self::MEAN_EXPONENT,
+            Self::COMBINED_SNAP_NORM_EXPONENT,
             snap_difficulty,
             agility_difficulty,
             flow_difficulty,
             Self::SKILL_MULTIPLIER_TOTAL,
+            self.with_td,
         );
 
         self.current_strain *= decay;
@@ -90,10 +95,11 @@ impl Aim {
 
     fn calculate_total_value(
         mean_exponent: f64,
-        snap_difficulty: f64,
+        mut snap_difficulty: f64,
         agility_difficulty: f64,
         flow_difficulty: f64,
         skill_multiplier_total: f64,
+        with_td: bool,
     ) -> f64 {
         // * We compare flow to combined snap and agility because snap by itself doesn't
         //   have enough difficulty to be above flow on streams
@@ -101,11 +107,18 @@ impl Aim {
         //   velocity changes while snapping
         // * So snapping every circle on a stream requires an enormous amount of agility
         //   at which point it's easier to flow
-        let combined_snap_difficulty = norm(mean_exponent, [snap_difficulty, agility_difficulty]);
+        let mut combined_snap_difficulty =
+            norm(mean_exponent, [snap_difficulty, agility_difficulty]);
 
         let p_snap =
             Self::calculate_snap_flow_probability(flow_difficulty / combined_snap_difficulty);
         let p_flow = 1.0 - p_snap;
+
+        if with_td {
+            // * we don't adjust agility here since agility represents TD difficulty in a decent enough way
+            snap_difficulty = snap_difficulty.powf(0.89);
+            combined_snap_difficulty = norm(mean_exponent, [snap_difficulty, agility_difficulty]);
+        }
 
         let total_difficulty = combined_snap_difficulty * p_snap + flow_difficulty * p_flow;
 
@@ -162,17 +175,4 @@ impl Aim {
             .map(|&s| logistic(s / consistent_top_strain, 0.88, 10.0, Some(1.1)))
             .sum()
     }
-
-    // From `OsuStrainSkill`; native rather than trait function so that it has
-    // priority over `StrainSkill::difficulty_value`
-    fn difficulty_value(current_strain_peaks: StrainsVec) -> f64 {
-        super::strain::difficulty_value(
-            current_strain_peaks,
-            Self::REDUCED_SECTION_COUNT,
-            Self::REDUCED_STRAIN_BASELINE,
-            Self::DECAY_WEIGHT,
-        )
-    }
 }
-
-impl OsuStrainSkill for Aim {}

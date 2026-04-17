@@ -8,7 +8,7 @@ use super::{
     OsuDifficultySetup, HD_FADE_IN_DURATION_MULTIPLIER,
 };
 use crate::{
-    any::difficulty::skills::{HarmonicSkill, StrainSkill},
+    any::difficulty::skills::{HarmonicSkill, StrainSkill, VariableLengthStrainSkill},
     model::mode::ConvertError,
     osu::{
         convert::convert_objects,

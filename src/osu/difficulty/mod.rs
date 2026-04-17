@@ -7,7 +7,7 @@ use self::{calculator::OsuRatingCalculator, skills::OsuSkills};
 use super::attributes::OsuDifficultyAttributes;
 use crate::{
     any::difficulty::{
-        skills::{HarmonicSkill, StrainSkill},
+        skills::{HarmonicSkill, StrainSkill, VariableLengthStrainSkill},
         Difficulty,
     },
     model::{beatmap::BeatmapAttributes, mode::ConvertError, mods::GameMods},

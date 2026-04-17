@@ -1,7 +1,11 @@
 use rosu_map::section::general::GameMode;
 
 use super::difficulty::{skills::OsuSkills, DifficultyValues};
-use crate::{any::difficulty::skills::StrainSkill, model::mode::ConvertError, Beatmap, Difficulty};
+use crate::{
+    any::difficulty::skills::{StrainSkill, VariableLengthStrainSkill},
+    model::mode::ConvertError,
+    Beatmap, Difficulty,
+};
 
 /// The result of calculating the strains on a osu! map.
 ///
@@ -37,8 +41,8 @@ pub fn strains(difficulty: &Difficulty, map: &Beatmap) -> Result<OsuStrains, Con
     } = DifficultyValues::calculate(difficulty, &map);
 
     Ok(OsuStrains {
-        aim: aim.into_current_strain_peaks().into_vec(),
-        aim_no_sliders: aim_no_sliders.into_current_strain_peaks().into_vec(),
+        aim: aim.into_current_strain_peaks(),
+        aim_no_sliders: aim_no_sliders.into_current_strain_peaks(),
         flashlight: flashlight.into_current_strain_peaks().into_vec(),
     })
 }

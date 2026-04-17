@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use crate::{
     any::difficulty::object::IDifficultyObject,
     osu::difficulty::object::OsuDifficultyObject,
@@ -72,14 +74,18 @@ impl ReadingEvaluator {
             curr_obj.clock_rate_adjusted_preempt,
         );
 
-        norm(
+        let mut difficulty = norm(
             1.5,
             [
                 preempt_difficulty,
                 hidden_difficulty,
                 note_density_difficulty,
             ],
-        )
+        );
+
+        difficulty *= Self::high_bpm_bonus(curr_obj.adjusted_delta_time);
+
+        difficulty
     }
 
     fn calculate_density_difficulty(
@@ -240,6 +246,10 @@ impl ReadingEvaluator {
         let mut index = 0;
         let mut current_time_gap = 0.0;
 
+        let mut loop_obj_prev0 = curr;
+        let mut loop_obj_prev1: Option<&OsuDifficultyObject<'_>> = None;
+        let mut loop_obj_prev2: Option<&OsuDifficultyObject<'_>> = None;
+
         while current_time_gap < Self::MINIMUM_ANGLE_RELEVANCY_TIME {
             let Some(loop_obj) = curr.previous(index, objects) else {
                 break;
@@ -256,6 +266,28 @@ impl ReadingEvaluator {
             if let (Some(loop_angle), Some(curr_angle)) = (loop_obj.angle, curr.angle) {
                 let angle_difference = (curr_angle - loop_angle).abs();
 
+                let mut angle_difference_alternating = PI;
+
+                if let (Some(prev0_angle), Some(prev1_angle), Some(prev2_angle), Some(curr_angle)) = (
+                    loop_obj_prev0.angle,
+                    loop_obj_prev1.and_then(|o| o.angle),
+                    loop_obj_prev2.and_then(|o| o.angle),
+                    loop_obj.angle,
+                ) {
+                    angle_difference_alternating = (prev1_angle - curr_angle).abs();
+                    angle_difference_alternating += (prev2_angle - prev0_angle).abs();
+
+                    let mut weight = 1.0;
+
+                    // * Be sure that one of the angles is very sharp, when other is wide
+                    weight *= reverse_lerp(prev0_angle.min(curr_angle) * 180.0 / PI, 20.0, 5.0);
+                    weight *= reverse_lerp(prev0_angle.max(curr_angle) * 180.0 / PI, 60.0, 120.0);
+
+                    // * Lerp between max angle difference and rescaled alternating difference, with more harsh scaling compared to normal difference
+                    angle_difference_alternating =
+                        f64::lerp(PI, 0.1 * angle_difference_alternating, weight);
+                }
+
                 let stack_factor = smootherstep(
                     loop_obj.lazy_jump_dist,
                     0.0,
@@ -263,13 +295,19 @@ impl ReadingEvaluator {
                 );
 
                 let radians_30 = 30.0_f64.to_radians();
-                constant_angle_count += (3.0 * radians_30.min(angle_difference * stack_factor))
-                    .cos()
+                constant_angle_count += (3.0
+                    * (radians_30)
+                        .min(angle_difference.min(angle_difference_alternating) * stack_factor))
+                .cos()
                     * long_interval_factor;
             }
 
             current_time_gap = curr.start_time - loop_obj.start_time;
             index += 1;
+
+            loop_obj_prev2 = loop_obj_prev1;
+            loop_obj_prev1 = Some(loop_obj_prev0);
+            loop_obj_prev0 = loop_obj;
         }
 
         (2.0 / constant_angle_count).clamp(0.2, 1.0)
@@ -277,5 +315,9 @@ impl ReadingEvaluator {
 
     fn get_time_nerf_factor(delta_time: f64) -> f64 {
         (2.0 - delta_time / (Self::READING_WINDOW_SIZE / 2.0)).clamp(0.0, 1.0)
+    }
+
+    fn high_bpm_bonus(ms: f64) -> f64 {
+        1.0 / (1.0 - 0.8_f64.powf(ms / 1000.0))
     }
 }
