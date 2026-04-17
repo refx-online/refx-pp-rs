@@ -245,14 +245,10 @@ impl OsuPerformanceCalculator<'_> {
             );
         }
 
-        // * TC bonuses are excluded when blinds is present as the increased visual
-        //   difficulty is unimportant when notes cannot be seen.
         if self.mods.bl() {
             // * Increasing the speed value by object count for Blinds isn't
             // * ideal, so the minimum buff is given.
             speed_value *= 1.12;
-        } else if self.mods.tc() {
-            speed_value *= 1.0 + self.calculate_traceable_bonus(1.0);
         }
 
         let speed_high_deviation_mult = self.calculate_speed_high_deviation_nerf(speed_deviation);
@@ -558,20 +554,24 @@ impl OsuPerformanceCalculator<'_> {
     }
 
     fn calculate_traceable_bonus(&self, slider_factor: f64) -> f64 {
-        // * Starts from normal curve, rewarding lower AR up to AR7
-        let mut traceable_bonus = 0.025 * (12.0 - self.attrs.ar.max(7.0));
+        // * We want to reward slider aim less, more so at lower AR
+        let high_ar_slider_visibility_factor = 0.5 + (slider_factor.powi(6) / 2.0);
+        let low_ar_slider_visibility_factor = slider_factor.powi(6);
 
-        // * We want to reward slider aim on low AR less
-        let slider_visibility_factor = slider_factor.powf(3.0);
+        // * Start from normal curve, rewarding lower AR up to AR7
+        let mut traceable_bonus = 0.0275;
+        traceable_bonus += 0.025 * (12.0 - self.attrs.ar.max(7.0)) * high_ar_slider_visibility_factor;
 
         // * For AR up to 0 - reduce reward for very low ARs when object is visible
         if self.attrs.ar < 7.0 {
-            traceable_bonus += 0.02 * (7.0 - self.attrs.ar.max(0.0)) * slider_visibility_factor;
+            traceable_bonus +=
+                0.025 * (7.0 - self.attrs.ar.max(0.0)) * low_ar_slider_visibility_factor;
         }
 
         // * Starting from AR0 - cap values so they won't grow to infinity
         if self.attrs.ar < 0.0 {
-            traceable_bonus += 0.01 * (1.0 - self.attrs.ar.powf(1.5)) * slider_visibility_factor;
+            traceable_bonus +=
+                0.025 * (1.0 - 1.5_f64.powf(self.attrs.ar)) * low_ar_slider_visibility_factor;
         }
 
         traceable_bonus
