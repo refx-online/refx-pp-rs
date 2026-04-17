@@ -21,11 +21,6 @@ use crate::{
 pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.12;
 pub const PERFORMANCE_NORM_EXPONENT: f64 = 1.1;
 
-struct RelaxStreamsNerf {
-    aim_multiplier: f64,
-    accuracy_depression: f64,
-}
-
 pub(super) struct OsuPerformanceCalculator<'mods> {
     attrs: OsuDifficultyAttributes,
     mods: &'mods GameMods,
@@ -96,11 +91,8 @@ impl OsuPerformanceCalculator<'_> {
         let mut aim_value = self.compute_aim_value();
         let speed_value = self.compute_speed_value(speed_deviation);
 
-        let mut accuracy_depression_value = 1.0;
-        if let Some(rx_streams_nerf) = self.calculate_rx_streams_nerf() {
-            aim_value *= rx_streams_nerf.aim_multiplier;
-            accuracy_depression_value = rx_streams_nerf.accuracy_depression;
-        }
+        let (rx_accuracy_penalty, accuracy_depression_factor) = self.calculate_rx_streams_nerf();
+        aim_value *= rx_accuracy_penalty;
 
         let acc_value = self.compute_accuracy_value();
 
@@ -109,7 +101,7 @@ impl OsuPerformanceCalculator<'_> {
         let cognition_value = sum_cognition_difficulty(reading_value, flashlight_value);
 
         let adjusted_speed_exponent_value =
-            self.calculate_adjusted_speed_exponent(accuracy_depression_value);
+            self.calculate_adjusted_speed_exponent(accuracy_depression_factor);
 
         let pp = if self.mods.rx() {
             let exp = PERFORMANCE_NORM_EXPONENT;
@@ -510,64 +502,59 @@ impl OsuPerformanceCalculator<'_> {
 
     /// Applies a nerf to scores with Relax when stream difficulty exceeds aim
     /// difficulty. lower ratio => heavier nerf on both speed and accuracy
-    /// performance values. NOTE: logic copied from akatsuki's, but more
-    /// harsher.
-    fn calculate_rx_streams_nerf(&self) -> Option<RelaxStreamsNerf> {
+    /// performance values. NOTE: logic partially copied from akatsuki's.
+    fn calculate_rx_streams_nerf(&self) -> (f64, f64) {
         if !self.mods.rx() {
-            return None;
+            return (1.0, 1.0);
         }
 
         let total_hits = self.total_hits();
 
-        let streams_nerf = self.attrs.aim / self.attrs.speed;
+        let aim_to_speed_ratio = self.attrs.aim / self.attrs.speed;
 
-        let speed_density = if total_hits > 0.0 {
+        let stream_note_density = if total_hits > 0.0 {
             self.attrs.speed_note_count / total_hits
         } else {
             0.0
         };
 
-        // NOTE: density threshold scales inversely with streams_nerf.
-        let density_threshold = 0.50 - ((1.05 - streams_nerf).max(0.0) / 1.05) * 0.45;
+        // The density threshold above which the nerf kicks in. It scales down
+        // as aim_to_speed_ratio drops.
+        let stream_density_nerf_threshold =
+            0.50 - ((1.05 - aim_to_speed_ratio).max(0.0) / 1.05) * 0.45;
 
-        let mut aim_multiplier = 1.0;
-        let mut acc_depression = 1.0;
+        let mut rx_accuracy_penalty = 1.0;
+        let mut accuracy_depression_factor = 1.0;
 
-        if streams_nerf < 1.05 && speed_density > density_threshold {
-            let acc_factor = (1.0 - self.acc).abs();
+        if aim_to_speed_ratio < 1.05 && stream_note_density > stream_density_nerf_threshold {
+            // How far past the density threshold this score is (0.0 = just at
+            // threshold, 1.0 = every note is a stream note).
+            let density_excess_factor = ((stream_note_density - stream_density_nerf_threshold)
+                / (1.0 - stream_density_nerf_threshold))
+                .clamp(0.0, 1.0);
 
-            let density_factor = (speed_density - density_threshold) / (1.0 - density_threshold);
+            // Scores with lower accuracy on stream maps with Relax are penalized
+            // more heavily, since accuracy is one of the few remaining challenges.
+            // acc_penalty_bias nudges the upper lerp bound up for inaccurate scores.
+            let acc_penalty_bias = (1.0 - self.acc).abs();
+            let depression_at_full_density = (0.84 + acc_penalty_bias * 0.04).max(0.55);
 
-            let density_factor = density_factor.clamp(0.0, 1.0);
+            // Interpolate between a harsh floor (0.82) at the density threshold
+            // and the accuracy-adjusted ceiling as density approaches 1.0.
+            accuracy_depression_factor =
+                f64::lerp(0.82, depression_at_full_density, density_excess_factor);
 
-            acc_depression = f64::lerp(0.82, (0.84 + acc_factor * 0.04).max(0.55), density_factor);
+            rx_accuracy_penalty *= accuracy_depression_factor;
 
-            aim_multiplier *= acc_depression;
-
-            // Penalize low accuracy even more :skull:
+            // Apply an extra penalty for very low accuracy (< 95%), since the
+            // player is clearly.. not engaging with the speed challenge at all.
             if self.acc < 0.95 {
-                let acc_penalty = 1.0 - (0.95 - self.acc) * 0.3;
-                aim_multiplier *= acc_penalty;
+                let low_acc_penalty = 1.0 - (0.95 - self.acc) * 0.3;
+                rx_accuracy_penalty *= low_acc_penalty;
             }
         }
 
-        Some(RelaxStreamsNerf {
-            aim_multiplier,
-            accuracy_depression: acc_depression,
-        })
-    }
-
-    /// Actually unecessary to have this as a separate function
-    /// but for consistency with other parts of the codebase.
-    fn calculate_adjusted_speed_exponent(&self, accuracy_depression: f64) -> f64 {
-        if self.mods.rx() {
-            // Relax completely removes tapping skill from the equation,
-            // so speed-based PP should scale weaker than normal plays.
-            // The 0.88 base is (stolen from akatsuki's) arbitrary but gives a good scaling.
-            return 0.88 * accuracy_depression;
-        }
-
-        PERFORMANCE_NORM_EXPONENT
+        (rx_accuracy_penalty, accuracy_depression_factor)
     }
 
     fn calculate_traceable_bonus(&self, slider_factor: f64) -> f64 {
@@ -596,6 +583,17 @@ impl OsuPerformanceCalculator<'_> {
     // * to make it more punishing on maps with lower amount of hard sections.
     fn calculate_miss_penalty(miss_count: f64, difficult_strain_count: f64) -> f64 {
         0.93 / (miss_count / (4.0 * difficult_strain_count.ln()) + 1.0)
+    }
+
+    fn calculate_adjusted_speed_exponent(&self, acc_depression_factor: f64) -> f64 {
+        if self.mods.rx() {
+            // Relax completely removes tapping skill from the equation,
+            // so speed-based PP should scale weaker than normal plays.
+            // The 0.88 base is (stolen from akatsuki's) arbitrary but gives a good scaling.
+            return 0.88 * acc_depression_factor;
+        }
+
+        PERFORMANCE_NORM_EXPONENT
     }
 
     fn get_combo_scaling_factor(&self) -> f64 {
