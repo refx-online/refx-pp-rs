@@ -613,26 +613,25 @@ impl<'map> OsuPerformance<'map> {
         max_combo: u32,
         attributes: &OsuDifficultyAttributes,
     ) -> f64 {
-        let n100 = self.n100.unwrap_or(0);
-        if !using_classic_slider_acc || n100 == 0 {
+        let non_miss_mistakes = self.n100.unwrap_or(0) + self.n50.unwrap_or(0);
+        if !using_classic_slider_acc || non_miss_mistakes == 0 {
             return 0.0;
         }
 
         let missed_combo_percent = 1.0 - (f64::from(max_combo) / f64::from(attributes.max_combo));
 
         let mut estimated_sliderbreaks =
-            f64::from(n100).min(effective_miss_count * top_weighted_slider_factor);
+            f64::from(non_miss_mistakes).min(effective_miss_count * top_weighted_slider_factor);
 
-        // * Scores with more oks are more likely to have sliderbreaks
-        let ok_adjustment = ((f64::from(n100) - estimated_sliderbreaks) + 0.5) / f64::from(n100);
+        // * Scores with more Oks and Mehs are more likely to have slider breaks.
+        let non_miss_mistake_adjustment = ((f64::from(non_miss_mistakes) - estimated_sliderbreaks) + 0.5) / f64::from(non_miss_mistakes);
 
         // * There is a low probability of extra slider breaks on effective miss counts
-        //   close to 1,
-        // * as score based calculations are good at indicating if only a single break
-        //   occurred
+        //   close to 1, as score based calculations are good at indicating if only a
+        //   single break occurred.
         estimated_sliderbreaks *= smoothstep(effective_miss_count, 1.0, 2.0);
 
-        estimated_sliderbreaks * ok_adjustment * logistic(missed_combo_percent, 0.33, 15.0, None)
+        estimated_sliderbreaks * non_miss_mistake_adjustment * logistic(missed_combo_percent, 0.33, 15.0, None)
     }
 
     fn calculate_combo_based_estimated_miss_count(

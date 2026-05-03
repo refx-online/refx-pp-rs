@@ -96,9 +96,7 @@ impl FlowAimEvaluator {
 
         if let Some(curr_angle) = osu_curr_obj.angle {
             // * Acute angles are also hard to flow
-            // * We square root velocity to make acute angle switches in streams aren't
-            //   having difficulty higher than snap
-            flow_difficulty += curr_velocity.sqrt()
+            flow_difficulty += curr_velocity
                 * SnapAimEvaluator::calc_angle_acuteness(curr_angle)
                 * overlapped_notes_weight;
         }

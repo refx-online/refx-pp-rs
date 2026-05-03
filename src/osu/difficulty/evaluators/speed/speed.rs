@@ -47,12 +47,12 @@ impl SpeedEvaluator {
         };
 
         // * Base difficulty with all bonuses
-        let mut difficulty = (1.0 + speed_bonus) * 1000.0 / strain_time;
+        let mut speed_difficulty = (1.0 + speed_bonus) * 1000.0 / strain_time;
 
-        difficulty *= Self::high_bpm_bonus(osu_curr_obj.adjusted_delta_time);
+        speed_difficulty *= Self::high_bpm_bonus(osu_curr_obj.adjusted_delta_time);
 
         // * Apply penalty if there's doubletappable doubles
-        difficulty * doubletapness
+        speed_difficulty * doubletapness
     }
 
     fn high_bpm_bonus(ms: f64) -> f64 {

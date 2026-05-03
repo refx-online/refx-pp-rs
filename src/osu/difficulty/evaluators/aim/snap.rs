@@ -15,7 +15,7 @@ impl SnapAimEvaluator {
     // * WARNING: Increasing this multiplier beyond 1.02 reduces difficulty as
     //   distance increases. Refer to the desmos link above the wiggle bonus
     //   calculation
-    const WIDE_ANGLE_MULTIPLIER: f64 = 1.05;
+    const WIDE_ANGLE_MULTIPLIER: f64 = 0.67;
     const WIGGLE_MULTIPLIER: f64 = 1.02;
 
     #[allow(clippy::too_many_lines)]
@@ -68,10 +68,10 @@ impl SnapAimEvaluator {
         };
         let prev_velocity = prev_distance / osu_last_obj.adjusted_delta_time;
 
-        let mut aim_strain = curr_velocity;
+        let mut snap_difficulty = curr_velocity;
 
         // * Penalize angle repetition.
-        aim_strain *= Self::vector_angle_repetition(osu_curr_obj, osu_last_obj, diff_objects);
+        snap_difficulty *= Self::vector_angle_repetition(osu_curr_obj, osu_last_obj, diff_objects);
 
         if let (Some(curr_angle), Some(last_angle)) = (osu_curr_obj.angle, osu_last_obj.angle) {
             // * Rewarding angles, take the smaller velocity as base.
@@ -113,7 +113,17 @@ impl SnapAimEvaluator {
                 + 0.75
                     * (1.0 - wide_angle_bonus.min(Self::calc_angle_wideness(last_angle).powi(3)));
 
-            wide_angle_bonus *= velocity_influence;
+            // * Rescaling velocity for the wide angle bonus
+            const WIDE_ANGLE_TIME_SCALE: f64 = 1.45;
+            let mut wide_angle_curr_velocity = curr_distance / osu_curr_obj.adjusted_delta_time.powf(WIDE_ANGLE_TIME_SCALE);
+            let wide_angle_prev_velocity = prev_distance / osu_last_obj.adjusted_delta_time.powf(WIDE_ANGLE_TIME_SCALE);
+
+            if osu_last_obj.base.is_slider() && with_slider_travel_distance {
+                let slider_distance = osu_last_obj.lazy_travel_dist + osu_curr_obj.lazy_jump_dist;
+                wide_angle_curr_velocity = wide_angle_curr_velocity.max(slider_distance / osu_curr_obj.adjusted_delta_time.powf(WIDE_ANGLE_TIME_SCALE));
+            }
+
+            wide_angle_bonus *= wide_angle_curr_velocity.min(wide_angle_prev_velocity);
 
             if let Some(osu_last_2_obj) = osu_last_2_obj {
                 // * If objects just go back and forth through a middle point - don't give as
@@ -130,7 +140,7 @@ impl SnapAimEvaluator {
             }
 
             // * Add in acute angle bonus or wide angle bonus, whichever is larger.
-            aim_strain += (acute_angle_bonus * Self::ACUTE_ANGLE_MULTIPLIER)
+            snap_difficulty += (acute_angle_bonus * Self::ACUTE_ANGLE_MULTIPLIER)
                 .max(wide_angle_bonus * Self::WIDE_ANGLE_MULTIPLIER);
 
             // * Apply wiggle bonus for jumps that are [radius, 3*diameter] in distance,
@@ -154,7 +164,7 @@ impl SnapAimEvaluator {
                 .powf(1.8)
                 * smootherstep(last_angle, 110_f64.to_radians(), 60_f64.to_radians());
 
-            aim_strain += wiggle_bonus * Self::WIGGLE_MULTIPLIER;
+            snap_difficulty += wiggle_bonus * Self::WIGGLE_MULTIPLIER;
         }
 
         if prev_velocity.max(curr_velocity) != 0.0 {
@@ -189,13 +199,13 @@ impl SnapAimEvaluator {
                     .max(osu_last_obj.adjusted_delta_time))
             .powi(2);
 
-            aim_strain += velocity_change_bonus * Self::VELOCITY_CHANGE_MULTIPLIER;
+            snap_difficulty += velocity_change_bonus * Self::VELOCITY_CHANGE_MULTIPLIER;
         }
 
         // * Reward sliders based on velocity.
         if osu_curr_obj.base.is_slider() && with_slider_travel_distance {
             let slider_bonus = osu_curr_obj.travel_dist / osu_curr_obj.travel_time;
-            aim_strain += if slider_bonus < 1.0 {
+            snap_difficulty += if slider_bonus < 1.0 {
                 slider_bonus
             } else {
                 slider_bonus.powf(0.75)
@@ -203,14 +213,14 @@ impl SnapAimEvaluator {
         }
 
         // * Apply high circle size bonus
-        aim_strain *= osu_curr_obj.small_circle_bonus;
+        snap_difficulty *= osu_curr_obj.small_circle_bonus;
 
-        aim_strain *= Self::high_bpm_bonus(
+        snap_difficulty *= Self::high_bpm_bonus(
             osu_curr_obj.adjusted_delta_time,
             osu_curr_obj.lazy_jump_dist,
         );
 
-        aim_strain
+        snap_difficulty
     }
 
     // * We decrease strain for distances <radius to fix cases where doubles with no

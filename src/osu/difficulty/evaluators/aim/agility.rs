@@ -6,7 +6,8 @@ use crate::{
 pub struct AgilityEvaluator;
 
 impl AgilityEvaluator {
-    const DISTANCE_CAP: f64 = OsuDifficultyObject::NORMALIZED_DIAMETER as f64 * 1.25;
+    // * 1.2 circles distance between centers
+    const DISTANCE_CAP: f64 = OsuDifficultyObject::NORMALIZED_DIAMETER as f64 * 1.2;
 
     pub fn evaluate_diff_of<'a>(
         curr: &'a OsuDifficultyObject<'a>,
@@ -28,13 +29,13 @@ impl AgilityEvaluator {
         let distance = travel_distance + osu_curr_obj.lazy_jump_dist;
 
         let distance_scaled = distance.min(Self::DISTANCE_CAP) / Self::DISTANCE_CAP;
-        let mut strain = distance_scaled * 1000.0 / osu_curr_obj.adjusted_delta_time;
+        let mut agility_difficulty = distance_scaled * 1000.0 / osu_curr_obj.adjusted_delta_time;
 
-        strain *= osu_curr_obj.small_circle_bonus.powf(1.5);
+        agility_difficulty *= osu_curr_obj.small_circle_bonus.powf(1.5);
 
-        strain *= Self::high_bpm_bonus(osu_curr_obj.adjusted_delta_time);
+        agility_difficulty *= Self::high_bpm_bonus(osu_curr_obj.adjusted_delta_time);
 
-        strain * smootherstep(distance, 0.0, f64::from(RADIUS))
+        agility_difficulty * smootherstep(distance, 0.0, f64::from(RADIUS))
     }
 
     fn high_bpm_bonus(ms: f64) -> f64 {

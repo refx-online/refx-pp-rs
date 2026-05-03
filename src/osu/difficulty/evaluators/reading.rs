@@ -74,7 +74,7 @@ impl ReadingEvaluator {
             curr_obj.clock_rate_adjusted_preempt,
         );
 
-        let mut difficulty = norm(
+        let mut reading_difficulty = norm(
             1.5,
             [
                 preempt_difficulty,
@@ -83,9 +83,9 @@ impl ReadingEvaluator {
             ],
         );
 
-        difficulty *= Self::high_bpm_bonus(curr_obj.adjusted_delta_time);
+        reading_difficulty *= Self::high_bpm_bonus(curr_obj.adjusted_delta_time);
 
-        difficulty
+        reading_difficulty
     }
 
     fn calculate_density_difficulty(

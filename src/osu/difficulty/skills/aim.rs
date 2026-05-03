@@ -37,7 +37,7 @@ define_skill! {
 impl<'a> Aim {
     const COMBINED_SNAP_NORM_EXPONENT: f64 = 1.2;
     const SKILL_MULTIPLIER_AGILITY: f64 = 2.35;
-    const SKILL_MULTIPLIER_FLOW: f64 = 243.0;
+    const SKILL_MULTIPLIER_FLOW: f64 = 242.0;
     const SKILL_MULTIPLIER_SNAP: f64 = 70.9;
     const SKILL_MULTIPLIER_TOTAL: f64 = 1.12;
     const STRAIN_DECAY_BASE: f64 = 0.2;
