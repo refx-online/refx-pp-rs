@@ -123,6 +123,21 @@ impl DifficultyValues {
         Self { skills, attrs }
     }
 
+    /// Calculate the average jump distance of the map
+    let mut dist_sum = 0.0;
+        let mut dist_count = 0u32;
+        for obj in &diff_objects {
+            if obj.lazy_jump_dist > 0.0 {
+                dist_sum += obj.lazy_jump_dist;
+                dist_count += 1;
+            }
+        }
+        attrs.avg_jump_dist = if dist_count > 0 {
+            dist_sum / f64::from(dist_count)
+        } else {
+            0.0
+        };
+
     /// Process the difficulty values and store the results in `attrs`.
     pub fn eval(map: &Beatmap, attrs: &mut OsuDifficultyAttributes, mods: &GameMods, skills: &OsuSkills) {
         let OsuSkills {

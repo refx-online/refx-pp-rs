@@ -11,6 +11,7 @@ use super::{
 };
 
 pub mod aim;
+pub mod aim_rx;
 pub mod flashlight;
 pub mod speed;
 pub mod strain;
@@ -45,8 +46,8 @@ impl OsuSkills {
             400.0 * (time_preempt / OsuObject::PREEMPT_MIN).min(1.0)
         };
 
-        let aim = Aim::new(true);
-        let aim_no_sliders = Aim::new(false);
+        let aim = Aim::new(true, mods.rx());
+        let aim_no_sliders = Aim::new(false, mods.rx());
         let speed = Speed::new(hit_window, mods.ap());
         let flashlight = Flashlight::new(mods, scaling_factor.radius, time_preempt, time_fade_in);
 

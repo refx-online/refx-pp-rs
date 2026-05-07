@@ -11,12 +11,13 @@ use crate::{
     },
 };
 
-use super::strain::OsuStrainSkill;
+use super::{strain::OsuStrainSkill, aim_rx};
 
 define_skill! {
     #[derive(Clone)]
     pub struct Aim: StrainSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
         include_sliders: bool,
+        is_relax: bool,
         current_strain: f64 = 0.0,
         slider_strains: Vec<f64> = Vec::with_capacity(64), // TODO: use `StrainsVec`?
     }
@@ -45,8 +46,12 @@ impl Aim {
         objects: &[OsuDifficultyObject<'_>],
     ) -> f64 {
         self.current_strain *= strain_decay(curr.delta_time, Self::STRAIN_DECAY_BASE);
-        self.current_strain += AimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders)
-            * Self::SKILL_MULTIPLIER;
+        let aim_diff = if self.is_relax {
+            aim_rx::AimRxEvaluator::evaluate_diff_of(curr, objects, self.include_sliders)
+        } else {
+            AimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders)
+        };
+        self.current_strain += aim_diff * Self::SKILL_MULTIPLIER;
 
         if curr.base.is_slider() {
             self.slider_strains.push(self.current_strain);
@@ -100,7 +105,8 @@ struct AimEvaluator;
 impl AimEvaluator {
     const WIDE_ANGLE_MULTIPLIER: f64 = 1.5;
     const ACUTE_ANGLE_MULTIPLIER: f64 = 2.55;
-    const SLIDER_MULTIPLIER: f64 = 1.35;
+    const SLIDER_MULTIPLIER: f64 = 0.0; // sliders give no aim strain themselves, 
+    // but they can contribute to the strain of following hitcircles through their travel velocity
     const VELOCITY_CHANGE_MULTIPLIER: f64 = 0.75;
     const WIGGLE_MULTIPLIER: f64 = 1.02;
 
