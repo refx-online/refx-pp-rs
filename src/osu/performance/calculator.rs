@@ -224,9 +224,15 @@ impl OsuPerformanceCalculator<'_> {
 
         let total_hits = self.total_hits();
 
-        let len_bonus = 0.95
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + f64::from(u8::from(total_hits > 2000.0)) * (total_hits / 2000.0).log10() * 0.5;
+        let len_bonus = if self.mods.ap() {
+            1.0 // Length bonus completely removed in AP (long maps are extremely overweight)
+        } else {
+            0.95
+                + 0.4 * (total_hits as f64 / 2000.0).min(1.0)
+                + f64::from(u8::from(total_hits > 2000))
+                    * (total_hits as f64 / 2000.0).log10()
+                    * 0.5
+        };
 
         speed_value *= len_bonus;
 

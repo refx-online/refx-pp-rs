@@ -45,9 +45,24 @@ impl OsuRatingCalculator<'_> {
         }
 
         let mut aim_rating = f64::sqrt(aim_difficulty_value) * DIFFICULTY_MULTIPLIER;
+        
+        let is_4mod = self.mods.dt() && self.mods.hd() && self.mods.hr() && self.mods.fl()
+        let exempt_mods = self.mods.ez() || self.mods.nf()
+        let nofail = self.mods.nf()
+        let ez = self.mods.ez()
+        let autopilot = self.mods.ap()
+        let is_ez_4mod = self.mods.dt() && self.mods.hd() && self.mods.ez() && self.mods.fl()
 
+        // TD normally nerfs aim, but 4-mod scores are assumed to be played with Freedom (auto)
+        // so I skip the TD penalty to avoid the known TD bug on these scores.
         if self.mods.td() {
             aim_rating = aim_rating.powf(0.8);
+        } else if is_4mod && self.mods.td() {
+            aim_rating = 1.0;
+        } else if nofail && is_4mod {
+            aim_rating = aim_rating.powf(0.8);
+        } else if is_ez_4mod {
+            aim_rating = aim_rating.powf(0.85);
         }
 
         if self.mods.mg() {
@@ -95,9 +110,29 @@ impl OsuRatingCalculator<'_> {
     pub fn compute_speed_rating(&self, speed_difficulty_value: f64) -> f64 {
         let mut speed_rating = f64::sqrt(speed_difficulty_value) * DIFFICULTY_MULTIPLIER;
 
-        if self.mods.ap() {
-            speed_rating *= 0.5;
+        // Touch Device (TD) mod often increases difficulty on streams because each note must be individually tapped. 
+        // To compensate, we apply a 1.04x buff to the final speed rating when TD is enabled.
+        // However, 4-mod + TD scores are very likely played with Freedom (auto), so applying 
+        // the TD speed buff would heavily inflate speed PP. We therefore remove the buff on 4-mod scores.
+        if self.mods.td() && !exempt_mods {
+            speed_rating *= 1.04
+        } else if !exempt_mods && is_4mod && self.mods.td() {
+            speed_rating = 1.0
+        } else if !autopilot && ez && self.mods.td() {
+            speed_rating *= 1.12 // EZ makes stream maps even harder on td
+        } else if autopilot && self.mods.td() {
+            speed_rating = 1.0 // EZ has no affect if AP is active (dont need to tap individual circles)
+        } else if nofail && self.mods.td() {
+            speed_rating *= 0.97 // Less PP overall for NF (temp before NF specific logic is added)
         }
+
+        if self.mods.ap() {
+            speed_rating *= 0.8; // 0.5 -> 0.8
+        } else if is_ez_4mod && self.mods.ap() {
+            speed_rating *= 0.7;
+        } else if is_4mod && self.mods.ap() {
+            speed_rating *= 0.5; // Likely too harsh (flashlight likely doesnt balence this out) 
+        } 
 
         if self.mods.mg() {
             // * Reduce speed rating because of the speed distance scaling, with maximum reduction being 0.7x
@@ -147,12 +182,18 @@ impl OsuRatingCalculator<'_> {
 
         let mut flashlight_rating = f64::sqrt(flashlight_difficulty_value) * DIFFICULTY_MULTIPLIER;
 
+        // TD normally nerfs flashlight, but 4-mod scores are assumed to be played with Freedom (auto)
+        // so I skip the TD penalty to avoid the known TD bug on these scores.
         if self.mods.td() {
             flashlight_rating = flashlight_rating.powf(0.8);
+        } else if is_4mod && self.mods.td() {
+            flashlight_rating = 1.0; 
         }
 
-        if self.mods.ap() {
+        if self.mods.ap() && !exempt_mods {
             flashlight_rating *= 0.4;
+        } else if !is_4mod && self.mods.ap() && exempt_mods {
+            flashlight_rating *= 0.46; // EZ will make FL slightly harder even if the majority of AP skill comes from rhythm recognition.
         }
 
         if self.mods.mg() {
