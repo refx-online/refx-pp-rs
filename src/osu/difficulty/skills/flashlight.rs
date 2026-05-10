@@ -140,7 +140,7 @@ impl FlashlightEvaluator {
                 }
 
                 // * goofy thing
-                let stack_nerf = ((curr_obj.lazy_jump_dist / self.scaling_factor) / 25.0).clamp(0.0, 1.0);
+                let stack_nerf = ((curr_obj.lazy_jump_dist / self.scaling_factor) / 40.0).clamp(0.0, 1.0);
 
                 // * Bonus based on how visible the object is.
                 let opacity_bonus = 1.0
@@ -153,8 +153,9 @@ impl FlashlightEvaluator {
                                 self.time_fade_in,
                             ));
 
-                result += stack_nerf * opacity_bonus * self.scaling_factor * jump_dist
-                    / (cumulative_strain_time + 50.0).sqrt();
+                result += opacity_bonus * self.scaling_factor * jump_dist
+                    / (cumulative_strain_time + 30.0).sqrt();
+                result *= stack_nerf
 
                 if let Some((curr_obj_angle, osu_curr_angle)) = curr_obj.angle.zip(osu_curr.angle) {
                     // * Objects further back in time should count less for the nerf.
