@@ -139,8 +139,8 @@ impl FlashlightEvaluator {
                     small_dist_nerf = (jump_dist / 75.0).min(1.0);
                 }
 
-                // * We also want to nerf stacks so that only the first object of the stack is accounted for.
-                let stack_nerf = (1.0 - ((curr_obj.lazy_jump_dist / self.scaling_factor) / 25.0).min(1.0)).max(0.0);
+                // * goofy thing
+                let stack_nerf = ((curr_obj.lazy_jump_dist / self.scaling_factor) / 25.0).clamp(0.0, 1.0);
 
                 // * Bonus based on how visible the object is.
                 let opacity_bonus = 1.0
