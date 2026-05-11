@@ -153,9 +153,8 @@ impl FlashlightEvaluator {
                                 self.time_fade_in,
                             ));
 
-                result += opacity_bonus * self.scaling_factor * jump_dist
+                result += stack_nerf * opacity_bonus * self.scaling_factor * jump_dist
                     / (cumulative_strain_time + 50.0).sqrt();
-                result *= stack_nerf;
 
                 if let Some((curr_obj_angle, osu_curr_angle)) = curr_obj.angle.zip(osu_curr.angle) {
                     // * Objects further back in time should count less for the nerf.
