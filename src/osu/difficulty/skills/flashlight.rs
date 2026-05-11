@@ -81,7 +81,7 @@ struct FlashlightEvaluator {
 }
 
 impl FlashlightEvaluator {
-    const MAX_OPACITY_BONUS: f64 = 0.4;
+    const MAX_OPACITY_BONUS: f64 = 0.3;
     const HIDDEN_BONUS: f64 = 0.2;
 
     const MIN_VELOCITY: f64 = 0.5;
@@ -139,8 +139,8 @@ impl FlashlightEvaluator {
                     small_dist_nerf = (jump_dist / 75.0).min(1.0);
                 }
 
-                // * We also want to nerf stacks so that only the first object of the stack is accounted for.
-                let stack_nerf = ((curr_obj.lazy_jump_dist / self.scaling_factor) / 25.0).min(1.0);
+                // * goofy thing
+                let stack_nerf = ((curr_obj.lazy_jump_dist / self.scaling_factor) / 40.0).clamp(0.0, 1.0);
 
                 // * Bonus based on how visible the object is.
                 let opacity_bonus = 1.0
@@ -154,13 +154,11 @@ impl FlashlightEvaluator {
                             ));
 
                 result += stack_nerf * opacity_bonus * self.scaling_factor * jump_dist
-                    / cumulative_strain_time;
+                    / (cumulative_strain_time + 50.0).sqrt();
 
                 if let Some((curr_obj_angle, osu_curr_angle)) = curr_obj.angle.zip(osu_curr.angle) {
                     // * Objects further back in time should count less for the nerf.
-                    if (curr_obj_angle - osu_curr_angle).abs() < 0.02 {
-                        angle_repeat_count += (1.0 - 0.1 * i as f64).max(0.0);
-                    }
+                    angle_repeat_count += (1.0 - (curr_obj_angle - osu_curr_angle).abs()).max(0.0) * (1.0 - 0.1 * i as f64);
                 }
             }
 
