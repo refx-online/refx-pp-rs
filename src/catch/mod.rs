@@ -1,19 +1,18 @@
 use rosu_map::section::general::GameMode;
 
-use crate::{
-    model::{
-        beatmap::Beatmap,
-        mode::{ConvertError, IGameMode},
-    },
-    Difficulty,
-};
-
 pub use self::{
     attributes::{CatchDifficultyAttributes, CatchPerformanceAttributes},
     difficulty::gradual::CatchGradualDifficulty,
     performance::{gradual::CatchGradualPerformance, CatchPerformance},
     score_state::CatchScoreState,
     strains::CatchStrains,
+};
+use crate::{
+    model::{
+        beatmap::Beatmap,
+        mode::{ConvertError, IGameMode},
+    },
+    Difficulty,
 };
 
 mod attributes;
@@ -41,10 +40,10 @@ impl Catch {
 
 impl IGameMode for Catch {
     type DifficultyAttributes = CatchDifficultyAttributes;
-    type Strains = CatchStrains;
-    type Performance<'map> = CatchPerformance<'map>;
     type GradualDifficulty = CatchGradualDifficulty;
     type GradualPerformance = CatchGradualPerformance;
+    type Performance<'map> = CatchPerformance<'map>;
+    type Strains = CatchStrains;
 
     fn difficulty(
         difficulty: &Difficulty,

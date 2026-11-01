@@ -1,13 +1,12 @@
 use rosu_map::section::hit_objects::hit_samples::HitSoundType;
 
+use super::PatternGenerator;
 use crate::{
     mania::convert::{pattern::Pattern, pattern_type::PatternType},
     model::hit_object::HitObject,
     util::random::osu::Random,
     Beatmap,
 };
-
-use super::PatternGenerator;
 
 pub struct EndTimeObjectPatternGenerator<'h> {
     pub end_time: f64,
@@ -98,11 +97,13 @@ impl<'h> EndTimeObjectPatternGenerator<'h> {
             return initial_column;
         }
 
-        // * Ensure that we have at least one free column, so that an endless loop is avoided
+        // * Ensure that we have at least one free column, so that an endless loop is
+        //   avoided
         let has_valid_column = (lower..upper).any(is_valid);
         assert!(has_valid_column);
 
-        // * Iterate until a valid column is found. This is a random iteration in the default case.
+        // * Iterate until a valid column is found. This is a random iteration in the
+        //   default case.
         while {
             initial_column = self.inner.get_random_column(Some(lower), Some(upper));
 

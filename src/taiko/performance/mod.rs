@@ -3,7 +3,7 @@ use std::cmp;
 use rosu_map::section::general::GameMode;
 
 use self::calculator::TaikoPerformanceCalculator;
-
+use super::{attributes::TaikoPerformanceAttributes, score_state::TaikoScoreState, Taiko};
 use crate::{
     any::{Difficulty, HitResultPriority, IntoModePerformance, IntoPerformance},
     model::{mode::ConvertError, mods::GameMods},
@@ -11,8 +11,6 @@ use crate::{
     util::map_or_attrs::MapOrAttrs,
     Performance,
 };
-
-use super::{attributes::TaikoPerformanceAttributes, score_state::TaikoScoreState, Taiko};
 
 mod calculator;
 pub mod gradual;
@@ -35,8 +33,8 @@ impl<'map> TaikoPerformance<'map> {
     /// Create a new performance calculator for osu!taiko maps.
     ///
     /// The argument `map_or_attrs` must be either
-    /// - previously calculated attributes ([`TaikoDifficultyAttributes`]
-    ///   or [`TaikoPerformanceAttributes`])
+    /// - previously calculated attributes ([`TaikoDifficultyAttributes`] or
+    ///   [`TaikoPerformanceAttributes`])
     /// - a [`Beatmap`] (by reference or value)
     ///
     /// If a map is given, difficulty attributes will need to be calculated
@@ -213,7 +211,8 @@ impl<'map> TaikoPerformance<'map> {
         self
     }
 
-    /// Create the [`TaikoScoreState`] that will be used for performance calculation.
+    /// Create the [`TaikoScoreState`] that will be used for performance
+    /// calculation.
     pub fn generate_state(&mut self) -> Result<TaikoScoreState, ConvertError> {
         let attrs = match self.map_or_attrs {
             MapOrAttrs::Map(ref map) => {
@@ -413,14 +412,13 @@ mod test {
     use proptest::prelude::*;
     use rosu_map::section::general::GameMode;
 
+    use super::*;
     use crate::{
         any::{DifficultyAttributes, PerformanceAttributes},
         osu::{OsuDifficultyAttributes, OsuPerformanceAttributes},
         taiko::TaikoDifficultyAttributes,
         Beatmap,
     };
-
-    use super::*;
 
     static ATTRS: OnceLock<TaikoDifficultyAttributes> = OnceLock::new();
 

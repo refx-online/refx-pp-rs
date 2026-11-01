@@ -1,36 +1,55 @@
 use crate::{
     any::difficulty::{
         object::{HasStartTime, IDifficultyObject},
-        skills::{strain_decay, StrainSkill},
+        skills::{strain_decay, VariableLengthStrainSkill},
     },
-    osu::difficulty::object::OsuDifficultyObject,
+    osu::difficulty::{
+        evaluators::{AgilityEvaluator, FlowAimEvaluator, SnapAimEvaluator},
+        object::OsuDifficultyObject,
+    },
     util::{
-        difficulty::{milliseconds_to_bpm, reverse_lerp, smootherstep, smoothstep, count_top_weighted_sliders},
+        difficulty::{logistic, logistic_exp, norm},
         float_ext::FloatExt,
-        strains_vec::StrainsVec,
     },
 };
 
-use super::strain::OsuStrainSkill;
-
 define_skill! {
     #[derive(Clone)]
-    pub struct Aim: StrainSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
+    pub struct Aim: VariableLengthStrainSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
         include_sliders: bool,
+        with_td: bool,
+        radius: f64,
         current_strain: f64 = 0.0,
         slider_strains: Vec<f64> = Vec::with_capacity(64), // TODO: use `StrainsVec`?
     }
+
+    pub fn new(include_sliders: bool, with_td: bool, radius: f64) -> Self {
+        Self {
+            include_sliders: include_sliders,
+            with_td: with_td,
+            radius: radius,
+            current_strain: 0.0,
+            slider_strains: Vec::with_capacity(64),
+        }
+    }
 }
 
-impl Aim {
-    const SKILL_MULTIPLIER: f64 = 26.0;
-    const STRAIN_DECAY_BASE: f64 = 0.15;
+impl<'a> Aim {
+    const COMBINED_SNAP_NORM_EXPONENT: f64 = 1.2;
+    const SKILL_MULTIPLIER_AGILITY: f64 = 2.35;
+    const SKILL_MULTIPLIER_FLOW: f64 = 242.0;
+    const SKILL_MULTIPLIER_SNAP: f64 = 70.9;
+    const SKILL_MULTIPLIER_TOTAL: f64 = 1.12;
+    const STRAIN_DECAY_BASE: f64 = 0.2;
+
+    const REDUCED_SECTION_TIME: f64 = 4000.0;
+    const REDUCED_STRAIN_BASELINE: f64 = 0.727;
 
     fn calculate_initial_strain(
-        &mut self,
+        &self,
         time: f64,
-        curr: &OsuDifficultyObject<'_>,
-        objects: &[OsuDifficultyObject<'_>],
+        curr: &OsuDifficultyObject<'a>,
+        objects: &[OsuDifficultyObject<'a>],
     ) -> f64 {
         let prev_start_time = curr
             .previous(0, objects)
@@ -41,18 +60,83 @@ impl Aim {
 
     fn strain_value_at(
         &mut self,
-        curr: &OsuDifficultyObject<'_>,
-        objects: &[OsuDifficultyObject<'_>],
+        curr: &OsuDifficultyObject<'a>,
+        objects: &[OsuDifficultyObject<'a>],
     ) -> f64 {
-        self.current_strain *= strain_decay(curr.delta_time, Self::STRAIN_DECAY_BASE);
-        self.current_strain += AimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders)
-            * Self::SKILL_MULTIPLIER;
+        let decay = strain_decay(curr.adjusted_delta_time, Self::STRAIN_DECAY_BASE);
+
+        let snap_difficulty =
+            SnapAimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders)
+                * Self::SKILL_MULTIPLIER_SNAP;
+        let agility_difficulty =
+            AgilityEvaluator::evaluate_diff_of(curr, objects) * Self::SKILL_MULTIPLIER_AGILITY;
+        let flow_difficulty =
+            FlowAimEvaluator::evaluate_diff_of(curr, objects, self.include_sliders, self.radius)
+                * Self::SKILL_MULTIPLIER_FLOW;
+
+        let total_difficulty = Self::calculate_total_value(
+            Self::COMBINED_SNAP_NORM_EXPONENT,
+            snap_difficulty,
+            agility_difficulty,
+            flow_difficulty,
+            Self::SKILL_MULTIPLIER_TOTAL,
+            self.with_td,
+        );
+
+        self.current_strain *= decay;
+        self.current_strain += total_difficulty * (1.0 - decay);
 
         if curr.base.is_slider() {
             self.slider_strains.push(self.current_strain);
         }
 
         self.current_strain
+    }
+
+    fn calculate_total_value(
+        mean_exponent: f64,
+        mut snap_difficulty: f64,
+        agility_difficulty: f64,
+        flow_difficulty: f64,
+        skill_multiplier_total: f64,
+        with_td: bool,
+    ) -> f64 {
+        // * We compare flow to combined snap and agility because snap by itself doesn't
+        //   have enough difficulty to be above flow on streams
+        // * Agility on the other hand is supposed to measure the rate of cursor
+        //   velocity changes while snapping
+        // * So snapping every circle on a stream requires an enormous amount of agility
+        //   at which point it's easier to flow
+        let mut combined_snap_difficulty =
+            norm(mean_exponent, [snap_difficulty, agility_difficulty]);
+
+        let p_snap =
+            Self::calculate_snap_flow_probability(flow_difficulty / combined_snap_difficulty);
+        let p_flow = 1.0 - p_snap;
+
+        if with_td {
+            // * we don't adjust agility here since agility represents TD difficulty in a decent enough way
+            snap_difficulty = snap_difficulty.powf(0.89);
+            combined_snap_difficulty = norm(mean_exponent, [snap_difficulty, agility_difficulty]);
+        }
+
+        let total_difficulty = combined_snap_difficulty * p_snap + flow_difficulty * p_flow;
+
+        total_difficulty * skill_multiplier_total
+    }
+
+    fn calculate_snap_flow_probability(ratio: f64) -> f64 {
+        const K: f64 = 7.27; // why
+
+        if FloatExt::eq(ratio, 0.0) {
+            return 0.0;
+        }
+
+        if ratio.is_nan() || ratio.is_infinite() {
+            return 1.0;
+        }
+
+        logistic_exp(-K * ratio.ln(), None)
     }
 
     pub fn get_difficult_sliders(&self) -> f64 {
@@ -73,238 +157,22 @@ impl Aim {
             .sum()
     }
 
-    pub fn count_top_weighted_sliders(&self) -> f64 {
+    pub fn count_top_weighted_sliders(&self, difficulty_value: f64) -> f64 {
         if self.slider_strains.is_empty() {
             return 0.0;
         }
 
-        count_top_weighted_sliders(&self.slider_strains, self.cloned_difficulty_value())
-    }
-
-    // From `OsuStrainSkill`; native rather than trait function so that it has
-    // priority over `StrainSkill::difficulty_value`
-    fn difficulty_value(current_strain_peaks: StrainsVec) -> f64 {
-        super::strain::difficulty_value(
-            current_strain_peaks,
-            Self::REDUCED_SECTION_COUNT,
-            Self::REDUCED_STRAIN_BASELINE,
-            Self::DECAY_WEIGHT,
-        )
-    }
-}
-
-impl OsuStrainSkill for Aim {}
-
-struct AimEvaluator;
-
-impl AimEvaluator {
-    const WIDE_ANGLE_MULTIPLIER: f64 = 1.5;
-    const ACUTE_ANGLE_MULTIPLIER: f64 = 2.55;
-    const SLIDER_MULTIPLIER: f64 = 1.35;
-    const VELOCITY_CHANGE_MULTIPLIER: f64 = 0.75;
-    const WIGGLE_MULTIPLIER: f64 = 1.02;
-
-    #[allow(clippy::too_many_lines)]
-    fn evaluate_diff_of<'a>(
-        curr: &'a OsuDifficultyObject<'a>,
-        diff_objects: &'a [OsuDifficultyObject<'a>],
-        with_slider_travel_dist: bool,
-    ) -> f64 {
-        let osu_curr_obj = curr;
-
-        let Some((osu_last_last_obj, osu_last_obj)) = curr
-            .previous(1, diff_objects)
-            .zip(curr.previous(0, diff_objects))
-            .filter(|(_, last)| !(curr.base.is_spinner() || last.base.is_spinner()))
-        else {
+        // * What would the top strain be if all strain values were identical
+        let consistent_top_strain = difficulty_value * (1.0 - Self::DECAY_WEIGHT);
+        if consistent_top_strain == 0.0 {
             return 0.0;
-        };
-
-        #[allow(clippy::items_after_statements)]
-        const RADIUS: i32 = OsuDifficultyObject::NORMALIZED_RADIUS;
-        #[allow(clippy::items_after_statements)]
-        const DIAMETER: i32 = OsuDifficultyObject::NORMALIZED_DIAMETER;
-
-        // * Calculate the velocity to the current hitobject, which starts
-        // * with a base distance / time assuming the last object is a hitcircle.
-        let mut curr_vel = osu_curr_obj.lazy_jump_dist / osu_curr_obj.adjusted_delta_time;
-
-        // * But if the last object is a slider, then we extend the travel
-        // * velocity through the slider into the current object.
-        if osu_last_obj.base.is_slider() && with_slider_travel_dist {
-            // * calculate the slider velocity from slider head to slider end.
-            let travel_vel = osu_last_obj.travel_dist / osu_last_obj.travel_time;
-            // * calculate the movement velocity from slider end to current object
-            let movement_vel = osu_curr_obj.min_jump_dist / osu_curr_obj.min_jump_time;
-
-            // * take the larger total combined velocity.
-            curr_vel = curr_vel.max(movement_vel + travel_vel);
         }
 
-        // * As above, do the same for the previous hitobject.
-        let mut prev_vel = osu_last_obj.lazy_jump_dist / osu_last_obj.adjusted_delta_time;
-
-        if osu_last_last_obj.base.is_slider() && with_slider_travel_dist {
-            let travel_vel = osu_last_last_obj.travel_dist / osu_last_last_obj.travel_time;
-            let movement_vel = osu_last_obj.min_jump_dist / osu_last_obj.min_jump_time;
-
-            prev_vel = prev_vel.max(movement_vel + travel_vel);
-        }
-
-        let mut wide_angle_bonus = 0.0;
-        let mut acute_angle_bonus = 0.0;
-        let mut slider_bonus = 0.0;
-        let mut vel_change_bonus = 0.0;
-        let mut wiggle_bonus = 0.0;
-
-        // * Start strain with regular velocity.
-        let mut aim_strain = curr_vel;
-
-        if let Some((curr_angle, last_angle)) = osu_curr_obj.angle.zip(osu_last_obj.angle) {
-            // * Rewarding angles, take the smaller velocity as base.
-            let angle_bonus = curr_vel.min(prev_vel);
-
-            if osu_curr_obj.adjusted_delta_time.max(osu_last_obj.adjusted_delta_time)
-                < 1.25 * osu_curr_obj.adjusted_delta_time.min(osu_last_obj.adjusted_delta_time)
-            {
-                // * If rhythms are the same.
-                acute_angle_bonus = Self::calc_acute_angle_bonus(curr_angle);
-
-                // * Penalize angle repetition.
-                acute_angle_bonus *= 0.08
-                    + 0.92
-                        * (1.0
-                            - f64::min(
-                                acute_angle_bonus,
-                                f64::powf(Self::calc_acute_angle_bonus(last_angle), 3.0),
-                            ));
-
-                // * Apply acute angle bonus for BPM above 300 1/2 and distance more than one diameter
-                acute_angle_bonus *= angle_bonus
-                    * smootherstep(
-                        milliseconds_to_bpm(osu_curr_obj.adjusted_delta_time, Some(2)),
-                        300.0,
-                        400.0,
-                    )
-                    * smootherstep(
-                        osu_curr_obj.lazy_jump_dist,
-                        f64::from(DIAMETER),
-                        f64::from(DIAMETER * 2),
-                    );
-            }
-
-            wide_angle_bonus = Self::calc_wide_angle_bonus(curr_angle);
-
-            // * Penalize angle repetition.
-            wide_angle_bonus *= 1.0
-                - f64::min(
-                    wide_angle_bonus,
-                    f64::powf(Self::calc_wide_angle_bonus(last_angle), 3.0),
-                );
-
-            // * Apply full wide angle bonus for distance more than one diameter
-            wide_angle_bonus *= angle_bonus
-                * smootherstep(osu_curr_obj.lazy_jump_dist, 0.0, f64::from(DIAMETER));
-
-            // * Apply wiggle bonus for jumps that are [radius, 3*diameter] in distance, with < 110 angle
-            // * https://www.desmos.com/calculator/dp0v0nvowc
-            wiggle_bonus = angle_bonus
-                * smootherstep(
-                    osu_curr_obj.lazy_jump_dist,
-                    f64::from(RADIUS),
-                    f64::from(DIAMETER),
-                )
-                * f64::powf(
-                    reverse_lerp(
-                        osu_curr_obj.lazy_jump_dist,
-                        f64::from(DIAMETER * 3),
-                        f64::from(DIAMETER),
-                    ),
-                    1.8,
-                )
-                * smootherstep(curr_angle, f64::to_radians(110.0), f64::to_radians(60.0))
-                * smootherstep(
-                    osu_last_obj.lazy_jump_dist,
-                    f64::from(RADIUS),
-                    f64::from(DIAMETER),
-                )
-                * f64::powf(
-                    reverse_lerp(
-                        osu_last_obj.lazy_jump_dist,
-                        f64::from(DIAMETER * 3),
-                        f64::from(DIAMETER),
-                    ),
-                    1.8,
-                )
-                * smootherstep(last_angle, f64::to_radians(110.0), f64::to_radians(60.0));
-
-            if let Some(osu_last2_obj) = curr.previous(2, diff_objects) {
-                // * If objects just go back and forth through a middle point - don't give as much wide bonus
-                // * Use Previous(2) and Previous(0) because angles calculation is done prevprev-prev-curr, so any object's angle's center point is always the previous object
-                let last_base_object = &osu_last_obj.base;
-                let last2_base_object = &osu_last2_obj.base;
-
-                let distance = f64::from((last2_base_object.stacked_pos() - last_base_object.stacked_pos()).length());
-
-                if distance < 1.0 {
-                    wide_angle_bonus *= 1.0 - 0.35 * (1.0 - distance);
-                }
-            }
-        }
-
-        if prev_vel.max(curr_vel).not_eq(0.0) {
-            // * We want to use the average velocity over the whole object when awarding
-            // * differences, not the individual jump and slider path velocities.
-            prev_vel = (osu_last_obj.lazy_jump_dist + osu_last_last_obj.travel_dist)
-                / osu_last_obj.adjusted_delta_time;
-            curr_vel =
-                (osu_curr_obj.lazy_jump_dist + osu_last_obj.travel_dist) / osu_curr_obj.adjusted_delta_time;
-
-            // * Scale with ratio of difference compared to 0.5 * max dist.
-            let dist_ratio = smoothstep(
-                (prev_vel - curr_vel).abs() / prev_vel.max(curr_vel), 0.0, 1.0,);
-
-            // * Reward for % distance up to 125 / strainTime for overlaps where velocity is still changing.
-            let overlap_vel_buff = (f64::from(DIAMETER) * 1.25
-                / osu_curr_obj.adjusted_delta_time.min(osu_last_obj.adjusted_delta_time))
-            .min((prev_vel - curr_vel).abs());
-
-            vel_change_bonus = overlap_vel_buff * dist_ratio;
-
-            // * Penalize for rhythm changes.
-            let bonus_base = (osu_curr_obj.adjusted_delta_time).min(osu_last_obj.adjusted_delta_time)
-                / (osu_curr_obj.adjusted_delta_time).max(osu_last_obj.adjusted_delta_time);
-            vel_change_bonus *= bonus_base.powf(2.0);
-        }
-
-        if osu_last_obj.base.is_slider() {
-            // * Reward sliders based on velocity.
-            slider_bonus = osu_last_obj.travel_dist / osu_last_obj.travel_time;
-        }
-
-        aim_strain += wiggle_bonus * Self::WIGGLE_MULTIPLIER;
-        aim_strain += vel_change_bonus * Self::VELOCITY_CHANGE_MULTIPLIER;
-
-        // * Add in acute angle bonus or wide angle bonus, whichever is larger.
-        aim_strain += (acute_angle_bonus * Self::ACUTE_ANGLE_MULTIPLIER)
-            .max(wide_angle_bonus * Self::WIDE_ANGLE_MULTIPLIER);
-
-        // * Apply high circle size bonus.
-        aim_strain *= osu_curr_obj.small_circle_bonus;
-
-        // * Add in additional slider velocity bonus.
-        if with_slider_travel_dist {
-            aim_strain += slider_bonus * Self::SLIDER_MULTIPLIER;
-        }
-
-        aim_strain
-    }
-
-    const fn calc_wide_angle_bonus(angle: f64) -> f64 {
-        smoothstep(angle, f64::to_radians(40.0), f64::to_radians(140.0))
-    }
-
-    const fn calc_acute_angle_bonus(angle: f64) -> f64 {
-        smoothstep(angle, f64::to_radians(140.0), f64::to_radians(40.0))
+        // * Use a weighted sum of all strains. Constants are arbitrary and give nice
+        //   values
+        self.slider_strains
+            .iter()
+            .map(|&s| logistic(s / consistent_top_strain, 0.88, 10.0, Some(1.1)))
+            .sum()
     }
 }

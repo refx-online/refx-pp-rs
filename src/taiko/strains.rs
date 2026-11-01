@@ -1,11 +1,10 @@
 use rosu_map::section::general::GameMode;
 
+use super::difficulty::TaikoSkills;
 use crate::{
     any::difficulty::skills::StrainSkill, model::mode::ConvertError,
     taiko::difficulty::DifficultyValues, Beatmap, Difficulty,
 };
-
-use super::difficulty::TaikoSkills;
 
 /// The result of calculating the strains on a osu!taiko map.
 ///

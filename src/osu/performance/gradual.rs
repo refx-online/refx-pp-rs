@@ -1,6 +1,5 @@
-use crate::{model::mode::ConvertError, osu::OsuGradualDifficulty, Beatmap, Difficulty};
-
 use super::{OsuPerformanceAttributes, OsuScoreState};
+use crate::{model::mode::ConvertError, osu::OsuGradualDifficulty, Beatmap, Difficulty};
 
 /// Gradually calculate the performance attributes of an osu!standard map.
 ///
@@ -130,9 +129,8 @@ impl OsuGradualPerformance {
 
 #[cfg(test)]
 mod tests {
-    use crate::{osu::OsuPerformance, Beatmap};
-
     use super::*;
+    use crate::{osu::OsuPerformance, Beatmap};
 
     #[test]
     fn next_and_nth() {

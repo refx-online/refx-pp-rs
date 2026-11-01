@@ -11,12 +11,14 @@ pub struct TaikoDifficultyAttributes {
     pub color: f64,
     /// The difficulty of the reading skill.
     pub reading: f64,
-    /// The perceived hit window for an n300 inclusive of rate-adjusting mods (DT/HT/etc)
+    /// The perceived hit window for an n300 inclusive of rate-adjusting mods
+    /// (DT/HT/etc)
     pub great_hit_window: f64,
-    /// The perceived hit window for an n100 inclusive of rate-adjusting mods (DT/HT/etc)
+    /// The perceived hit window for an n100 inclusive of rate-adjusting mods
+    /// (DT/HT/etc)
     pub ok_hit_window: f64,
-    /// The ratio of stamina difficulty from mono-color (single color) streams to total
-    /// stamina difficulty.
+    /// The ratio of stamina difficulty from mono-color (single color) streams
+    /// to total stamina difficulty.
     pub mono_stamina_factor: f64,
     /// The final star rating.
     pub stars: f64,

@@ -27,7 +27,9 @@ impl Reading {
             .and_then(Weak::upgrade)
             .and_then(|mono| {
                 mono.get().hit_objects.iter().position(|h| {
-                    let Some(h) = h.upgrade() else { return false };
+                    let Some(h) = h.upgrade() else {
+                        return false;
+                    };
                     let h = h.get();
 
                     h.idx == curr.idx
@@ -50,7 +52,8 @@ impl ReadingEvaluator {
         let high_velocity = VelocityRange::new(480.0, 640.0);
         let mid_velocity = VelocityRange::new(360.0, 480.0);
 
-        // * Apply a cap to prevent outlier values on maps that exceed the editor's parameters.
+        // * Apply a cap to prevent outlier values on maps that exceed the editor's
+        //   parameters.
         let effective_bpm = f64::max(1.0, note_object.effective_bpm);
 
         let mid_velocity_diff = 0.5
@@ -61,11 +64,13 @@ impl ReadingEvaluator {
                 None,
             );
 
-        // * Expected DeltaTime is the DeltaTime this note would need to be spaced equally to a base slider velocity 1/4 note.
+        // * Expected DeltaTime is the DeltaTime this note would need to be spaced
+        //   equally to a base slider velocity 1/4 note.
         let expected_delta_time = 21_000.0 / effective_bpm;
         let object_density = expected_delta_time / f64::max(1.0, note_object.delta_time);
 
-        // * High density is penalised at high velocity as it is generally considered easier to read.
+        // * High density is penalised at high velocity as it is generally considered
+        //   easier to read.
         // * See https://www.desmos.com/calculator/u63f3ntdsi
         let density_penalty = logistic(object_density, 0.925, 15.0, None);
 

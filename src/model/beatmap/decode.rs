@@ -15,6 +15,7 @@ use rosu_map::{
     DecodeBeatmap, DecodeState,
 };
 
+use super::{Beatmap, DEFAULT_SLIDER_LENIENCY};
 use crate::{
     model::{
         control_point::{
@@ -24,8 +25,6 @@ use crate::{
     },
     util::{float_ext::FloatExt, hint::unlikely, sort},
 };
-
-use super::{Beatmap, DEFAULT_SLIDER_LENIENCY};
 
 /// The state of a [`Beatmap`] for [`DecodeBeatmap`].
 pub struct BeatmapState {
@@ -236,8 +235,8 @@ impl BeatmapState {
 
         // SAFETY:
         // - *const str and &str have the same layout.
-        // - `self.point_split` is cleared after every use, ensuring that it
-        //   does not contain any invalid pointers.
+        // - `self.point_split` is cleared after every use, ensuring that it does not
+        //   contain any invalid pointers.
         let point_split = unsafe { slice::from_raw_parts(ptr.cast(), len) };
         let res = f(self, point_split);
         self.point_split.clear();

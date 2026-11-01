@@ -1,13 +1,12 @@
 use std::collections::VecDeque;
 
-use crate::{
-    taiko::difficulty::object::TaikoDifficultyObjects,
-    util::sync::{Ref, RefCount, Weak},
-};
-
 use super::data::{
     alternating_mono_pattern::AlternatingMonoPattern, mono_streak::MonoStreak,
     repeating_hit_patterns::RepeatingHitPatterns,
+};
+use crate::{
+    taiko::difficulty::object::TaikoDifficultyObjects,
+    util::sync::{Ref, RefCount, Weak},
 };
 
 pub struct ColorDifficultyPreprocessor;
@@ -179,8 +178,9 @@ impl ColorDifficultyPreprocessor {
             hit_patterns.push(RefCount::clone(curr_hit_pattern));
         }
 
-        for pattern in hit_patterns
-            .iter_mut() { pattern.get_mut().find_repetition_interval(); }
+        for pattern in hit_patterns.iter_mut() {
+            pattern.get_mut().find_repetition_interval();
+        }
 
         hit_patterns
     }

@@ -48,7 +48,8 @@ impl CompatPrng {
         let mut ii = 0;
 
         for _ in 1..55 {
-            // * The range [1..55] is special (Knuth) and so we're wasting the 0'th position.
+            // * The range [1..55] is special (Knuth) and so we're wasting the 0'th
+            //   position.
             ii += 21;
 
             if ii >= 55 {

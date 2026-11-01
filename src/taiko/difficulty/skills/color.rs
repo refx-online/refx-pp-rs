@@ -64,7 +64,8 @@ impl ColorEvaluator {
             let curr_ratio = curr.rhythm_data.ratio;
             let prev_ratio = prev.rhythm_data.ratio;
 
-            // * A consistent interval is defined as the percentage difference between the two rhythmic ratios with the margin of error.
+            // * A consistent interval is defined as the percentage difference between the
+            //   two rhythmic ratios with the margin of error.
             if f64::abs(1.0 - curr_ratio / prev_ratio) <= threshold {
                 consistent_ratio_count += 1;
                 total_ratio_count += curr_ratio;

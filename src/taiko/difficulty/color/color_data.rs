@@ -1,11 +1,10 @@
-use crate::{
-    taiko::difficulty::object::{TaikoDifficultyObject, TaikoDifficultyObjects},
-    util::sync::{RefCount, Weak},
-};
-
 use super::data::{
     alternating_mono_pattern::AlternatingMonoPattern, mono_streak::MonoStreak,
     repeating_hit_patterns::RepeatingHitPatterns,
+};
+use crate::{
+    taiko::difficulty::object::{TaikoDifficultyObject, TaikoDifficultyObjects},
+    util::sync::{RefCount, Weak},
 };
 
 #[derive(Debug, Default)]

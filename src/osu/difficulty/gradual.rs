@@ -2,21 +2,19 @@ use std::{cmp, mem};
 
 use rosu_map::section::general::GameMode;
 
+use self::osu_objects::OsuObjects;
+use super::{
+    object::OsuDifficultyObject, skills::OsuSkills, DifficultyValues, OsuDifficultyAttributes,
+    OsuDifficultySetup, HD_FADE_IN_DURATION_MULTIPLIER,
+};
 use crate::{
-    any::difficulty::skills::StrainSkill,
-    model::{mode::ConvertError},
+    any::difficulty::skills::{HarmonicSkill, StrainSkill, VariableLengthStrainSkill},
+    model::mode::ConvertError,
     osu::{
         convert::convert_objects,
         object::{OsuObject, OsuObjectKind},
     },
     Beatmap, Difficulty,
-};
-
-use self::osu_objects::OsuObjects;
-
-use super::{
-    object::OsuDifficultyObject, skills::OsuSkills, DifficultyValues, OsuDifficultyAttributes,
-    OsuDifficultySetup,
 };
 
 /// Gradually calculate the difficulty attributes of an osu!standard map.
@@ -32,15 +30,15 @@ use super::{
 /// # Example
 ///
 /// ```
-/// use refx_pp::{Beatmap, Difficulty};
 /// use refx_pp::osu::{Osu, OsuGradualDifficulty};
+/// use refx_pp::{Beatmap, Difficulty};
 ///
 /// let map = Beatmap::from_path("./resources/2785319.osu").unwrap();
 ///
 /// let difficulty = Difficulty::new().mods(64); // DT
 /// let mut iter = OsuGradualDifficulty::new(difficulty, &map).unwrap();
 ///
-///  // the difficulty of the map after the first hit object
+/// // the difficulty of the map after the first hit object
 /// let attrs1 = iter.next();
 /// // ... after the second hit object
 /// let attrs2 = iter.next();
@@ -55,7 +53,6 @@ use super::{
 pub struct OsuGradualDifficulty {
     pub(crate) idx: usize,
     pub(crate) difficulty: Difficulty,
-    map: Beatmap,
     attrs: OsuDifficultyAttributes,
     skills: OsuSkills,
     // Lifetimes actually depend on `osu_objects` so this type is
@@ -104,18 +101,25 @@ impl OsuGradualDifficulty {
 
         let mut osu_objects = OsuObjects::new(osu_objects);
 
+        let time_fade_in = if mods.hd() {
+            time_preempt * HD_FADE_IN_DURATION_MULTIPLIER
+        } else {
+            400.0 * (time_preempt / OsuObject::PREEMPT_MIN).min(1.0)
+        };
+
         let diff_objects = DifficultyValues::create_difficulty_objects(
             &difficulty,
             &scaling_factor,
             osu_objects.iter_mut(),
+            time_preempt,
+            time_fade_in,
         );
 
-        let skills = OsuSkills::new(mods, &scaling_factor, &map_attrs, time_preempt);
+        let skills = OsuSkills::new(mods, &scaling_factor, &map_attrs);
         let diff_objects = extend_lifetime(diff_objects.into_boxed_slice());
 
         Ok(Self {
             idx: 0,
-            map: map.as_ref().to_owned(),
             difficulty,
             attrs,
             skills,
@@ -163,6 +167,7 @@ impl Iterator for OsuGradualDifficulty {
             self.skills.aim.process(curr, &self.diff_objects);
             self.skills.aim_no_sliders.process(curr, &self.diff_objects);
             self.skills.speed.process(curr, &self.diff_objects);
+            self.skills.reading.process(curr, &self.diff_objects);
             self.skills.flashlight.process(curr, &self.diff_objects);
 
             Self::increment_combo(curr.base, &mut self.attrs);
@@ -174,7 +179,7 @@ impl Iterator for OsuGradualDifficulty {
 
         let mut attrs = self.attrs.clone();
 
-        DifficultyValues::eval(&self.map, &mut attrs, self.difficulty.get_mods(), &self.skills);
+        DifficultyValues::eval(&mut attrs, self.difficulty.get_mods(), &self.skills);
 
         Some(attrs)
     }
@@ -239,9 +244,8 @@ mod osu_objects {
 
 #[cfg(test)]
 mod tests {
-    use crate::{osu::Osu, Beatmap};
-
     use super::*;
+    use crate::{osu::Osu, Beatmap};
 
     #[test]
     fn empty() {

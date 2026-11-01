@@ -1,9 +1,8 @@
+use super::same_rhythm_hit_object_grouping::SameRhythmHitObjectGrouping;
 use crate::{
     taiko::difficulty::object::TaikoDifficultyObject,
     util::sync::{RefCount, Weak},
 };
-
-use super::same_rhythm_hit_object_grouping::SameRhythmHitObjectGrouping;
 
 #[derive(Debug)]
 pub struct SamePatternsGroupedHitObjects {

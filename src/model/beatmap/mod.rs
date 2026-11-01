@@ -1,15 +1,9 @@
 use std::{borrow::Cow, io, path::Path, str::FromStr};
 
+pub use rosu_map::section::events::BreakPeriod;
 use rosu_map::{
     section::{general::GameMode, hit_objects::hit_samples::HitSoundType},
     LATEST_FORMAT_VERSION,
-};
-
-pub use rosu_map::section::events::BreakPeriod;
-
-use crate::{
-    catch::Catch, mania::Mania, taiko::Taiko, Difficulty, GameMods, GradualDifficulty,
-    GradualPerformance, Performance,
 };
 
 pub use self::{
@@ -17,7 +11,6 @@ pub use self::{
     decode::{BeatmapState, ParseBeatmapError},
     suspicious::TooSuspicious,
 };
-
 use super::{
     control_point::{
         difficulty_point_at, effect_point_at, timing_point_at, DifficultyPoint, EffectPoint,
@@ -25,6 +18,10 @@ use super::{
     },
     hit_object::HitObject,
     mode::ConvertError,
+};
+use crate::{
+    catch::Catch, mania::Mania, taiko::Taiko, Difficulty, GameMods, GradualDifficulty,
+    GradualPerformance, Performance,
 };
 
 mod attributes;

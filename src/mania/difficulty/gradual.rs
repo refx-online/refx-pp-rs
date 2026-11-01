@@ -2,6 +2,10 @@ use std::cmp;
 
 use rosu_map::section::general::GameMode;
 
+use super::{
+    object::ManiaDifficultyObject, skills::strain::Strain, DifficultyValues,
+    ManiaDifficultyAttributes, ManiaObject, DIFFICULTY_MULTIPLIER,
+};
 use crate::{
     any::difficulty::skills::StrainSkill,
     mania::{convert, object::ObjectParams},
@@ -9,16 +13,12 @@ use crate::{
     Beatmap, Difficulty,
 };
 
-use super::{
-    object::ManiaDifficultyObject, skills::strain::Strain, DifficultyValues,
-    ManiaDifficultyAttributes, ManiaObject, DIFFICULTY_MULTIPLIER,
-};
-
 /// Gradually calculate the difficulty attributes of an osu!mania map.
 ///
 /// Note that this struct implements [`Iterator`].
 /// On every call of [`Iterator::next`], the map's next hit object will
-/// be processed and the [`ManiaDifficultyAttributes`] will be updated and returned.
+/// be processed and the [`ManiaDifficultyAttributes`] will be updated and
+/// returned.
 ///
 /// If you want to calculate performance attributes, use
 /// [`ManiaGradualPerformance`] instead.
@@ -26,8 +26,8 @@ use super::{
 /// # Example
 ///
 /// ```
-/// use refx_pp::{Beatmap, Difficulty};
 /// use refx_pp::mania::ManiaGradualDifficulty;
+/// use refx_pp::{Beatmap, Difficulty};
 ///
 /// let map = Beatmap::from_path("./resources/1638954.osu").unwrap();
 ///
@@ -220,9 +220,8 @@ fn increment_combo_raw(is_circle: bool, start_time: f64, end_time: f64, state: &
 
 #[cfg(test)]
 mod tests {
-    use crate::{mania::Mania, Beatmap};
-
     use super::*;
+    use crate::{mania::Mania, Beatmap};
 
     #[test]
     fn empty() {

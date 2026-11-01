@@ -1,6 +1,5 @@
-use crate::{mania::ManiaGradualDifficulty, model::mode::ConvertError, Beatmap, Difficulty};
-
 use super::{ManiaPerformanceAttributes, ManiaScoreState};
+use crate::{mania::ManiaGradualDifficulty, model::mode::ConvertError, Beatmap, Difficulty};
 
 /// Gradually calculate the performance attributes of an osu!mania map.
 ///
@@ -117,9 +116,8 @@ impl ManiaGradualPerformance {
 
 #[cfg(test)]
 mod tests {
-    use crate::{mania::ManiaPerformance, Beatmap};
-
     use super::*;
+    use crate::{mania::ManiaPerformance, Beatmap};
 
     #[test]
     fn next_and_nth() {

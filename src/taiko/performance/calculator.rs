@@ -22,7 +22,8 @@ impl<'a> TaikoPerformanceCalculator<'a> {
 
 impl TaikoPerformanceCalculator<'_> {
     pub fn calculate(self) -> TaikoPerformanceAttributes {
-        // * The effectiveMissCount is calculated by gaining a ratio for totalSuccessfulHits
+        // * The effectiveMissCount is calculated by gaining a ratio for
+        //   totalSuccessfulHits
         // * and increasing the miss penalty for shorter object counts lower than 1000.
         let total_successful_hits = self.total_successful_hits();
 
@@ -99,7 +100,8 @@ impl TaikoPerformanceCalculator<'_> {
             );
         }
 
-        // * Scale accuracy more harshly on nearly-completely mono (single coloured) speed maps.
+        // * Scale accuracy more harshly on nearly-completely mono (single coloured)
+        //   speed maps.
         let acc_scaling_exp = f64::from(2) + self.attrs.mono_stamina_factor;
         let acc_scaling_shift =
             f64::from(500) - f64::from(100) * (self.attrs.mono_stamina_factor * f64::from(3));
@@ -124,7 +126,8 @@ impl TaikoPerformanceCalculator<'_> {
 
         let length_bonus = f64::min(1.15, f64::powf(self.total_hits() / 1500.0, 0.3));
 
-        // * Slight HDFL Bonus for accuracy. A clamp is used to prevent against negative values.
+        // * Slight HDFL Bonus for accuracy. A clamp is used to prevent against negative
+        //   values.
         if self.mods.hd() && self.mods.fl() && !self.attrs.is_convert {
             acc_value *= f64::max(1.0, 1.05 * length_bonus);
         }
@@ -132,9 +135,12 @@ impl TaikoPerformanceCalculator<'_> {
         acc_value
     }
 
-    // * Computes an upper bound on the player's tap deviation based on the OD, number of circles and sliders,
-    // * and the hit judgements, assuming the player's mean hit error is 0. The estimation is consistent in that
-    // * two SS scores on the same map with the same settings will always return the same deviation.
+    // * Computes an upper bound on the player's tap deviation based on the OD,
+    //   number of circles and sliders,
+    // * and the hit judgements, assuming the player's mean hit error is 0. The
+    //   estimation is consistent in that
+    // * two SS scores on the same map with the same settings will always return the
+    //   same deviation.
     fn compute_deviation_upper_bound(&self) -> Option<f64> {
         if self.state.n300 == 0 || self.attrs.great_hit_window <= 0.0 {
             return None;

@@ -2,12 +2,11 @@ use std::mem;
 
 use rosu_map::util::Pos;
 
-use crate::model::hit_object::{HitObject, HitObjectKind, HoldNote};
-
 use super::pattern_generator::{
     end_time_object::EndTimeObjectPatternGenerator, hit_object::HitObjectPatternGenerator,
     path_object::PathObjectPatternGenerator,
 };
+use crate::model::hit_object::{HitObject, HitObjectKind, HoldNote};
 
 #[derive(Default)]
 pub struct Pattern {

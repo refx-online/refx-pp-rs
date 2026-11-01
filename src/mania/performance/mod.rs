@@ -3,7 +3,7 @@ use std::cmp;
 use rosu_map::section::general::GameMode;
 
 use self::calculator::ManiaPerformanceCalculator;
-
+use super::{attributes::ManiaPerformanceAttributes, score_state::ManiaScoreState, Mania};
 use crate::{
     any::{Difficulty, HitResultPriority, IntoModePerformance, IntoPerformance},
     model::{mode::ConvertError, mods::GameMods},
@@ -11,8 +11,6 @@ use crate::{
     util::map_or_attrs::MapOrAttrs,
     Performance,
 };
-
-use super::{attributes::ManiaPerformanceAttributes, score_state::ManiaScoreState, Mania};
 
 mod calculator;
 pub mod gradual;
@@ -37,8 +35,8 @@ impl<'map> ManiaPerformance<'map> {
     /// Create a new performance calculator for osu!mania maps.
     ///
     /// The argument `map_or_attrs` must be either
-    /// - previously calculated attributes ([`ManiaDifficultyAttributes`]
-    ///   or [`ManiaPerformanceAttributes`])
+    /// - previously calculated attributes ([`ManiaDifficultyAttributes`] or
+    ///   [`ManiaPerformanceAttributes`])
     /// - a [`Beatmap`] (by reference or value)
     ///
     /// If a map is given, difficulty attributes will need to be calculated
@@ -250,7 +248,8 @@ impl<'map> ManiaPerformance<'map> {
         self
     }
 
-    /// Create the [`ManiaScoreState`] that will be used for performance calculation.
+    /// Create the [`ManiaScoreState`] that will be used for performance
+    /// calculation.
     #[allow(clippy::too_many_lines, clippy::similar_names)]
     pub fn generate_state(&mut self) -> Result<ManiaScoreState, ConvertError> {
         let attrs = match self.map_or_attrs {
@@ -800,20 +799,17 @@ impl<'map, T: IntoModePerformance<'map, Mania>> From<T> for ManiaPerformance<'ma
 mod tests {
     use std::{cmp::Ordering, sync::OnceLock, time::Instant};
 
-    use proptest::{
-        prelude::*
-    };
+    use proptest::prelude::*;
     use rosu_map::section::general::GameMode;
     use rosu_mods::GameMod;
 
+    use super::{calculator::custom_accuracy, *};
     use crate::{
         any::{DifficultyAttributes, PerformanceAttributes},
         mania::ManiaDifficultyAttributes,
         osu::{OsuDifficultyAttributes, OsuPerformanceAttributes},
         Beatmap,
     };
-
-    use super::{calculator::custom_accuracy, *};
 
     static ATTRS: OnceLock<ManiaDifficultyAttributes> = OnceLock::new();
 

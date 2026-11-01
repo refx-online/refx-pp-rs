@@ -14,15 +14,12 @@ define_skill! {
 
 impl Movement {
     const ABSOLUTE_PLAYER_POSITIONING_ERROR: f32 = 16.0;
-    const NORMALIZED_HITOBJECT_RADIUS: f32 = 41.0;
+    const DECAY_WEIGHT: f64 = 0.94;
     const DIRECTION_CHANGE_BONUS: f64 = 21.0;
-
+    const NORMALIZED_HITOBJECT_RADIUS: f32 = 41.0;
+    const SECTION_LENGTH: f64 = 750.0;
     const SKILL_MULTIPLIER: f64 = 1.0;
     const STRAIN_DECAY_BASE: f64 = 0.2;
-
-    const DECAY_WEIGHT: f64 = 0.94;
-
-    const SECTION_LENGTH: f64 = 750.0;
 
     fn strain_value_of(
         &mut self,
@@ -37,7 +34,8 @@ impl Movement {
 
         let dist_moved = player_pos - last_player_pos;
 
-        // * For the exact position we consider that the catcher is in the correct position for both objects
+        // * For the exact position we consider that the catcher is in the correct
+        //   position for both objects
         let exact_dist_moved = curr.normalized_pos - last_player_pos;
 
         let weighted_strain_time = curr.strain_time + 13.0 + (3.0 / self.clock_rate);
@@ -81,10 +79,14 @@ impl Movement {
                     * ((curr.strain_time * self.clock_rate).min(265.0) / 265.0).powf(1.5);
         }
 
-        // * There is an edge case where horizontal back and forth sliders create "buzz" patterns which are repeated "movements" with a distance lower than
-        // * the platter's width but high enough to be considered a movement due to the absolute_player_positioning_error and normalized_hitobject_radius offsets
-        // * We are detecting this exact scenario. The first back and forth is counted but all subsequent ones are nullified.
-        // * To achieve that, we need to store the exact distances (distance ignoring absolute_player_positioning_error and normalized_hitobject_radius)
+        // * There is an edge case where horizontal back and forth sliders create "buzz"
+        //   patterns which are repeated "movements" with a distance lower than
+        // * the platter's width but high enough to be considered a movement due to the
+        //   absolute_player_positioning_error and normalized_hitobject_radius offsets
+        // * We are detecting this exact scenario. The first back and forth is counted
+        //   but all subsequent ones are nullified.
+        // * To achieve that, we need to store the exact distances (distance ignoring
+        //   absolute_player_positioning_error and normalized_hitobject_radius)
         if exact_dist_moved.abs() <= self.half_catcher_width * 2.0
             && <f32 as FloatExt>::eq(exact_dist_moved, -self.last_exact_dist_moved)
             && <f64 as FloatExt>::eq(curr.strain_time, self.last_strain_time)

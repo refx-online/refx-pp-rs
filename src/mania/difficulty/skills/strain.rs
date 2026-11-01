@@ -29,7 +29,6 @@ impl Strain {
     const INDIVIDUAL_DECAY_BASE: f64 = 0.125;
     const OVERALL_DECAY_BASE: f64 = 0.3;
     const RELEASE_THRESHOLD: f64 = 30.0;
-
     const SKILL_MULTIPLIER: f64 = 1.0;
     const STRAIN_DECAY_BASE: f64 = 1.0;
 
@@ -69,11 +68,13 @@ impl Strain {
         let mut closest_end_time = (end_time - start_time).abs();
         // * Factor to all additional strains in case something else is held
         let mut hold_factor = 1.0;
-        // * Addition to the current note in case it's a hold and has to be released awkwardly
+        // * Addition to the current note in case it's a hold and has to be released
+        //   awkwardly
         let mut hold_addition = 0.0;
 
         for i in 0..self.end_times.len() {
-            // * The current note is overlapped if a previous note or end is overlapping the current note body
+            // * The current note is overlapped if a previous note or end is overlapping the
+            //   current note body
             is_overlapping |= self.end_times[i] > start_time + 1.0
                 && end_time > self.end_times[i] + 1.0
                 && start_time > self.start_times[i] + 1.0;
@@ -86,16 +87,18 @@ impl Strain {
             closest_end_time = (end_time - self.end_times[i]).abs().min(closest_end_time);
         }
 
-        // * The hold addition is given if there was an overlap, however it is only valid if there are no other note with a similar ending.
-        // * Releasing multiple notes is just as easy as releasing 1. Nerfs the hold addition by half if the closest release is release_threshold away.
+        // * The hold addition is given if there was an overlap, however it is only
+        //   valid if there are no other note with a similar ending.
+        // * Releasing multiple notes is just as easy as releasing 1. Nerfs the hold
+        //   addition by half if the closest release is release_threshold away.
         // * holdAddition
-        // *     ^
+        // * ^
         // * 1.0 + - - - - - -+-----------
-        // *     |           /
+        // * |           /
         // * 0.5 + - - - - -/   Sigmoid Curve
-        // *     |         /|
+        // * |         /|
         // * 0.0 +--------+-+---------------> Release Difference / ms
-        // *         release_threshold
+        // * release_threshold
         if is_overlapping {
             hold_addition = logistic(closest_end_time, Self::RELEASE_THRESHOLD, 0.27, None);
         }
@@ -108,7 +111,8 @@ impl Strain {
         );
         self.individual_strains[column] += 2.0 * hold_factor;
 
-        // * For notes at the same time (in a chord), the individualStrain should be the hardest individualStrain out of those columns
+        // * For notes at the same time (in a chord), the individualStrain should be the
+        //   hardest individualStrain out of those columns
         self.individual_strain = if mania_curr.delta_time <= 1.0 {
             self.individual_strain.max(self.individual_strains[column])
         } else {
@@ -127,7 +131,8 @@ impl Strain {
         self.start_times[column] = start_time;
         self.end_times[column] = end_time;
 
-        // * By subtracting CurrentStrain, this skill effectively only considers the maximum strain of any one hitobject within each strain section.
+        // * By subtracting CurrentStrain, this skill effectively only considers the
+        //   maximum strain of any one hitobject within each strain section.
         self.individual_strain + self.overall_strain - self.strain_decay_skill_current_strain
     }
 }

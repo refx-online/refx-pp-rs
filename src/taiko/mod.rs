@@ -1,19 +1,18 @@
 use rosu_map::section::general::GameMode;
 
-use crate::{
-    model::{
-        beatmap::Beatmap,
-        mode::{ConvertError, IGameMode},
-    },
-    Difficulty,
-};
-
 pub use self::{
     attributes::{TaikoDifficultyAttributes, TaikoPerformanceAttributes},
     difficulty::gradual::TaikoGradualDifficulty,
     performance::{gradual::TaikoGradualPerformance, TaikoPerformance},
     score_state::TaikoScoreState,
     strains::TaikoStrains,
+};
+use crate::{
+    model::{
+        beatmap::Beatmap,
+        mode::{ConvertError, IGameMode},
+    },
+    Difficulty,
 };
 
 mod attributes;
@@ -38,10 +37,10 @@ impl Taiko {
 
 impl IGameMode for Taiko {
     type DifficultyAttributes = TaikoDifficultyAttributes;
-    type Strains = TaikoStrains;
-    type Performance<'map> = TaikoPerformance<'map>;
     type GradualDifficulty = TaikoGradualDifficulty;
     type GradualPerformance = TaikoGradualPerformance;
+    type Performance<'map> = TaikoPerformance<'map>;
+    type Strains = TaikoStrains;
 
     fn difficulty(
         difficulty: &Difficulty,

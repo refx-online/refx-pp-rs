@@ -1,24 +1,15 @@
+use self::utils::{MAXIMUM_ROTATIONS_PER_SECOND, MINIMUM_ROTATIONS_PER_SECOND};
 use crate::{
-    Beatmap,
-    model::{
-        mods::GameMods,
-        hit_object::Spinner
-    },
+    model::hit_object::Spinner,
     osu::{
         attributes::OsuLegacyScoreAttributes,
-        object::{OsuObject, OsuObjectKind, NestedSliderObjectKind, OsuSlider},
-        convert::convert_objects,
-        difficulty::scaling_factor::ScalingFactor,
+        object::{NestedSliderObjectKind, OsuObject, OsuObjectKind, OsuSlider},
     },
 };
 
-use self::utils::{calculate_difficulty_peppy_stars, MAXIMUM_ROTATIONS_PER_SECOND, MINIMUM_ROTATIONS_PER_SECOND};
-
-pub mod utils;
 pub mod calculator;
+pub mod utils;
 
-/// Simulates a perfect play through a beatmap to calculate legacy score components.
-/// This is used for converting legacy scores (Score V1) to the standardised scoring system.
 pub struct OsuLegacyScoreSimulator {
     legacy_bonus_score: i32,
     standardised_bonus_score: i32,
@@ -36,30 +27,20 @@ impl OsuLegacyScoreSimulator {
         }
     }
 
-    pub fn simulate(&mut self, beatmap: &Beatmap, mods: &GameMods) -> OsuLegacyScoreAttributes {
+    pub fn simulate(
+        &mut self,
+        osu_objects: &[OsuObject],
+        score_multiplier: f64,
+    ) -> OsuLegacyScoreAttributes {
         self.legacy_bonus_score = 0;
         self.standardised_bonus_score = 0;
         self.combo = 0;
 
-        self.score_multiplier = f64::from(calculate_difficulty_peppy_stars(beatmap));
-
-        let map_attrs = beatmap.attributes().mods(mods.clone()).build();
-        let scaling_factor = ScalingFactor::new(map_attrs.cs);
-        let time_preempt = map_attrs.hit_windows.ar * map_attrs.clock_rate;
-        
-        let mut attrs = crate::osu::OsuDifficultyAttributes::default();
-        let osu_objects = convert_objects(
-            beatmap,
-            &scaling_factor,
-            mods.reflection(),
-            time_preempt,
-            beatmap.hit_objects.len(),
-            &mut attrs,
-        );
+        self.score_multiplier = score_multiplier;
 
         let mut attributes = OsuLegacyScoreAttributes::default();
 
-        for obj in osu_objects.iter() {
+        for obj in osu_objects {
             self.simulate_hit(obj, &mut attributes);
         }
 
@@ -95,11 +76,7 @@ impl OsuLegacyScoreSimulator {
         self.combo += 1;
     }
 
-    fn simulate_slider(
-        &mut self,
-        slider: &OsuSlider,
-        attributes: &mut OsuLegacyScoreAttributes,
-    ) {
+    fn simulate_slider(&mut self, slider: &OsuSlider, attributes: &mut OsuLegacyScoreAttributes) {
         for nested in &slider.nested_objects {
             match nested.kind {
                 NestedSliderObjectKind::Tick => {
@@ -125,24 +102,26 @@ impl OsuLegacyScoreSimulator {
         attributes.accuracy_score += score_increase;
     }
 
-    fn simulate_spinner(
-        &mut self,
-        spinner: Spinner,
-        attributes: &mut OsuLegacyScoreAttributes,
-    ) {
+    fn simulate_spinner(&mut self, spinner: Spinner, attributes: &mut OsuLegacyScoreAttributes) {
         let seconds_duration = spinner.duration / 1000.0;
 
         // * The total amount of half spins possible for the entire spinner.
-        let total_half_spins_possible = (seconds_duration * MAXIMUM_ROTATIONS_PER_SECOND * 2.0) as i32;
-        
-        // * The amount of half spins that are required to successfully complete the spinner (i.e. get a 300).
-        let half_spins_required_for_completion = (seconds_duration * MINIMUM_ROTATIONS_PER_SECOND) as i32;
-        
-        // * To be able to receive bonus points, the spinner must be rotated another 1.5 times.
+        let total_half_spins_possible =
+            (seconds_duration * MAXIMUM_ROTATIONS_PER_SECOND * 2.0) as i32;
+
+        // * The amount of half spins that are required to successfully complete the
+        //   spinner (i.e. get a 300).
+        let half_spins_required_for_completion =
+            (seconds_duration * MINIMUM_ROTATIONS_PER_SECOND) as i32;
+
+        // * To be able to receive bonus points, the spinner must be rotated another 1.5
+        //   times.
         let half_spins_required_before_bonus = half_spins_required_for_completion + 3;
 
         for i in 0..=total_half_spins_possible {
-            if i > half_spins_required_before_bonus && (i - half_spins_required_before_bonus) % 2 == 0 {
+            if i > half_spins_required_before_bonus
+                && (i - half_spins_required_before_bonus) % 2 == 0
+            {
                 self.legacy_bonus_score += 1100;
                 self.standardised_bonus_score += 50;
             } else if i > 1 && i % 2 == 0 {
@@ -159,6 +138,7 @@ impl OsuLegacyScoreSimulator {
 
     fn add_combo_score(&self, score_increase: i32, attributes: &mut OsuLegacyScoreAttributes) {
         // * Integer division is intentional to match stable's behavior
-        attributes.combo_score += (f64::from((self.combo - 1).max(0) * (score_increase / 25)) * self.score_multiplier) as i32;
+        attributes.combo_score += (f64::from((self.combo - 1).max(0) * (score_increase / 25))
+            * self.score_multiplier) as i32;
     }
 }

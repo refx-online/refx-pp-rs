@@ -8,18 +8,18 @@ mod inner {
         slice::{self, Iter},
     };
 
-    use crate::util::hint::{likely, unlikely};
-
     use self::entry::StrainsEntry;
+    use crate::util::hint::{likely, unlikely};
 
     /// A specialized `Vec<f64>` where all entries must be non-negative.
     ///
-    /// It is compact in the sense that zeros are not stored directly but instead
-    /// as amount of times they appear consecutively.
+    /// It is compact in the sense that zeros are not stored directly but
+    /// instead as amount of times they appear consecutively.
     ///
     /// For cases with few consecutive zeros, this type generally reduces
-    /// performance slightly. However, for edge cases like `/b/3739922` the length
-    /// of the list is massively reduced, preventing out-of-memory issues.
+    /// performance slightly. However, for edge cases like `/b/3739922` the
+    /// length of the list is massively reduced, preventing out-of-memory
+    /// issues.
     #[derive(Clone)]
     pub struct StrainsVec {
         inner: Vec<StrainsEntry>,
@@ -88,20 +88,12 @@ mod inner {
             }
         }
 
-        /// Removes all zeros and sorts the remaining entries in descending order.
+        /// Removes all zeros and sorts the remaining entries in descending
+        /// order.
         #[inline]
         pub fn retain_non_zero_and_sort(&mut self) {
             self.retain_non_zero();
             self.sort_desc();
-        }
-
-        /// Removes all zeros, sorts the remaining entries in descending order, and
-        /// returns an iterator over mutable references to the values.
-        #[inline]
-        pub fn sorted_non_zero_iter_mut(&mut self) -> impl ExactSizeIterator<Item = &mut f64> {
-            self.retain_non_zero_and_sort();
-
-            self.inner.iter_mut().map(StrainsEntry::as_value_mut)
         }
 
         /// Sum up all values.
@@ -295,11 +287,6 @@ mod inner {
             }
 
             #[inline]
-            pub const fn as_value_mut(&mut self) -> &mut f64 {
-                unsafe { &mut self.value }
-            }
-
-            #[inline]
             pub const fn zero_count(self) -> u64 {
                 unsafe { self.zero_count & Self::ZERO_COUNT_MASK }
             }
@@ -324,9 +311,8 @@ mod inner {
     mod tests {
         use proptest::prelude::*;
 
-        use crate::util::float_ext::FloatExt;
-
         use super::*;
+        use crate::util::float_ext::FloatExt;
 
         proptest! {
             #[test]

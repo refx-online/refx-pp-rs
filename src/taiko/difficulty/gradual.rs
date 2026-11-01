@@ -2,18 +2,17 @@ use std::{cmp, mem, slice::Iter};
 
 use rosu_map::section::general::GameMode;
 
+use super::{
+    object::{TaikoDifficultyObject, TaikoDifficultyObjects},
+    skills::TaikoSkills,
+    DifficultyValues, TaikoDifficultyAttributes,
+};
 use crate::{
     any::difficulty::skills::StrainSkill,
     model::{beatmap::HitWindows, hit_object::HitObject, mode::ConvertError},
     taiko::convert,
     util::sync::RefCount,
     Beatmap, Difficulty,
-};
-
-use super::{
-    object::{TaikoDifficultyObject, TaikoDifficultyObjects},
-    skills::TaikoSkills,
-    DifficultyValues, TaikoDifficultyAttributes,
 };
 
 /// Gradually calculate the difficulty attributes of an osu!taiko map.
@@ -28,8 +27,8 @@ use super::{
 /// # Example
 ///
 /// ```
-/// use refx_pp::{Beatmap, Difficulty};
 /// use refx_pp::taiko::{Taiko, TaikoGradualDifficulty};
+/// use refx_pp::{Beatmap, Difficulty};
 ///
 /// let map = Beatmap::from_path("./resources/1028484.osu").unwrap();
 ///
@@ -270,9 +269,8 @@ impl ExactSizeIterator for TaikoGradualDifficulty {
 
 #[cfg(test)]
 mod tests {
-    use crate::{taiko::Taiko, Beatmap};
-
     use super::*;
+    use crate::{taiko::Taiko, Beatmap};
 
     #[test]
     fn empty() {

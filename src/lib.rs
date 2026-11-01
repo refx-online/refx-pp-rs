@@ -1,8 +1,10 @@
-//! Library to calculate difficulty and performance attributes for all [osu!] gamemodes.
+//! Library to calculate difficulty and performance attributes for all [osu!]
+//! gamemodes.
 //!
-//! A large part of `refx-pp` is a port of [osu!lazer]'s difficulty and performance calculation
-//! with emphasis on a precise translation to Rust for the most [accurate results](#accuracy)
-//! while also providing a significant [boost in performance](#speed).
+//! A large part of `refx-pp` is a port of [osu!lazer]'s difficulty and
+//! performance calculation with emphasis on a precise translation to Rust for
+//! the most [accurate results](#accuracy) while also providing a significant
+//! [boost in performance](#speed).
 //!
 //! Last commits of the ported code:
 //!   - [osu!lazer] : `79b737bc270c8361261a9edd43b380f5326c3848` (2025-02-27)
@@ -44,7 +46,8 @@
 //! let pp = perf_attrs.pp();
 //!
 //! // Again, we re-use the previous attributes for maximum efficiency.
-//! let max_pp = perf_attrs.performance()
+//! let max_pp = perf_attrs
+//!     .performance()
 //!     .mods(24) // Still the same
 //!     .calculate()
 //!     .pp();
@@ -54,12 +57,12 @@
 //!
 //! ## Gradual calculation
 //!
-//! Gradually calculating attributes provides an efficient way to process each hitobject
-//! separately and calculate the attributes only up to that point.
+//! Gradually calculating attributes provides an efficient way to process each
+//! hitobject separately and calculate the attributes only up to that point.
 //!
-//! For difficulty attributes, there is [`GradualDifficulty`] which implements `Iterator`
-//! and for performance attributes there is [`GradualPerformance`] which requires the current
-//! score state.
+//! For difficulty attributes, there is [`GradualDifficulty`] which implements
+//! `Iterator` and for performance attributes there is [`GradualPerformance`]
+//! which requires the current score state.
 //!
 //! ```
 //! use refx_pp::{Beatmap, GradualPerformance, Difficulty, any::ScoreState};
@@ -97,17 +100,19 @@
 //! `refx-pp` was tested against millions of real scores and delivered
 //! values that matched osu!lazer perfectly down to the last decimal place.
 //!
-//! However, there is one small caveat: the values are only this precise on debug mode.
-//! On release mode, Rust's compiler performs optimizations that produce the tiniest discrepancies
-//! due to floating point inaccuracies. With this in mind, `refx-pp` is still as accurate as can
-//! be without targeting the .NET compiler itself.
-//! Realistically, the inaccuracies in release mode are negligibly small.
+//! However, there is one small caveat: the values are only this precise on
+//! debug mode. On release mode, Rust's compiler performs optimizations that
+//! produce the tiniest discrepancies due to floating point inaccuracies. With
+//! this in mind, `refx-pp` is still as accurate as can be without targeting the
+//! .NET compiler itself. Realistically, the inaccuracies in release mode are
+//! negligibly small.
 //!
 //! ## Speed
 //!
-//! An important factor for `refx-pp` is the calculation speed. Optimizations and an accurate translation
-//! unfortunately don't always go hand-in-hand. Nonetheless, performance improvements are still
-//! snuck in wherever possible, providing a significantly faster runtime than the native C# code.
+//! An important factor for `refx-pp` is the calculation speed. Optimizations
+//! and an accurate translation unfortunately don't always go hand-in-hand.
+//! Nonetheless, performance improvements are still snuck in wherever possible,
+//! providing a significantly faster runtime than the native C# code.
 //!
 //! Results of a rudimentary [benchmark] of osu!lazer and refx-pp:
 //! ```txt

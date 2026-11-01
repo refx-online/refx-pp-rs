@@ -139,9 +139,8 @@ impl CatchGradualPerformance {
 
 #[cfg(test)]
 mod tests {
-    use crate::{catch::CatchPerformance, Beatmap};
-
     use super::*;
+    use crate::{catch::CatchPerformance, Beatmap};
 
     #[test]
     fn next_and_nth() {

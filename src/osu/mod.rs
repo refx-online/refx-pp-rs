@@ -1,5 +1,12 @@
 use rosu_map::util::Pos;
 
+pub use self::{
+    attributes::{OsuDifficultyAttributes, OsuPerformanceAttributes},
+    difficulty::gradual::OsuGradualDifficulty,
+    performance::{gradual::OsuGradualPerformance, OsuPerformance},
+    score_state::{OsuScoreOrigin, OsuScoreState},
+    strains::OsuStrains,
+};
 use crate::{
     model::{
         beatmap::Beatmap,
@@ -8,22 +15,14 @@ use crate::{
     Difficulty,
 };
 
-pub use self::{
-    attributes::{OsuDifficultyAttributes, OsuPerformanceAttributes},
-    difficulty::gradual::OsuGradualDifficulty,
-    performance::{gradual::OsuGradualPerformance, OsuPerformance},
-    score_state::{OsuScoreOrigin, OsuScoreState},
-    strains::OsuStrains,
-};
-
 mod attributes;
 mod convert;
 mod difficulty;
+mod legacy;
 mod object;
 mod performance;
 mod score_state;
 mod strains;
-mod legacy;
 
 const PLAYFIELD_BASE_SIZE: Pos = Pos::new(512.0, 384.0);
 
@@ -34,10 +33,10 @@ pub struct Osu;
 
 impl IGameMode for Osu {
     type DifficultyAttributes = OsuDifficultyAttributes;
-    type Strains = OsuStrains;
-    type Performance<'map> = OsuPerformance<'map>;
     type GradualDifficulty = OsuGradualDifficulty;
     type GradualPerformance = OsuGradualPerformance;
+    type Performance<'map> = OsuPerformance<'map>;
+    type Strains = OsuStrains;
 
     fn difficulty(
         difficulty: &Difficulty,

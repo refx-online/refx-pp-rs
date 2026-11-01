@@ -3,7 +3,7 @@ use std::cmp::{self, Ordering};
 use rosu_map::section::general::GameMode;
 
 use self::calculator::CatchPerformanceCalculator;
-
+use super::{attributes::CatchPerformanceAttributes, score_state::CatchScoreState, Catch};
 use crate::{
     any::{Difficulty, IntoModePerformance, IntoPerformance},
     model::{mode::ConvertError, mods::GameMods},
@@ -11,8 +11,6 @@ use crate::{
     util::map_or_attrs::MapOrAttrs,
     Performance,
 };
-
-use super::{attributes::CatchPerformanceAttributes, score_state::CatchScoreState, Catch};
 
 mod calculator;
 pub mod gradual;
@@ -36,8 +34,8 @@ impl<'map> CatchPerformance<'map> {
     /// Create a new performance calculator for osu!catch maps.
     ///
     /// The argument `map_or_attrs` must be either
-    /// - previously calculated attributes ([`CatchDifficultyAttributes`]
-    ///   or [`CatchPerformanceAttributes`])
+    /// - previously calculated attributes ([`CatchDifficultyAttributes`] or
+    ///   [`CatchPerformanceAttributes`])
     /// - a [`Beatmap`] (by reference or value)
     ///
     /// If a map is given, difficulty attributes will need to be calculated
@@ -261,7 +259,8 @@ impl<'map> CatchPerformance<'map> {
         self
     }
 
-    /// Create the [`CatchScoreState`] that will be used for performance calculation.
+    /// Create the [`CatchScoreState`] that will be used for performance
+    /// calculation.
     #[allow(clippy::too_many_lines)]
     pub fn generate_state(&mut self) -> Result<CatchScoreState, ConvertError> {
         let attrs = match self.map_or_attrs {
@@ -520,14 +519,13 @@ mod test {
     use proptest::prelude::*;
     use rosu_map::section::general::GameMode;
 
+    use super::*;
     use crate::{
         any::{DifficultyAttributes, PerformanceAttributes},
         catch::CatchDifficultyAttributes,
         osu::{OsuDifficultyAttributes, OsuPerformanceAttributes},
         Beatmap,
     };
-
-    use super::*;
 
     static ATTRS: OnceLock<CatchDifficultyAttributes> = OnceLock::new();
 

@@ -1,5 +1,10 @@
 use rosu_map::section::general::GameMode;
 
+use self::skills::movement::Movement;
+use super::{
+    attributes::{CatchDifficultyAttributes, ObjectCountBuilder},
+    object::palpable::PalpableObject,
+};
 use crate::{
     any::difficulty::{skills::StrainSkill, Difficulty},
     catch::{
@@ -7,13 +12,6 @@ use crate::{
     },
     model::{beatmap::BeatmapAttributes, mode::ConvertError},
     Beatmap,
-};
-
-use self::skills::movement::Movement;
-
-use super::{
-    attributes::{CatchDifficultyAttributes, ObjectCountBuilder},
-    object::palpable::PalpableObject,
 };
 
 pub mod gradual;

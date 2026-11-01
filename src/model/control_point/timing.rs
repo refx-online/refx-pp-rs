@@ -8,7 +8,6 @@ pub struct TimingPoint {
 impl TimingPoint {
     pub const DEFAULT_BEAT_LEN: f64 =
         rosu_map::section::timing_points::TimingPoint::DEFAULT_BEAT_LEN;
-
     pub const DEFAULT_BPM: f64 = 60_000.0 / Self::DEFAULT_BEAT_LEN;
 
     pub const fn new(time: f64, beat_len: f64) -> Self {

@@ -44,7 +44,8 @@ impl ManiaDifficultyAttributes {
 /// The result of a performance calculation on an osu!mania map.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ManiaPerformanceAttributes {
-    /// The difficulty attributes that were used for the performance calculation.
+    /// The difficulty attributes that were used for the performance
+    /// calculation.
     pub difficulty: ManiaDifficultyAttributes,
     /// The final performance points.
     pub pp: f64,

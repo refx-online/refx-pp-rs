@@ -1,14 +1,5 @@
 use rosu_map::section::{general::GameMode, hit_objects::CurveBuffers};
 
-use crate::{
-    model::{
-        beatmap::Beatmap,
-        hit_object::{HitObject, HitObjectKind, HoldNote, Spinner},
-        mods::Reflection,
-    },
-    util::{float_ext::FloatExt, random::osu::Random},
-};
-
 use super::{
     attributes::ObjectCountBuilder,
     catcher::Catcher,
@@ -19,6 +10,14 @@ use super::{
         palpable::PalpableObject,
     },
     PLAYFIELD_WIDTH,
+};
+use crate::{
+    model::{
+        beatmap::Beatmap,
+        hit_object::{HitObject, HitObjectKind, HoldNote, Spinner},
+        mods::Reflection,
+    },
+    util::{float_ext::FloatExt, random::osu::Random},
 };
 
 const RNG_SEED: i32 = 1337;

@@ -2,6 +2,14 @@ use std::cmp::Ordering;
 
 use rosu_map::{section::general::GameMode, util::Pos};
 
+use self::{
+    pattern::Pattern,
+    pattern_generator::{
+        end_time_object::EndTimeObjectPatternGenerator, hit_object::HitObjectPatternGenerator,
+        path_object::PathObjectPatternGenerator,
+    },
+    pattern_type::PatternType,
+};
 use crate::{
     mania::object::ManiaObject,
     model::{
@@ -15,15 +23,6 @@ use crate::{
         sort,
     },
     GameMods,
-};
-
-use self::{
-    pattern::Pattern,
-    pattern_generator::{
-        end_time_object::EndTimeObjectPatternGenerator, hit_object::HitObjectPatternGenerator,
-        path_object::PathObjectPatternGenerator,
-    },
-    pattern_type::PatternType,
 };
 
 mod pattern;
@@ -184,7 +183,8 @@ fn target_columns(map: &Beatmap, mods: &GameMods) -> f32 {
 
         let len = map.hit_objects.len();
 
-        // * In osu!stable, this division appears as if it happens on floats, but due to release-mode
+        // * In osu!stable, this division appears as if it happens on floats, but due to
+        //   release-mode
         // * optimisations, it actually ends up happening on doubles.
         let percent_slider_or_spinner = count_slider_or_spinner as f64 / len as f64;
 
@@ -280,7 +280,8 @@ pub(super) fn apply_invert_to_beatmap(map: &mut Beatmap) {
                 .timing_point_at(end_time)
                 .map_or(TimingPoint::DEFAULT_BEAT_LEN, |tp| tp.beat_len);
 
-            // * Decrease the duration by at most a 1/4 beat to ensure there's no instantaneous notes.
+            // * Decrease the duration by at most a 1/4 beat to ensure there's no
+            //   instantaneous notes.
             duration = f64::max(duration / 2.0, duration - beat_length / 4.0);
 
             HitObject {
@@ -324,9 +325,8 @@ fn cmp_by_start_time(a: &HitObject, b: &HitObject) -> Ordering {
 
 #[cfg(test)]
 mod tests {
-    use crate::util::float_ext::FloatExt;
-
     use super::*;
+    use crate::util::float_ext::FloatExt;
 
     #[test]
     fn convert_mania() {
